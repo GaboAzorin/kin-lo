@@ -12,7 +12,7 @@ logs/
 
 # Archivos de exploración/investigación temporal
 investigar_loteria*.py
-test_api_kino*.py
+test_*.py
 loteria_sample.html
 loteria_rendered.html
 loteria_api_sample.json
@@ -32,8 +32,3 @@ historial.csv
 .DS_Store
 Thumbs.db
 
-test_polla_pozo.py
-test_kinohistorico*.py
-test_boundary*.py
-test_lower*.py
-test_parse_range*.py

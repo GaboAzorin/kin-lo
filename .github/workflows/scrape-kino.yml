@@ -46,7 +46,12 @@ jobs:
         run: python src/analytics/metrics.py --game kino
 
       - name: Actualizar pozos estimados
-        # fetch_pozos.py consulta rckino.loteria.cl (sin restricciones de IP).
+        # Kino usa rckino.loteria.cl (sin restricciones de IP).
+        # Loto usa polla.cl → necesita Scrape.do si GitHub IPs están bloqueadas.
+        continue-on-error: true
+        env:
+          USE_SCRAPEDO: ${{ secrets.USE_SCRAPEDO || 'false' }}
+          SCRAPEDO_TOKEN: ${{ secrets.SCRAPEDO_TOKEN || '' }}
         run: python src/scrapers/fetch_pozos.py
 
       - name: Commit y push de datos actualizados
