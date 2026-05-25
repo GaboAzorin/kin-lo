@@ -71,17 +71,17 @@ except ImportError as e:
 # ==============================================================================
 COLUMNS_POLLA = [
     "sorteo", "fecha", "dia_semana",
-    # Loto principal
-    "LOTO_n1", "LOTO_n2", "LOTO_n3", "LOTO_n4", "LOTO_n5", "LOTO_n6", "LOTO_comodin",
+    # Loto principal (6 números, sin comodín)
+    "LOTO_n1", "LOTO_n2", "LOTO_n3", "LOTO_n4", "LOTO_n5", "LOTO_n6",
     # Recargado
     "RECARGADO_n1", "RECARGADO_n2", "RECARGADO_n3", "RECARGADO_n4",
-    "RECARGADO_n5", "RECARGADO_n6", "RECARGADO_comodin",
+    "RECARGADO_n5", "RECARGADO_n6",
     # Revancha
     "REVANCHA_n1", "REVANCHA_n2", "REVANCHA_n3", "REVANCHA_n4",
-    "REVANCHA_n5", "REVANCHA_n6", "REVANCHA_comodin",
+    "REVANCHA_n5", "REVANCHA_n6",
     # Desquite
     "DESQUITE_n1", "DESQUITE_n2", "DESQUITE_n3", "DESQUITE_n4",
-    "DESQUITE_n5", "DESQUITE_n6", "DESQUITE_comodin",
+    "DESQUITE_n5", "DESQUITE_n6",
 ]
 
 # ==============================================================================
