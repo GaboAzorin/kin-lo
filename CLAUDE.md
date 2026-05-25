@@ -9,7 +9,7 @@ Pipeline automático de datos de lotería chilena + sitio web estático en GitHu
 - **polla.cl** → Loto, Recargado, Revancha, Desquite
 - **loteria.cl** → Kino, ReKino, RequeteKino
 
-Los datos se actualizan automáticamente con GitHub Actions y se muestran en una interfaz web estática.
+Los datos de **Kino se actualizan automáticamente** con GitHub Actions. Los datos de **Loto se actualizan localmente** (polla.cl bloquea las IPs de GitHub) con un script PowerShell.
 
 ## Comandos Principales
 
@@ -18,18 +18,20 @@ Los datos se actualizan automáticamente con GitHub Actions y se muestran en una
 pip install -r requirements.txt
 playwright install chromium --with-deps
 
-# Scraper polla.cl (descarga sorteos nuevos)
+# Actualizar Loto (correr localmente después de cada sorteo mar/jue/dom ~22:15 CLT)
+.\scripts\actualizar_loto.ps1        # scraper + métricas + pozos + commit + push
+
+# Pasos individuales Loto
 python src/scrapers/scraper_polla.py
-
-# Scraper loteria.cl (descarga sorteos nuevos)
-python src/scrapers/scraper_loteria.py
-
-# Explorar estructura de loteria.cl (script temporal de investigación)
-python investigar_loteria.py
-
-# Generar métricas y sugerencias
 python src/analytics/metrics.py --game loto
+
+# Pasos individuales Kino (normalmente vía GitHub Actions)
+python src/scrapers/scraper_loteria.py
+python src/scrapers/scraper_kinohistorico.py
 python src/analytics/metrics.py --game kino
+
+# Actualizar pozos estimados
+python src/scrapers/fetch_pozos.py
 
 # Preview del sitio local
 python -m http.server 8080 --directory docs
@@ -41,12 +43,24 @@ python -m http.server 8080 --directory docs
 ### Flujo de datos
 
 ```
-GitHub Actions (cron)
-  → scraper_polla.py / scraper_loteria.py
-  → data/polla_historial.csv / data/loteria_historial.csv
-  → src/analytics/metrics.py
-  → docs/data/loto_metrics.json / kino_metrics.json
-  → GitHub Pages sirve docs/ (HTML + JSON)
+LOTO (local, manual)
+  scripts/actualizar_loto.ps1
+    → scraper_polla.py       (polla.cl bloquea IPs de GitHub Actions)
+    → metrics.py --game loto
+    → fetch_pozos.py
+    → git commit + push
+    → data/polla_historial.csv  docs/data/loto_metrics.json  docs/data/pozos.json
+
+KINO (automático, GitHub Actions cron)
+  scrape-kino.yml
+    → scraper_loteria.py      (últimos 26 sorteos)
+    → scraper_kinohistorico.py (sorteos nuevos del historial)
+    → metrics.py --game kino
+    → fetch_pozos.py
+    → git auto-commit
+    → data/loteria_historial.csv  docs/data/kino_metrics.json  docs/data/pozos.json
+
+GitHub Pages sirve docs/ → https://gaboazorin.github.io/kin-lo/
 ```
 
 ### Scraper polla.cl (`src/scrapers/scraper_polla.py`)
@@ -55,7 +69,8 @@ GitHub Actions (cron)
 - API endpoint: `POST https://www.polla.cl/es/get/draw/results` con `gameId=5271`.
 - Un solo `gameId` trae Loto + Recargado + Revancha + Desquite (en `additionalGameResults`).
 - Parser: `src/parsers/loto_parser_v3.py` → función `parse_loto_rich()`.
-- Modo nube: `USE_SCRAPEDO=true` + variable `SCRAPEDO_TOKEN`.
+- **Solo funciona desde IPs residenciales/corporativas.** polla.cl bloquea IPs de GitHub Actions.
+- Correr con `.\scripts\actualizar_loto.ps1` después de cada sorteo.
 
 ### Scraper loteria.cl (`src/scrapers/scraper_loteria.py`)
 
@@ -90,12 +105,12 @@ GitHub Actions (cron)
 **`data/loteria_historial.csv`** — separador `,`
 - Columnas: `sorteo, fecha, dia_semana, KINO_n1..n14, REKINO_n1..n14, REQUETEKINO_n1..n14`
 
-## Horarios de GitHub Actions
+## Actualización de datos
 
-| Workflow | Cron (UTC) | Equivalente CLT (UTC-4) |
+| Juego | Método | Cuándo |
 |---|---|---|
-| `scrape-loto.yml` | `15 2 * * 3,5,1` | Mar/Jue/Dom 22:15 |
-| `scrape-kino.yml` | `59 3 * * 4,6,1` | Mié/Vie/Dom 23:59 |
+| **Loto** | `.\scripts\actualizar_loto.ps1` (local) | Después de cada sorteo: mar/jue/dom ~22:15 CLT |
+| **Kino** | GitHub Actions cron automático | `scrape-kino.yml`: `59 3 * * 4,6,1` (UTC) = mié/vie/dom 23:59 CLT |
 
 ## Rangos de Números
 
@@ -104,9 +119,3 @@ GitHub Actions (cron)
 - Combinaciones posibles Loto: C(41,6) = 4.496.388
 - Combinaciones posibles Kino: C(25,14) = 4.457.400
 
-## Variables de Entorno
-
-| Variable | Descripción |
-|---|---|
-| `USE_SCRAPEDO` | `true` para usar Scrape.do como proxy (modo nube) |
-| `SCRAPEDO_TOKEN` | Token(s) de Scrape.do, separados por coma |
