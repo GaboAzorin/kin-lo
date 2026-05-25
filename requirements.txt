@@ -1,5 +1,6 @@
-# Scraping polla.cl (basado en código existente)
+# Scraping polla.cl
 playwright>=1.43.0
+requests>=2.31.0        # usado en modo Scrape.do (proxy nube)
 
 # Scraping loteria.cl
 scrapling[fetchers]>=0.4.0
