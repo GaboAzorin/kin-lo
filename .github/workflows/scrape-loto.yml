@@ -35,21 +35,16 @@ jobs:
         run: playwright install chromium --with-deps
 
       - name: Ejecutar scraper polla.cl
-        env:
-          # Para activar Scrape.do (necesario si GitHub IPs son bloqueadas por polla.cl):
-          #   1. Ve a Settings → Secrets → Actions en tu repo
-          #   2. Agrega SCRAPEDO_TOKEN con tu token de scrape.do
-          #   3. Agrega USE_SCRAPEDO con valor "true"
-          USE_SCRAPEDO: ${{ secrets.USE_SCRAPEDO || 'false' }}
-          SCRAPEDO_TOKEN: ${{ secrets.SCRAPEDO_TOKEN || '' }}
+        # NOTA: polla.cl bloquea IPs de GitHub Actions.
+        # El scraper saldrá con código 0 (sin datos nuevos) pero sin error fatal.
         run: python src/scrapers/scraper_polla.py
 
       - name: Calcular métricas y sugerencias (Loto)
         run: python src/analytics/metrics.py --game loto
 
       - name: Actualizar pozos estimados
-        # fetch_pozos.py también consulta polla.cl (JackpotBanner).
-        # Si polla.cl bloquea la IP, este paso falla pero es no-crítico.
+        # polla.cl bloquea IPs de GitHub → este paso fallará en CI; no es crítico.
+        # El pozo de Kino (rckino.loteria.cl) sí se actualiza correctamente.
         continue-on-error: true
         run: python src/scrapers/fetch_pozos.py
 

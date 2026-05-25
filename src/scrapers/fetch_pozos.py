@@ -2,31 +2,22 @@
 fetch_pozos.py
 Obtiene los pozos estimados del próximo sorteo de Kino y Loto.
 
-Fuentes (sin autenticación):
-  - Kino:  rckino.loteria.cl/api/sorteos  → pozoEstimado por variante
+Fuentes:
+  - Kino:  rckino.loteria.cl/api/sorteos  → pozoEstimado por variante (sin restricciones IP)
   - Loto:  polla.cl homepage HTML         → JackpotBanner con prizeAmount
-           Si polla.cl bloquea la IP (ej. GitHub Actions), usar Scrape.do:
-           USE_SCRAPEDO=true + SCRAPEDO_TOKEN=<token>
+           NOTA: polla.cl bloquea IPs de GitHub Actions → este paso falla en CI.
+           El workflow usa continue-on-error: true para que no sea fatal.
 
 Output: docs/data/pozos.json
 """
 
 import json
 import logging
-import os
-import random
 import re
 import sys
-import urllib.parse
 import urllib.request
 from datetime import datetime
 from pathlib import Path
-
-# ─────────────────────────────────────────────
-# Configuración Scrape.do (para entornos donde polla.cl bloquea la IP)
-SCRAPEDO_TOKENS_RAW  = os.environ.get("SCRAPEDO_TOKEN", "")
-SCRAPEDO_TOKENS_LIST = [t.strip() for t in SCRAPEDO_TOKENS_RAW.split(",") if t.strip()]
-USE_SCRAPEDO         = os.environ.get("USE_SCRAPEDO", "false").lower() == "true"
 
 # ─────────────────────────────────────────────
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -57,17 +48,6 @@ LOTO_GAMES = [
 def _get(url: str, headers: dict) -> bytes:
     req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req, timeout=15) as r:
-        return r.read()
-
-
-def _get_via_scrapedo(url: str) -> bytes:
-    """Realiza GET a través de la API de Scrape.do para eludir bloqueos de IP."""
-    token = random.choice(SCRAPEDO_TOKENS_LIST)
-    api_url = f"https://api.scrape.do?token={token}&url={urllib.parse.quote(url, safe='')}"
-    req = urllib.request.Request(api_url, headers={
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-    })
-    with urllib.request.urlopen(req, timeout=30) as r:
         return r.read()
 
 
@@ -115,18 +95,13 @@ def fetch_kino() -> dict:
 
 def fetch_loto() -> dict:
     """Obtiene pozos de Loto/Recargado/Revancha/Desquite desde polla.cl homepage."""
-    target_url = "https://www.polla.cl/es/"
-    if USE_SCRAPEDO and SCRAPEDO_TOKENS_LIST:
-        logger.info("  Loto: usando Scrape.do proxy")
-        html = _get_via_scrapedo(target_url).decode("utf-8", errors="replace")
-    else:
-        html = _get(
-            target_url,
-            headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-                "Accept":     "text/html",
-            }
-        ).decode("utf-8", errors="replace")
+    html = _get(
+        "https://www.polla.cl/es/",
+        headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "Accept":     "text/html",
+        }
+    ).decode("utf-8", errors="replace")
 
     # Extraer el bloque JackpotBanner del HTML
     # La estructura es: {"game":{...,"totalPrize":N}} → necesitamos los 2 cierres
