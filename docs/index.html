@@ -111,6 +111,24 @@
     }
     footer a { color: var(--muted); text-decoration: underline; }
 
+    /* ── Pozos ── */
+    .pozos-section {}
+    .pozo-row {
+      display: flex; align-items: baseline; justify-content: space-between;
+      padding: 5px 0; border-bottom: 1px solid var(--border);
+      font-size: 0.88rem;
+    }
+    .pozo-row:last-child { border-bottom: none; }
+    .pozo-nombre { color: var(--muted); }
+    .pozo-monto  { font-weight: 700; font-size: 1rem; }
+    .pozo-monto.grande { font-size: 1.2rem; }
+    .pozo-unit   { font-size: 0.72rem; color: var(--muted); margin-left: 3px; }
+    .pozo-total  {
+      margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);
+      font-size: 0.78rem; color: var(--muted); text-align: right;
+    }
+    .pozo-total strong { color: var(--text); }
+
     .loading { color: var(--muted); font-style: italic; font-size: 0.85rem; }
     .error   { color: #f87171; font-size: 0.85rem; }
   </style>
@@ -138,6 +156,13 @@
         <span class="card-title">Loto</span>
       </div>
 
+      <div class="pozos-section">
+        <div class="section-label">Pozo estimado próximo sorteo</div>
+        <div id="loto-pozos"><span class="loading">cargando...</span></div>
+      </div>
+
+      <div class="divider"></div>
+
       <div class="ultimo-section">
         <div class="section-label">Último sorteo</div>
         <p class="meta" id="loto-fecha"><span class="loading">cargando...</span></p>
@@ -163,6 +188,13 @@
         <span class="badge badge-kino">Loteria.cl</span>
         <span class="card-title">Kino</span>
       </div>
+
+      <div class="pozos-section">
+        <div class="section-label">Pozo estimado próximo sorteo</div>
+        <div id="kino-pozos"><span class="loading">cargando...</span></div>
+      </div>
+
+      <div class="divider"></div>
 
       <div class="ultimo-section">
         <div class="section-label">Último sorteo (14 números)</div>
@@ -227,11 +259,49 @@ function renderSugs(sugs, containerId, bolaCls) {
     </div>`).join('');
 }
 
+function fmtMillones(m) {
+  return m >= 1000
+    ? `${(m/1000).toFixed(m % 1000 === 0 ? 0 : 1)}<span class="pozo-unit">MIL MM</span>`
+    : `${m}<span class="pozo-unit">MM</span>`;
+}
+
+function renderPozos(variantes, containerId, accentVar, total) {
+  const el = document.getElementById(containerId);
+  if (!variantes || !variantes.length) {
+    el.innerHTML = '<span class="error">Sin datos</span>';
+    return;
+  }
+  const maxMM = Math.max(...variantes.map(v => v.millones));
+  const rows = variantes.map(v => {
+    const grande = v.millones === maxMM && v.millones >= 500 ? ' grande' : '';
+    return `<div class="pozo-row">
+      <span class="pozo-nombre">${v.nombre}</span>
+      <span class="pozo-monto${grande}" style="color:var(${accentVar})">${fmtMillones(v.millones)}</span>
+    </div>`;
+  }).join('');
+  const totalRow = total
+    ? `<div class="pozo-total">Total estimado: <strong>$${total.toLocaleString('es-CL')} MM</strong></div>`
+    : '';
+  el.innerHTML = rows + totalRow;
+}
+
 async function init() {
-  const [loto, kino] = await Promise.all([
+  const [loto, kino, pozos] = await Promise.all([
     loadJSON('data/loto_metrics.json'),
     loadJSON('data/kino_metrics.json'),
+    loadJSON('data/pozos.json'),
   ]);
+
+  // ── Pozos ──
+  if (pozos?.loto) {
+    renderPozos(pozos.loto.variantes, 'loto-pozos', '--loto', pozos.loto.total_millones);
+  }
+  if (pozos?.kino) {
+    const proximo = pozos.kino.proximo_sorteo ? ` · ${pozos.kino.proximo_sorteo}` : '';
+    document.getElementById('kino-pozos').insertAdjacentHTML('beforebegin',
+      `<p class="meta" style="margin-bottom:6px">Próximo: <strong>${proximo.replace(' · ','')}</strong></p>`);
+    renderPozos(pozos.kino.variantes, 'kino-pozos', '--kino', null);
+  }
 
   // ── Loto ──
   if (loto) {

@@ -10,8 +10,19 @@ env/
 # Logs (solo locales)
 logs/
 
-# Archivos de exploración temporal
+# Archivos de exploración/investigación temporal
+investigar_loteria*.py
+test_api_kino*.py
 loteria_sample.html
+loteria_rendered.html
+loteria_api_sample.json
+rckino_screenshot.png
+
+# Archivos originales en raíz (ya copiados a src/)
+scraper_puro.py
+loto_parser_v3.py
+loto_parsers_mix.py
+historial.csv
 
 # Variables de entorno
 .env
@@ -20,3 +31,5 @@ loteria_sample.html
 # OS
 .DS_Store
 Thumbs.db
+
+test_polla_pozo.py
