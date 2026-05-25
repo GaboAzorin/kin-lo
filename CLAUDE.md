@@ -66,11 +66,13 @@ GitHub Actions (cron)
 
 ### Scraper histórico Kino (`src/scrapers/scraper_kinohistorico.py`)
 
-- Fuente: `https://kinohistorico.cl/draw/N` (Angular SSG, datos en TransferState JSON).
-- Disponibilidad: sorteos **3100–3198** (la web no cubre ni anteriores ni los más recientes).
-- Uso: `python src/scrapers/scraper_kinohistorico.py --desde 3198`
-- Se detiene automáticamente tras 10 páginas consecutivas sin datos.
-- **No incluir Accept-Encoding en los headers** — urllib no descomprime gzip automáticamente.
+- Fuente: **API REST** `https://kinohistorico.cl/kino-api/draws?page=N&limit=50`
+- Cobertura: **~2433 sorteos desde 2006** (sorteo 799 en adelante).
+- Uso: `python src/scrapers/scraper_kinohistorico.py` (descarga todo lo que no esté en el CSV)
+- Uso incremental: `python src/scrapers/scraper_kinohistorico.py --desde 3198`
+- **Nota técnica**: la web Angular de kinohistorico.cl llama a `/kino-api/draws/{id}` via AJAX.
+  Solo el sorteo 3100 tenía datos pre-renderizados en HTML (SSG); los demás requieren JS.
+  Usar la API REST directamente es mucho más eficiente.
 
 ### Analytics (`src/analytics/`)
 
