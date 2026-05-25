@@ -131,6 +131,44 @@
 
     .loading { color: var(--muted); font-style: italic; font-size: 0.85rem; }
     .error   { color: #f87171; font-size: 0.85rem; }
+
+    /* ── Countdown ── */
+    .countdown-bar {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+      margin-bottom: 32px;
+    }
+    @media (max-width: 500px) { .countdown-bar { grid-template-columns: 1fr; } }
+
+    .cd-card {
+      border-radius: var(--radius); padding: 18px 20px;
+      border: 1px solid var(--border); background: var(--card);
+      display: flex; flex-direction: column; gap: 8px;
+      transition: border-color 0.3s;
+    }
+    .cd-card.next { border-color: var(--accent-cd); box-shadow: 0 0 0 1px var(--accent-cd); }
+
+    .cd-header {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .cd-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    .cd-title { font-size: 1rem; font-weight: 600; }
+
+    .cd-digits {
+      display: flex; gap: 6px; align-items: flex-end;
+    }
+    .cd-unit { text-align: center; }
+    .cd-num {
+      font-size: 1.9rem; font-weight: 800; line-height: 1;
+      font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+    }
+    .cd-label { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .cd-sep { font-size: 1.5rem; font-weight: 300; color: var(--border); padding-bottom: 4px; }
+
+    .cd-date { font-size: 0.78rem; color: var(--muted); }
+    .cd-date strong { color: var(--text); }
   </style>
 </head>
 <body>
@@ -146,6 +184,45 @@
 
 <main>
   <h2>Análisis estadístico de la Lotería de Chile</h2>
+
+  <!-- ══ CONTADORES ══ -->
+  <div class="countdown-bar">
+    <div class="cd-card" id="cd-loto" style="--accent-cd: var(--loto)">
+      <div class="cd-header">
+        <div class="cd-dot" style="background:var(--loto)"></div>
+        <span style="color:var(--loto)">Polla.cl</span>
+      </div>
+      <div class="cd-title">Próximo Loto</div>
+      <div class="cd-digits">
+        <div class="cd-unit"><div class="cd-num" id="loto-dd">--</div><div class="cd-label">días</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-num" id="loto-hh">--</div><div class="cd-label">horas</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-num" id="loto-mm">--</div><div class="cd-label">min</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-num" id="loto-ss">--</div><div class="cd-label">seg</div></div>
+      </div>
+      <div class="cd-date" id="loto-draw-date">—</div>
+    </div>
+
+    <div class="cd-card" id="cd-kino" style="--accent-cd: var(--kino)">
+      <div class="cd-header">
+        <div class="cd-dot" style="background:var(--kino)"></div>
+        <span style="color:var(--kino)">Lotería.cl</span>
+      </div>
+      <div class="cd-title">Próximo Kino</div>
+      <div class="cd-digits">
+        <div class="cd-unit"><div class="cd-num" id="kino-dd">--</div><div class="cd-label">días</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-num" id="kino-hh">--</div><div class="cd-label">horas</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-num" id="kino-mm">--</div><div class="cd-label">min</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-num" id="kino-ss">--</div><div class="cd-label">seg</div></div>
+      </div>
+      <div class="cd-date" id="kino-draw-date">—</div>
+    </div>
+  </div>
 
   <div class="grid">
 
@@ -225,6 +302,106 @@
 </footer>
 
 <script>
+// ─────────────────────────────────────────────
+// COUNTDOWN
+// Calcula el próximo sorteo en hora de Santiago (America/Santiago),
+// manejando correctamente CLT (UTC-4) y CLST (UTC-3).
+// ─────────────────────────────────────────────
+const TZ = 'America/Santiago';
+const DAYS_ES = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const WDAY_SHORT = {Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
+
+// Loto: mar(2), jue(4), dom(0) a las 21:00
+// Kino: mié(3), vie(5), dom(0) a las 22:30
+const DRAWS = {
+  loto: { days:[0,2,4], hour:21, min:0,  ids:['loto-dd','loto-hh','loto-mm','loto-ss'], dateId:'loto-draw-date', cardId:'cd-loto' },
+  kino: { days:[0,3,5], hour:22, min:30, ids:['kino-dd','kino-hh','kino-mm','kino-ss'], dateId:'kino-draw-date', cardId:'cd-kino' },
+};
+
+function getNextDrawUTC(drawDays, drawHourCL, drawMinCL) {
+  const now = new Date();
+  for (let daysAhead = 0; daysAhead <= 7; daysAhead++) {
+    const probe = new Date(now.getTime() + daysAhead * 86400000);
+
+    // ¿Qué día es en Santiago?
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: TZ,
+      year:'numeric', month:'2-digit', day:'2-digit', weekday:'short'
+    }).formatToParts(probe).reduce((a,p) => ({...a,[p.type]:p.value}),{});
+
+    if (!drawDays.includes(WDAY_SHORT[parts.weekday])) continue;
+
+    // Encontrar el UTC offset de Santiago ese día usando una referencia de mediodía
+    const noonUTC = new Date(`${parts.year}-${parts.month}-${parts.day}T12:00:00Z`);
+    const sanStr  = new Intl.DateTimeFormat('en-US', {
+      timeZone: TZ, hour:'2-digit', minute:'2-digit', hour12:false
+    }).format(noonUTC);
+    const [sanH, sanM] = sanStr.split(':').map(Number);
+    const offsetMin = 12*60 - (sanH*60 + sanM); // minutos que Santiago está detrás del UTC
+
+    // Hora del sorteo en UTC
+    const drawUTC = new Date(`${parts.year}-${parts.month}-${parts.day}T${String(drawHourCL).padStart(2,'0')}:${String(drawMinCL).padStart(2,'0')}:00Z`);
+    drawUTC.setTime(drawUTC.getTime() + offsetMin * 60000);
+
+    if (drawUTC > now) return drawUTC;
+  }
+  return null;
+}
+
+function pad(n) { return String(n).padStart(2,'0'); }
+
+function tickCountdowns() {
+  const now = Date.now();
+  let nextMs = Infinity, nextCard = null;
+
+  for (const [key, cfg] of Object.entries(DRAWS)) {
+    const drawDate = getNextDrawUTC(cfg.days, cfg.hour, cfg.min);
+    if (!drawDate) continue;
+
+    const diff = drawDate - now;
+    const [ddId, hhId, mmId, ssId] = cfg.ids;
+
+    if (diff <= 0) {
+      document.getElementById(ddId).textContent = '00';
+      document.getElementById(hhId).textContent = '00';
+      document.getElementById(mmId).textContent = '00';
+      document.getElementById(ssId).textContent = '00';
+      continue;
+    }
+
+    const totalSec = Math.floor(diff / 1000);
+    const days  = Math.floor(totalSec / 86400);
+    const hours = Math.floor((totalSec % 86400) / 3600);
+    const mins  = Math.floor((totalSec % 3600) / 60);
+    const secs  = totalSec % 60;
+
+    document.getElementById(ddId).textContent = pad(days);
+    document.getElementById(hhId).textContent = pad(hours);
+    document.getElementById(mmId).textContent = pad(mins);
+    document.getElementById(ssId).textContent = pad(secs);
+
+    // Fecha legible en hora de Santiago
+    const dateLabel = drawDate.toLocaleDateString('es-CL', {
+      timeZone: TZ, weekday:'long', day:'numeric', month:'long'
+    });
+    const timeLabel = drawDate.toLocaleTimeString('es-CL', {
+      timeZone: TZ, hour:'2-digit', minute:'2-digit'
+    });
+    document.getElementById(cfg.dateId).innerHTML =
+      `<strong>${dateLabel}</strong> a las ${timeLabel} CLT`;
+
+    if (diff < nextMs) { nextMs = diff; nextCard = cfg.cardId; }
+  }
+
+  // Resaltar el más próximo
+  document.querySelectorAll('.cd-card').forEach(c => c.classList.remove('next'));
+  if (nextCard) document.getElementById(nextCard).classList.add('next');
+}
+
+tickCountdowns();
+setInterval(tickCountdowns, 1000);
+
+// ─────────────────────────────────────────────
 async function loadJSON(path) {
   try {
     const r = await fetch(path);
