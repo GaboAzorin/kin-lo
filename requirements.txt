@@ -1,0 +1,11 @@
+# Scraping polla.cl (basado en código existente)
+playwright>=1.43.0
+
+# Scraping loteria.cl
+scrapling[fetchers]>=0.4.0
+
+# Analytics
+pandas>=2.0.0
+
+# Utilidades
+python-dotenv>=1.0.0

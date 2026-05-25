@@ -1,0 +1,49 @@
+name: Scrape Loto (polla.cl)
+
+# Horario de sorteos: martes, jueves y domingos a las 21:00 CLT.
+# Resultados seguros desde las 22:15 CLT.
+# CLT = UTC-4 (invierno) → 22:15 CLT = 02:15 UTC del día siguiente.
+# Días del job (día siguiente al sorteo): miércoles=3, viernes=5, lunes=1.
+on:
+  schedule:
+    - cron: "15 2 * * 3,5,1"
+  workflow_dispatch: # Permite ejecución manual desde la UI de GitHub
+
+permissions:
+  contents: write # Necesario para commitear los CSV actualizados
+
+jobs:
+  scrape-loto:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repositorio
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Instalar dependencias Python
+        run: pip install -r requirements.txt
+
+      - name: Instalar Chromium para Playwright
+        run: playwright install chromium --with-deps
+
+      - name: Ejecutar scraper polla.cl
+        run: python src/scrapers/scraper_polla.py
+
+      - name: Calcular métricas y sugerencias (Loto)
+        run: python src/analytics/metrics.py --game loto
+
+      - name: Commit y push de datos actualizados
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "data(loto): actualizar historial [${{ github.run_id }}]"
+          file_pattern: "data/polla_historial.csv docs/data/loto_metrics.json"
+          commit_user_name: "github-actions[bot]"
+          commit_user_email: "github-actions[bot]@users.noreply.github.com"

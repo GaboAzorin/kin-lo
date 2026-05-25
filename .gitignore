@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Logs (solo locales)
+logs/
+
+# Archivos de exploración temporal
+loteria_sample.html
+
+# Variables de entorno
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db

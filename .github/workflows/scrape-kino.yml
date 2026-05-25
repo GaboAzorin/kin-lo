@@ -1,0 +1,49 @@
+name: Scrape Kino (loteria.cl)
+
+# Horario de sorteos: miércoles, viernes y domingos a las 22:30 CLT.
+# Resultados seguros desde las 23:59 CLT.
+# CLT = UTC-4 (invierno) → 23:59 CLT = 03:59 UTC del día siguiente.
+# Días del job (día siguiente al sorteo): jueves=4, sábado=6, lunes=1.
+on:
+  schedule:
+    - cron: "59 3 * * 4,6,1"
+  workflow_dispatch: # Permite ejecución manual desde la UI de GitHub
+
+permissions:
+  contents: write
+
+jobs:
+  scrape-kino:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repositorio
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Instalar dependencias Python
+        run: pip install -r requirements.txt
+        # Si el scraper de loteria.cl requiere JS rendering (DynamicFetcher),
+        # descomentar la línea siguiente:
+        # run: pip install -r requirements.txt && scrapling install
+
+      - name: Ejecutar scraper loteria.cl
+        run: python src/scrapers/scraper_loteria.py
+
+      - name: Calcular métricas y sugerencias (Kino)
+        run: python src/analytics/metrics.py --game kino
+
+      - name: Commit y push de datos actualizados
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "data(kino): actualizar historial [${{ github.run_id }}]"
+          file_pattern: "data/loteria_historial.csv docs/data/kino_metrics.json"
+          commit_user_name: "github-actions[bot]"
+          commit_user_email: "github-actions[bot]@users.noreply.github.com"

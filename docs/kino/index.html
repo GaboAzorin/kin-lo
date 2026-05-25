@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kino · kino-loto</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117; --card: #1a1d27; --border: #2a2d3e;
+      --text: #e2e8f0; --muted: #8892a4;
+      --accent: #3b82f6; --green: #22c55e; --red: #ef4444;
+      --radius: 12px; --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); }
+
+    header {
+      padding: 16px 24px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+    }
+    header a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+    header a:hover { color: var(--text); }
+    header h1 { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+    .section { margin-bottom: 40px; }
+    .section-title {
+      font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted); margin-bottom: 16px;
+    }
+
+    .ultimo-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px;
+      display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start;
+    }
+    .ultimo-meta { flex: 0 0 160px; }
+    .ultimo-meta h2 { font-size: 1.5rem; font-weight: 800; }
+    .ultimo-meta p  { color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
+    .nums { display: flex; flex-wrap: wrap; gap: 7px; flex: 1; }
+    .bola {
+      width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.82rem; font-weight: 700;
+      background: rgba(59,130,246,0.15); color: var(--accent);
+      border: 1px solid rgba(59,130,246,0.35);
+    }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px;
+    }
+    .card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 16px; }
+
+    .heatmap {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
+    }
+    .hm-cell {
+      aspect-ratio: 1; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.72rem; font-weight: 700; cursor: default;
+      transition: transform 0.1s;
+    }
+    .hm-cell:hover { transform: scale(1.15); z-index: 1; }
+
+    .sugerencias { display: flex; flex-direction: column; gap: 12px; }
+    .sug-card {
+      background: #12151e; border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px 16px;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .sug-num { font-size: 0.75rem; font-weight: 700; color: var(--muted); min-width: 22px; }
+    .sug-meta { margin-left: auto; font-size: 0.78rem; color: var(--muted); }
+    .sug-meta strong { color: var(--text); }
+    .sug-bola {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.78rem; font-weight: 700;
+      background: rgba(59,130,246,0.15); color: var(--accent);
+      border: 1px solid rgba(59,130,246,0.35);
+    }
+
+    .hc-list { display: flex; flex-direction: column; gap: 6px; }
+    .hc-row { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
+    .hc-n {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 700; flex-shrink: 0;
+    }
+    .hot { background: rgba(239,68,68,0.2);  color: var(--red);  border: 1px solid rgba(239,68,68,0.4); }
+    .cold{ background: rgba(59,130,246,0.2); color: #60a5fa; border: 1px solid rgba(59,130,246,0.4); }
+    .bar-bg  { flex: 1; height: 6px; background: var(--border); border-radius: 3px; }
+    .bar-fill{ height: 100%; border-radius: 3px; }
+
+    canvas { max-width: 100%; }
+    .loading { color: var(--muted); font-style: italic; padding: 20px 0; }
+
+    .tab-bar { display: flex; gap: 8px; margin-bottom: 20px; }
+    .tab {
+      padding: 6px 14px; border-radius: 6px; cursor: pointer;
+      font-size: 0.83rem; font-weight: 600;
+      border: 1px solid var(--border); color: var(--muted);
+      background: transparent; transition: all 0.15s;
+    }
+    .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    .info-box {
+      background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2);
+      border-radius: 8px; padding: 12px 16px; font-size: 0.83rem;
+      color: var(--muted); margin-bottom: 16px;
+    }
+    .info-box strong { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="../">← kino-loto</a>
+  <span style="color:var(--border)">|</span>
+  <h1>🎰 Kino</h1>
+  <span style="margin-left:auto; font-size:0.8rem; color:var(--muted)" id="update-label">—</span>
+</header>
+
+<main>
+
+  <!-- Último sorteo -->
+  <div class="section">
+    <div class="section-title">Último sorteo</div>
+    <div class="ultimo-card">
+      <div class="ultimo-meta">
+        <h2 id="sorteo-num">—</h2>
+        <p id="sorteo-fecha">—</p>
+      </div>
+      <div>
+        <p style="font-size:0.75rem;color:var(--muted);margin-bottom:8px">14 números sorteados</p>
+        <div class="nums" id="ultimo-nums"><span class="loading">cargando...</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Frecuencias heatmap -->
+  <div class="section">
+    <div class="section-title">Frecuencia histórica (1–41)</div>
+
+    <div class="info-box">
+      El Kino sortea <strong>14 números</strong>. Tú apuestas eligiendo <strong>6 de 41</strong>.
+      El heatmap muestra qué números aparecen más en los sorteos históricos.
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab active" onclick="switchGame('KINO',this)">Kino</button>
+      <button class="tab" onclick="switchGame('REKINO',this)">ReKino</button>
+      <button class="tab" onclick="switchGame('REQUETEKINO',this)">RequeteKino</button>
+    </div>
+
+    <div class="card">
+      <div class="heatmap" id="heatmap"><span class="loading">cargando...</span></div>
+    </div>
+  </div>
+
+  <!-- Hot / Cold -->
+  <div class="two-col">
+    <div class="card">
+      <h3>🔥 Más frecuentes</h3>
+      <div class="hc-list" id="hot-list"><span class="loading">—</span></div>
+    </div>
+    <div class="card">
+      <h3>❄️ Más descansados</h3>
+      <div class="hc-list" id="cold-list"><span class="loading">—</span></div>
+    </div>
+  </div>
+
+  <!-- Distribución de sumas -->
+  <div class="section" style="margin-top:24px">
+    <div class="section-title">Distribución de sumas (Kino — 14 números sorteados)</div>
+    <div class="card">
+      <canvas id="sum-chart" height="120"></canvas>
+    </div>
+  </div>
+
+  <!-- Sugerencias -->
+  <div class="section">
+    <div class="section-title">Combinaciones sugeridas para el próximo sorteo</div>
+    <p style="font-size:0.82rem; color:var(--muted); margin-bottom:16px">
+      6 números de 41 · Balanceadas estadísticamente · Nunca han salido como sorteo ganador
+      en los <span id="total-sorteos">—</span> sorteos registrados.
+    </p>
+    <div class="sugerencias" id="sugerencias"><span class="loading">cargando...</span></div>
+  </div>
+
+</main>
+
+<script>
+let globalData = null;
+let sumChart = null;
+
+async function loadData() {
+  try {
+    const r = await fetch('../data/kino_metrics.json');
+    if (!r.ok) throw new Error('No data');
+    globalData = await r.json();
+    render();
+  } catch(e) {
+    document.querySelector('main').innerHTML =
+      '<p style="color:#f87171; padding:40px">Error cargando datos. ¿Ya se generó kino_metrics.json?</p>';
+  }
+}
+
+function gameData(key) {
+  if (!globalData) return null;
+  if (key === 'KINO') return globalData;
+  return globalData[key.toLowerCase()] || null;
+}
+
+function render() {
+  if (!globalData) return;
+  const d = globalData;
+  const ult = d.ultimo_sorteo || {};
+
+  document.getElementById('update-label').textContent =
+    `Actualizado: ${new Date().toLocaleDateString('es-CL')}`;
+  document.getElementById('total-sorteos').textContent = d.total_sorteos;
+
+  document.getElementById('sorteo-num').textContent = `Sorteo #${ult.sorteo}`;
+  document.getElementById('sorteo-fecha').textContent =
+    `${(ult.fecha||'').split(' ')[0]} · ${ult.dia||''}`;
+
+  const numsEl = document.getElementById('ultimo-nums');
+  if (ult.numeros) {
+    numsEl.innerHTML = ult.numeros.map(n => `<span class="bola">${n}</span>`).join('');
+  }
+
+  renderHeatmap('KINO');
+  renderHotCold('KINO');
+  renderSumChart();
+  renderSugerencias();
+}
+
+function switchGame(key, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderHeatmap(key);
+  renderHotCold(key);
+}
+
+function renderHeatmap(key) {
+  const d = gameData(key);
+  if (!d || !d.frequencies) return;
+  const freq = d.frequencies;
+  const maxCount = Math.max(...Object.values(freq).map(v => v.count));
+
+  const el = document.getElementById('heatmap');
+  el.innerHTML = '';
+  for (let n = 1; n <= 41; n++) {
+    const f = freq[String(n)] || { count: 0, pct: 0 };
+    const intensity = maxCount > 0 ? f.count / maxCount : 0;
+    const r2 = Math.round(59  + (intensity) * 20);
+    const g2 = Math.round(130 - (intensity) * 60);
+    const b2 = Math.round(246 - (intensity) * 80);
+    const alpha = 0.15 + 0.75 * intensity;
+    const cell = document.createElement('div');
+    cell.className = 'hm-cell';
+    cell.style.background = `rgba(${r2},${g2},${b2},${alpha})`;
+    cell.style.color = intensity > 0.6 ? '#fff' : '#e2e8f0';
+    cell.title = `Nº ${n}: ${f.count} veces (${f.pct}%)`;
+    cell.textContent = n;
+    el.appendChild(cell);
+  }
+}
+
+function renderHotCold(key) {
+  const d = gameData(key);
+  if (!d || !d.frequencies || !d.gaps) return;
+  const freq = d.frequencies;
+  const gaps = d.gaps;
+
+  const sorted = Object.keys(freq).map(k => ({
+    n: +k, count: freq[k].count, pct: freq[k].pct, gap: gaps[k] || 0
+  }));
+
+  const hot  = [...sorted].sort((a,b) => b.count - a.count).slice(0, 7);
+  const cold = [...sorted].sort((a,b) => b.gap - a.gap).slice(0, 7);
+  const maxCount = hot[0]?.count || 1;
+  const maxGap   = cold[0]?.gap  || 1;
+
+  document.getElementById('hot-list').innerHTML = hot.map(x => `
+    <div class="hc-row">
+      <span class="hc-n hot">${x.n}</span>
+      <div class="bar-bg"><div class="bar-fill" style="width:${x.count/maxCount*100}%;background:var(--red)"></div></div>
+      <span style="font-size:0.78rem;color:var(--muted);min-width:36px">${x.pct}%</span>
+    </div>`).join('');
+
+  document.getElementById('cold-list').innerHTML = cold.map(x => `
+    <div class="hc-row">
+      <span class="hc-n cold">${x.n}</span>
+      <div class="bar-bg"><div class="bar-fill" style="width:${x.gap/maxGap*100}%;background:#60a5fa"></div></div>
+      <span style="font-size:0.78rem;color:var(--muted);min-width:60px">${x.gap} sorteos</span>
+    </div>`).join('');
+}
+
+function renderSumChart() {
+  const d = globalData;
+  if (!d || !d.sum_stats) return;
+  const ss = d.sum_stats;
+  if (sumChart) sumChart.destroy();
+  const ctx = document.getElementById('sum-chart').getContext('2d');
+  sumChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Mín', 'P10', 'P25', 'Media', 'P75', 'P90', 'Máx'],
+      datasets: [{
+        label: 'Suma de los 14 números sorteados',
+        data: [ss.min, ss.p10, ss.p25, Math.round(ss.mean), ss.p75, ss.p90, ss.max],
+        backgroundColor: [
+          'rgba(59,130,246,0.3)','rgba(59,130,246,0.5)','rgba(59,130,246,0.7)',
+          'rgba(59,130,246,1.0)','rgba(59,130,246,0.7)','rgba(59,130,246,0.5)',
+          'rgba(59,130,246,0.3)'
+        ],
+        borderRadius: 4, borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { ticks: { color: '#8892a4' }, grid: { color: '#2a2d3e' } },
+        x: { ticks: { color: '#8892a4' }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+function renderSugerencias() {
+  const d = globalData;
+  if (!d || !d.suggestions) return;
+  const el = document.getElementById('sugerencias');
+  el.innerHTML = d.suggestions.map((s, i) => `
+    <div class="sug-card">
+      <span class="sug-num">#${i+1}</span>
+      ${s.combo.map(n => `<span class="sug-bola">${n}</span>`).join('')}
+      <span class="sug-meta">Suma: <strong>${s.suma}</strong> · Score: <strong>${s.score}</strong></span>
+    </div>`).join('');
+}
+
+loadData();
+</script>
+</body>
+</html>
