@@ -193,25 +193,23 @@ def generar_loto(df: pd.DataFrame) -> dict:
 def generar_kino(df: pd.DataFrame) -> dict:
     """Genera el JSON completo de métricas para Kino (incluye ReKino/RequeteKino).
 
-    Para Kino: la lotería saca 14 números de 41; el apostador elige 6.
-    - Las frecuencias, gaps y último sorteo se calculan sobre los 14 sorteados.
-    - Las sugerencias son combos de 6 (la elección del apostador).
+    Kino real: el apostador elige 14 números de 1 a 25.
+    La lotería también saca 14 números de 1 a 25.
+    C(25,14) = 4.457.400 combinaciones posibles.
     """
     print("  Calculando Kino principal...")
-    # pick=14 para que las frecuencias, gaps y sum_stats usen todos los 14 números
-    base = _metricas_juego(df, "KINO", num_range=41, pick=14, comodin=False)
+    base = _metricas_juego(df, "KINO", num_range=25, pick=14, comodin=False)
 
     print("  Generando sugerencias Kino...")
-    # pick=6 para generar combos del apostador (elige 6 de 41)
     base["suggestions"] = generar_sugerencias(
-        df, base, num_range=41, pick=6, num_col_prefix="KINO"
+        df, base, num_range=25, pick=14, num_col_prefix="KINO"
     )
 
     print("  Calculando ReKino...")
-    base["rekino"]       = _metricas_juego(df, "REKINO",       41, 14, False)
+    base["rekino"]       = _metricas_juego(df, "REKINO",       25, 14, False)
 
     print("  Calculando RequeteKino...")
-    base["requetekino"]  = _metricas_juego(df, "REQUETEKINO",  41, 14, False)
+    base["requetekino"]  = _metricas_juego(df, "REQUETEKINO",  25, 14, False)
 
     return base
 

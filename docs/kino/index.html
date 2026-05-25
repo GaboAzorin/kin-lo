@@ -58,7 +58,7 @@
     .card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 16px; }
 
     .heatmap {
-      display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
     }
     .hm-cell {
       aspect-ratio: 1; border-radius: 6px;
@@ -145,11 +145,11 @@
 
   <!-- Frecuencias heatmap -->
   <div class="section">
-    <div class="section-title">Frecuencia histórica (1–41)</div>
+    <div class="section-title">Frecuencia histórica (1–25)</div>
 
     <div class="info-box">
-      El Kino sortea <strong>14 números</strong>. Tú apuestas eligiendo <strong>6 de 41</strong>.
-      El heatmap muestra qué números aparecen más en los sorteos históricos.
+      En el Kino seleccionas <strong>14 números de 1 a 25</strong>.
+      La lotería sortea 14 números del mismo rango. C(25,14) = 4.457.400 combinaciones posibles.
     </div>
 
     <div class="tab-bar">
@@ -187,7 +187,7 @@
   <div class="section">
     <div class="section-title">Combinaciones sugeridas para el próximo sorteo</div>
     <p style="font-size:0.82rem; color:var(--muted); margin-bottom:16px">
-      6 números de 41 · Balanceadas estadísticamente · Nunca han salido como sorteo ganador
+      14 números de 25 · Balanceadas estadísticamente · Nunca han salido como sorteo ganador
       en los <span id="total-sorteos">—</span> sorteos registrados.
     </p>
     <div class="sugerencias" id="sugerencias"><span class="loading">cargando...</span></div>
@@ -256,7 +256,7 @@ function renderHeatmap(key) {
 
   const el = document.getElementById('heatmap');
   el.innerHTML = '';
-  for (let n = 1; n <= 41; n++) {
+  for (let n = 1; n <= 25; n++) {
     const f = freq[String(n)] || { count: 0, pct: 0 };
     const intensity = maxCount > 0 ? f.count / maxCount : 0;
     const r2 = Math.round(59  + (intensity) * 20);

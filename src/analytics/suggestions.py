@@ -36,8 +36,8 @@ def _build_history_set(df, num_cols: list[str]) -> set[tuple]:
 
 
 def _score(combo: tuple, freq: dict, sum_p10: int, sum_p90: int,
-           total_draws: int) -> float:
-    """Calcula un score 0-1 para una combinación de 6 números."""
+           total_draws: int, num_range: int = 41, pick: int = 6) -> float:
+    """Calcula un score 0-1 para una combinación de `pick` números."""
     s = sum(combo)
 
     # 1. Suma dentro del rango histórico p10-p90
@@ -48,24 +48,28 @@ def _score(combo: tuple, freq: dict, sum_p10: int, sum_p90: int,
         dist = min(abs(s - sum_p10), abs(s - sum_p90))
         score_suma = max(0.0, 1.0 - dist / rango)
 
-    # 2. Balance par/impar (2-4 pares es lo más común)
+    # 2. Balance par/impar — esperado: ~pick/2 pares
     pares = sum(1 for n in combo if n % 2 == 0)
-    score_paridad = 1.0 if 2 <= pares <= 4 else 0.4
+    mitad = pick // 2
+    score_paridad = 1.0 if (mitad - 1) <= pares <= (mitad + 1) else 0.4
 
-    # 3. Balance alto/bajo (umbral: 20 para rango 1-41)
-    bajos = sum(1 for n in combo if n <= 20)
-    score_balance = 1.0 if 2 <= bajos <= 4 else 0.4
+    # 3. Balance alto/bajo — umbral: mitad del rango
+    umbral = num_range // 2
+    bajos = sum(1 for n in combo if n <= umbral)
+    mitad_pick = pick // 2
+    score_balance = 1.0 if (mitad_pick - 2) <= bajos <= (mitad_pick + 2) else 0.4
 
     # 4. Frecuencia: preferir números cercanos a su frecuencia esperada
-    freq_esperada = 100.0 * 6 / 41  # ~14.63%
+    freq_esperada = 100.0 * pick / num_range
     freq_scores = []
     for n in combo:
         pct = freq.get(str(n), {}).get("pct", freq_esperada)
-        dist_rel = abs(pct - freq_esperada) / freq_esperada
+        dist_rel = abs(pct - freq_esperada) / freq_esperada if freq_esperada else 0
         freq_scores.append(max(0.0, 1.0 - dist_rel * 0.5))
     score_freq = sum(freq_scores) / len(freq_scores)
 
-    # 5. Penalizar 3+ números consecutivos
+    # 5. Penalizar 5+ números consecutivos (para picks grandes como 14, 3 consecutivos es normal)
+    umbral_consec = max(3, pick // 3)
     nums_sorted = sorted(combo)
     max_run = 1
     current_run = 1
@@ -75,7 +79,7 @@ def _score(combo: tuple, freq: dict, sum_p10: int, sum_p90: int,
             max_run = max(max_run, current_run)
         else:
             current_run = 1
-    score_consec = 0.0 if max_run >= 3 else 1.0
+    score_consec = 0.0 if max_run >= umbral_consec else 1.0
 
     return (
         0.30 * score_suma    +
@@ -123,7 +127,7 @@ def generar_sugerencias(df, metricas: dict, num_range: int = 41,
         combo = tuple(sorted(random.sample(range(1, num_range + 1), pick)))
         if combo in history:
             continue
-        s = _score(combo, freq, sum_p10, sum_p90, metricas.get("total_sorteos", 1))
+        s = _score(combo, freq, sum_p10, sum_p90, metricas.get("total_sorteos", 1), num_range, pick)
         candidatos.append((combo, s))
 
     # Ordenar por score descendente y devolver los top-n únicos
