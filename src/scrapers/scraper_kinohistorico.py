@@ -1,16 +1,20 @@
 """
 scraper_kinohistorico.py
-Descarga resultados históricos de Kino desde kinohistorico.cl
-Recorre desde el sorteo indicado hacia atrás hasta el sorteo 1 (o hasta 10 fallos consecutivos).
+Descarga resultados históricos de Kino desde la API REST de kinohistorico.cl.
+
+Endpoint: https://kinohistorico.cl/kino-api/draws?page=N&limit=50
+Cobertura: ~2433 sorteos desde 2006 hasta los más recientes.
 
 Uso:
     python src/scrapers/scraper_kinohistorico.py [--desde N]
+
+    --desde N  Solo descargar sorteos con número >= N (útil para actualizaciones incrementales)
+               Por defecto descarga TODO lo que no esté ya en el CSV.
 """
 
 import sys
 import argparse
 import json
-import re
 import time
 import urllib.request
 from datetime import datetime
@@ -22,6 +26,11 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CSV_PATH  = REPO_ROOT / "data" / "loteria_historial.csv"
+
+API_BASE  = "https://kinohistorico.cl/kino-api"
+PAGE_SIZE = 50
+DELAY     = 0.3   # segundos entre requests
+SAVE_EVERY = 200  # guardar en disco cada N filas nuevas
 
 COLUMNS = [
     "sorteo", "fecha", "dia_semana",
@@ -43,59 +52,45 @@ HEADERS = {
         "AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/124.0.0.0 Safari/537.36"
     ),
-    "Accept": "text/html",
-    "Accept-Language": "es-CL,es;q=0.9",
+    "Accept": "application/json",
+    "Referer": "https://kinohistorico.cl/",
 }
 
-DELAY_OK   = 0.4   # segundos entre requests exitosos
-DELAY_FAIL = 1.0   # segundos tras un fallo
-MAX_CONSEC = 10    # fallos consecutivos antes de detener
-SAVE_EVERY = 100   # guardar en disco cada N filas nuevas
-
 
 # ---------------------------------------------------------------------------
-# Fetch + Parse
+# API helpers
 # ---------------------------------------------------------------------------
 
-def fetch_html(sorteo_id: int) -> str | None:
-    url = f"https://kinohistorico.cl/draw/{sorteo_id}"
+def fetch_page(page: int) -> dict | None:
+    url = f"{API_BASE}/draws?page={page}&limit={PAGE_SIZE}"
     try:
         req = urllib.request.Request(url, headers=HEADERS)
         with urllib.request.urlopen(req, timeout=20) as r:
-            return r.read().decode("utf-8", errors="replace")
+            return json.loads(r.read().decode("utf-8", errors="replace"))
     except Exception as e:
-        print(f"  HTTP error: {e}")
+        print(f"  Error en página {page}: {e}")
         return None
 
 
-def parse_html(html: str, sorteo_id: int) -> dict | None:
-    """
-    Extrae el bloque de datos Angular TransferState de los scripts del HTML.
-    Devuelve el objeto `data` del sorteo o None si no se encuentra.
-    """
-    scripts = re.findall(r"<script[^>]*>(.*?)</script>", html, re.DOTALL)
-    for s in scripts:
-        if '"draw_number"' not in s and '"draw_date"' not in s:
-            continue
-        try:
-            obj = json.loads(s)
-        except json.JSONDecodeError:
-            continue
-        # Angular TransferState: {"<hash>": {"b": {"data": {...}}}}
-        for val in obj.values():
-            if not isinstance(val, dict):
-                continue
-            inner = val.get("b", {})
-            if not isinstance(inner, dict):
-                continue
-            draw_data = inner.get("data", {})
-            if isinstance(draw_data, dict) and draw_data.get("draw_number") == sorteo_id:
-                return draw_data
+def fetch_single(sorteo_id: int) -> dict | None:
+    """Obtiene un sorteo individual por número."""
+    url = f"{API_BASE}/draws/{sorteo_id}"
+    try:
+        req = urllib.request.Request(url, headers=HEADERS)
+        with urllib.request.urlopen(req, timeout=20) as r:
+            d = json.loads(r.read().decode("utf-8", errors="replace"))
+            if d.get("code") == 200:
+                return d["data"]
+    except Exception:
+        pass
     return None
 
 
+# ---------------------------------------------------------------------------
+# Conversión de registro de API → fila CSV
+# ---------------------------------------------------------------------------
+
 def build_row(draw_data: dict) -> dict | None:
-    """Convierte el dict de datos del sorteo en una fila de CSV."""
     draw_number = draw_data.get("draw_number")
     date_str    = draw_data.get("draw_date", "")
 
@@ -118,11 +113,11 @@ def build_row(draw_data: dict) -> dict | None:
             for i, n in enumerate(numbers, 1):
                 row[f"{code}_n{i}"] = n
 
-    # Verificar que al menos KINO tenga datos
+    # Verificar que KINO tiene datos
     if "KINO_n1" not in row:
         return None
 
-    # Rellenar juegos faltantes (ReKino/RequeteKino no siempre existen en sorteos antiguos)
+    # Rellenar juegos faltantes con None (sorteos muy antiguos no tienen ReKino)
     for prefix in ("REKINO", "REQUETEKINO"):
         if f"{prefix}_n1" not in row:
             for i in range(1, 15):
@@ -147,7 +142,7 @@ def load_csv() -> tuple[pd.DataFrame, set[int]]:
         return pd.DataFrame(columns=COLUMNS), set()
 
 
-def save_csv(df: pd.DataFrame, new_rows: list[dict]) -> pd.DataFrame:
+def merge_and_save(df: pd.DataFrame, new_rows: list[dict]) -> pd.DataFrame:
     if not new_rows:
         return df
     new_df   = pd.DataFrame(new_rows, columns=COLUMNS)
@@ -163,85 +158,85 @@ def save_csv(df: pd.DataFrame, new_rows: list[dict]) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="Scraper histórico kinohistorico.cl")
-    parser.add_argument("--desde", type=int, default=3205,
-                        help="Sorteo desde el que comenzar (hacia atrás)")
+    parser = argparse.ArgumentParser(description="Descarga historial Kino desde kinohistorico.cl API")
+    parser.add_argument("--desde", type=int, default=0,
+                        help="Solo bajar sorteos con número >= N (0 = todo)")
     args = parser.parse_args()
 
     df, existing = load_csv()
 
-    start      = args.desde
+    # Obtener total de páginas disponibles
+    print("\nConsultando metadata de la API...")
+    first = fetch_page(1)
+    if not first or first.get("code") != 200:
+        print("ERROR: No se pudo conectar con la API")
+        sys.exit(1)
+
+    meta = first.get("meta", {})
+    total_draws  = meta.get("total", 0)
+    total_pages  = meta.get("total_pages", 0)
+    print(f"  Total sorteos disponibles: {total_draws}")
+    print(f"  Total páginas (limit={PAGE_SIZE}): {total_pages}")
+
     new_rows   = []
-    consec_fail = 0
-    total_new   = 0
+    total_new  = 0
+    skip_count = 0
 
-    print(f"\nIniciando barrido desde sorteo {start} hacia atras...\n")
+    # Recorrer desde la última página (más antiguos) a la primera (más recientes)
+    # Para evitar duplicados con el CSV existente, saltamos los que ya tenemos.
+    print(f"\nDescargando {total_pages} páginas de más antigua a más reciente...\n")
 
-    for sorteo_id in range(start, 0, -1):
-        if sorteo_id in existing:
-            consec_fail = 0  # resetear porque no es un fallo, solo un skip
+    for page in range(total_pages, 0, -1):
+        resp = fetch_page(page)
+        if not resp or resp.get("code") != 200:
+            print(f"  Página {page}: ERROR")
+            time.sleep(1)
             continue
 
-        print(f"  [{sorteo_id}] ", end="", flush=True)
-        html = fetch_html(sorteo_id)
+        draws = resp.get("data", [])
 
-        if html is None:
-            consec_fail += 1
-            print(f"HTTP FAIL  ({consec_fail}/{MAX_CONSEC})")
-            if consec_fail >= MAX_CONSEC:
-                print("  Demasiados fallos consecutivos. Deteniendo.")
-                break
-            time.sleep(DELAY_FAIL)
-            continue
+        for draw in draws:
+            sid = draw.get("draw_number", 0)
 
-        # Página "vacía" = sin datos (Angular shell sin TransferState de este sorteo)
-        # El tamaño de la página sin datos ronda los 133 KB
-        if len(html) < 140_000:
-            consec_fail += 1
-            print(f"sin datos  ({consec_fail}/{MAX_CONSEC})")
-            if consec_fail >= MAX_CONSEC:
-                print("  Demasiados fallos consecutivos. Deteniendo.")
-                break
-            time.sleep(DELAY_FAIL)
-            continue
+            # Filtro --desde
+            if args.desde > 0 and sid < args.desde:
+                skip_count += 1
+                continue
 
-        draw_data = parse_html(html, sorteo_id)
-        if draw_data is None:
-            consec_fail += 1
-            print(f"parse fail ({consec_fail}/{MAX_CONSEC})")
-            if consec_fail >= MAX_CONSEC:
-                print("  Demasiados fallos consecutivos. Deteniendo.")
-                break
-            time.sleep(DELAY_FAIL)
-            continue
+            if sid in existing:
+                skip_count += 1
+                continue
 
-        row = build_row(draw_data)
-        if row is None:
-            consec_fail += 1
-            print(f"row fail   ({consec_fail}/{MAX_CONSEC})")
-            if consec_fail >= MAX_CONSEC:
-                break
-            time.sleep(DELAY_FAIL)
-            continue
+            row = build_row(draw)
+            if row:
+                new_rows.append(row)
+                existing.add(sid)
+                total_new += 1
 
-        consec_fail = 0
-        print(f"OK  {row['fecha']}  KINO={row.get('KINO_n1','?')}..{row.get('KINO_n14','?')}")
-        new_rows.append(row)
-        existing.add(sorteo_id)
-        total_new += 1
+        # Progreso cada 10 páginas
+        if (total_pages - page + 1) % 10 == 0 or page == 1:
+            page_done = total_pages - page + 1
+            oldest = draws[-1]['draw_number'] if draws else '?'
+            newest = draws[0]['draw_number'] if draws else '?'
+            print(f"  Página {page_done}/{total_pages} | "
+                  f"sorteos {oldest}–{newest} | "
+                  f"nuevos acumulados: {total_new}")
 
         # Guardar periódicamente
-        if total_new % SAVE_EVERY == 0:
-            df = save_csv(df, new_rows)
+        if total_new > 0 and total_new % SAVE_EVERY == 0 and new_rows:
+            df = merge_and_save(df, new_rows)
             new_rows = []
-            print(f"\n  --- Guardado parcial: {len(df)} filas en CSV ---\n")
+            print(f"  --- Guardado parcial: {len(df)} filas ---")
 
-        time.sleep(DELAY_OK)
+        time.sleep(DELAY)
 
     # Guardado final
-    df = save_csv(df, new_rows)
-    print(f"\nFIN. Total nuevos sorteos guardados: {total_new}")
-    print(f"CSV final: {len(df)} filas | sorteos {int(df['sorteo'].min())}–{int(df['sorteo'].max())}")
+    df = merge_and_save(df, new_rows)
+    print(f"\nFIN.")
+    print(f"  Nuevos sorteos guardados: {total_new}")
+    print(f"  Sorteos ya existentes (saltados): {skip_count}")
+    print(f"  CSV final: {len(df)} filas | "
+          f"sorteos {int(df['sorteo'].min())}–{int(df['sorteo'].max())}")
 
 
 if __name__ == "__main__":
