@@ -33,3 +33,7 @@ historial.csv
 Thumbs.db
 
 test_polla_pozo.py
+test_kinohistorico*.py
+test_boundary*.py
+test_lower*.py
+test_parse_range*.py

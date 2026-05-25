@@ -61,20 +61,29 @@ GitHub Actions (cron)
 
 - Usa **Scrapling** (`Fetcher` o `DynamicFetcher` si el HTML es JS-rendered).
 - URL: `https://www.loteria.cl/resultados/resultado-completo/?id=kino&sorteo=N`.
+- Solo devuelve los últimos ~26 sorteos.
 - Parser: `src/parsers/loteria_parser.py`.
-- Para investigar la estructura del sitio: `python investigar_loteria.py`.
+
+### Scraper histórico Kino (`src/scrapers/scraper_kinohistorico.py`)
+
+- Fuente: `https://kinohistorico.cl/draw/N` (Angular SSG, datos en TransferState JSON).
+- Disponibilidad: sorteos **3100–3198** (la web no cubre ni anteriores ni los más recientes).
+- Uso: `python src/scrapers/scraper_kinohistorico.py --desde 3198`
+- Se detiene automáticamente tras 10 páginas consecutivas sin datos.
+- **No incluir Accept-Encoding en los headers** — urllib no descomprime gzip automáticamente.
 
 ### Analytics (`src/analytics/`)
 
 - `metrics.py` lee los CSV y genera JSON en `docs/data/`.
-- `suggestions.py` (llamado desde metrics.py) genera 5 combinaciones de 6 números
+- `suggestions.py` (llamado desde metrics.py) genera 5 combinaciones de 14 números (Kino) o 6 (Loto)
   usando scoring estadístico (frecuencia, gaps, suma, paridad, balance).
 - **Unicidad garantizada**: ninguna combinación sugerida ha salido antes en el historial.
 
 ## Estructura de CSVs
 
 **`data/polla_historial.csv`** — separador `,`
-- Columnas: `sorteo, fecha, dia_semana, LOTO_n1..n6, LOTO_comodin, RECARGADO_n1..n6, RECARGADO_comodin, REVANCHA_n1..n6, REVANCHA_comodin, DESQUITE_n1..n6, DESQUITE_comodin`
+- Columnas: `sorteo, fecha, dia_semana, LOTO_n1..n6, RECARGADO_n1..n6, REVANCHA_n1..n6, DESQUITE_n1..n6`
+- (los comodines fueron eliminados; no se usan en las métricas)
 
 **`data/loteria_historial.csv`** — separador `,`
 - Columnas: `sorteo, fecha, dia_semana, KINO_n1..n14, REKINO_n1..n14, REQUETEKINO_n1..n14`
@@ -89,9 +98,9 @@ GitHub Actions (cron)
 ## Rangos de Números
 
 - **Loto / Recargado / Revancha / Desquite**: 1–41 (el jugador elige 6)
-- **Kino / ReKino / RequeteKino**: sorteo saca 14 números; el jugador apuesta 6 de 41
+- **Kino / ReKino / RequeteKino**: 14 números de 1–25; el **jugador también elige 14 números de 1–25**
 - Combinaciones posibles Loto: C(41,6) = 4.496.388
-- Combinaciones posibles Kino (apuesta): ~4.457.400
+- Combinaciones posibles Kino: C(25,14) = 4.457.400
 
 ## Variables de Entorno
 
