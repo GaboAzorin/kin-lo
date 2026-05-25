@@ -34,13 +34,19 @@ jobs:
         # descomentar la línea siguiente:
         # run: pip install -r requirements.txt && scrapling install
 
-      - name: Ejecutar scraper loteria.cl
+      - name: Ejecutar scraper loteria.cl (últimos 26 sorteos vía API oficial)
         run: python src/scrapers/scraper_loteria.py
+
+      - name: Ejecutar scraper kinohistorico.cl (historial completo vía REST API)
+        # Descarga sorteos nuevos que aún no estén en el CSV.
+        # kinohistorico.cl es una API pública sin restricciones de IP.
+        run: python src/scrapers/scraper_kinohistorico.py
 
       - name: Calcular métricas y sugerencias (Kino)
         run: python src/analytics/metrics.py --game kino
 
       - name: Actualizar pozos estimados
+        # fetch_pozos.py consulta rckino.loteria.cl (sin restricciones de IP).
         run: python src/scrapers/fetch_pozos.py
 
       - name: Commit y push de datos actualizados
