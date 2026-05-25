@@ -1,5 +1,5 @@
 {
-  "updated": "2026-05-25 16:44",
+  "updated": "2026-05-25 21:55",
   "kino": {
     "proximo_sorteo": "27 de mayo 2026",
     "pozo_total": "9.500",
@@ -22,24 +22,7 @@
     ]
   },
   "loto": {
-    "total_millones": 3500,
-    "variantes": [
-      {
-        "nombre": "Loto",
-        "millones": 700
-      },
-      {
-        "nombre": "Recargado",
-        "millones": 850
-      },
-      {
-        "nombre": "Revancha",
-        "millones": 310
-      },
-      {
-        "nombre": "Desquite",
-        "millones": 80
-      }
-    ]
+    "error": "HTTP Error 403: Forbidden",
+    "variantes": []
   }
 }
