@@ -8,6 +8,7 @@
     :root {
       --bg: #0f1117;
       --card: #1a1d27;
+      --card2: #12151e;
       --border: #2a2d3e;
       --text: #e2e8f0;
       --muted: #8892a4;
@@ -18,91 +19,106 @@
       --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg); color: var(--text);
-      font-family: var(--font); min-height: 100vh;
-    }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
 
     header {
-      padding: 24px 32px;
-      border-bottom: 1px solid var(--border);
+      padding: 20px 32px; border-bottom: 1px solid var(--border);
       display: flex; align-items: center; gap: 12px;
     }
     header h1 { font-size: 1.4rem; font-weight: 700; }
-    header span { font-size: 0.85rem; color: var(--muted); margin-left: auto; }
+    header span { font-size: 0.82rem; color: var(--muted); margin-left: auto; }
 
-    main {
-      max-width: 900px; margin: 0 auto;
-      padding: 40px 24px;
-    }
-    h2 { font-size: 1.1rem; color: var(--muted); margin-bottom: 24px; font-weight: 400; }
+    main { max-width: 960px; margin: 0 auto; padding: 36px 24px; }
+    h2 { font-size: 1rem; color: var(--muted); margin-bottom: 28px; font-weight: 400; }
 
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
 
+    /* ── Card principal ── */
     .card {
       background: var(--card); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 28px;
-      transition: border-color 0.2s;
+      border-radius: var(--radius); padding: 24px;
+      display: flex; flex-direction: column; gap: 18px;
     }
-    .card:hover { border-color: #3a3d55; }
-    .card-header {
-      display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
-    }
+
+    .card-header { display: flex; align-items: center; gap: 10px; }
     .badge {
-      padding: 3px 10px; border-radius: 20px; font-size: 0.75rem;
-      font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+      padding: 3px 10px; border-radius: 20px; font-size: 0.72rem;
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
     }
     .badge-loto { background: rgba(245,158,11,0.15); color: var(--loto); }
     .badge-kino { background: rgba(59,130,246,0.15); color: var(--kino); }
 
     .card-title { font-size: 1.25rem; font-weight: 700; }
 
-    .nums { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
-    .bola {
-      width: 38px; height: 38px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.85rem; font-weight: 700;
+    /* ── Último sorteo ── */
+    .ultimo-section {}
+    .section-label {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted); margin-bottom: 10px;
     }
-    .bola-loto  { background: rgba(245,158,11,0.2); color: var(--loto); border: 1px solid rgba(245,158,11,0.4); }
-    .bola-kino  { background: rgba(59,130,246,0.2); color: var(--kino); border: 1px solid rgba(59,130,246,0.4); }
-    .bola-comodin { background: rgba(34,197,94,0.2); color: var(--green); border: 1px solid rgba(34,197,94,0.4); }
-
-    .meta { font-size: 0.82rem; color: var(--muted); margin-bottom: 6px; }
+    .meta { font-size: 0.82rem; color: var(--muted); margin-bottom: 10px; }
     .meta strong { color: var(--text); }
 
+    .nums { display: flex; flex-wrap: wrap; gap: 7px; }
+    .bola {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.82rem; font-weight: 700;
+    }
+    .bola-loto { background: rgba(245,158,11,0.18); color: var(--loto); border: 1px solid rgba(245,158,11,0.35); }
+    .bola-kino { background: rgba(59,130,246,0.18); color: var(--kino); border: 1px solid rgba(59,130,246,0.35); }
+
+    /* ── Divisor ── */
+    .divider { height: 1px; background: var(--border); }
+
+    /* ── Sugerencias ── */
+    .sugs-list { display: flex; flex-direction: column; gap: 8px; }
+    .sug-row {
+      background: var(--card2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 9px 12px;
+      display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+    }
+    .sug-idx { font-size: 0.68rem; color: var(--muted); min-width: 18px; font-weight: 600; }
+    .sug-bola {
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.73rem; font-weight: 700;
+    }
+    .sug-bola-loto { background: rgba(245,158,11,0.13); color: var(--loto); border: 1px solid rgba(245,158,11,0.25); }
+    .sug-bola-kino { background: rgba(59,130,246,0.13); color: var(--kino); border: 1px solid rgba(59,130,246,0.25); }
+    .sug-sum { margin-left: auto; font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+    .sug-sum strong { color: var(--text); }
+
+    /* ── Stat + botón ── */
+    .card-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .stat-mini { font-size: 0.78rem; color: var(--muted); }
+    .stat-mini strong { color: var(--text); font-size: 1rem; }
+
     .btn {
-      display: inline-block; margin-top: 20px;
-      padding: 10px 20px; border-radius: 8px;
-      font-size: 0.875rem; font-weight: 600; text-decoration: none;
+      display: inline-block; padding: 9px 18px; border-radius: 8px;
+      font-size: 0.83rem; font-weight: 600; text-decoration: none;
       transition: opacity 0.15s;
     }
     .btn:hover { opacity: 0.85; }
     .btn-loto { background: var(--loto); color: #000; }
     .btn-kino  { background: var(--kino); color: #fff; }
 
-    .stats-row {
-      display: flex; gap: 24px; margin-top: 16px;
-    }
-    .stat { text-align: center; }
-    .stat-val { font-size: 1.5rem; font-weight: 700; }
-    .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
-
     footer {
-      text-align: center; padding: 32px;
-      font-size: 0.8rem; color: var(--muted);
-      border-top: 1px solid var(--border); margin-top: 60px;
+      text-align: center; padding: 28px;
+      font-size: 0.78rem; color: var(--muted);
+      border-top: 1px solid var(--border); margin-top: 56px;
     }
     footer a { color: var(--muted); text-decoration: underline; }
 
-    .loading { color: var(--muted); font-style: italic; }
-    .error   { color: #f87171; }
+    .loading { color: var(--muted); font-style: italic; font-size: 0.85rem; }
+    .error   { color: #f87171; font-size: 0.85rem; }
   </style>
 </head>
 <body>
 
 <header>
-  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+  <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
     <circle cx="14" cy="14" r="13" stroke="#f59e0b" stroke-width="2"/>
     <circle cx="14" cy="14" r="5" fill="#f59e0b"/>
   </svg>
@@ -114,64 +130,64 @@
   <h2>Análisis estadístico de la Lotería de Chile</h2>
 
   <div class="grid">
-    <!-- LOTO -->
+
+    <!-- ══ LOTO ══ -->
     <div class="card">
       <div class="card-header">
         <span class="badge badge-loto">Polla.cl</span>
-      </div>
-      <div class="card-title">Loto</div>
-
-      <p class="meta" id="loto-fecha">Cargando...</p>
-
-      <div class="nums" id="loto-nums">
-        <span class="loading">—</span>
+        <span class="card-title">Loto</span>
       </div>
 
-      <div class="stats-row">
-        <div class="stat">
-          <div class="stat-val" id="loto-total">—</div>
-          <div class="stat-label">sorteos</div>
-        </div>
-        <div class="stat">
-          <div class="stat-val" id="loto-sugerencias">5</div>
-          <div class="stat-label">combinaciones</div>
-        </div>
+      <div class="ultimo-section">
+        <div class="section-label">Último sorteo</div>
+        <p class="meta" id="loto-fecha"><span class="loading">cargando...</span></p>
+        <div class="nums" id="loto-nums"></div>
       </div>
 
-      <a href="loto/" class="btn btn-loto">Ver análisis completo →</a>
+      <div class="divider"></div>
+
+      <div>
+        <div class="section-label">Combinaciones sugeridas</div>
+        <div class="sugs-list" id="loto-sugs"><span class="loading">cargando...</span></div>
+      </div>
+
+      <div class="card-footer">
+        <div class="stat-mini"><strong id="loto-total">—</strong> sorteos registrados</div>
+        <a href="loto/" class="btn btn-loto">Análisis completo →</a>
+      </div>
     </div>
 
-    <!-- KINO -->
+    <!-- ══ KINO ══ -->
     <div class="card">
       <div class="card-header">
         <span class="badge badge-kino">Loteria.cl</span>
-      </div>
-      <div class="card-title">Kino</div>
-
-      <p class="meta" id="kino-fecha">Cargando...</p>
-
-      <div class="nums" id="kino-nums">
-        <span class="loading">—</span>
+        <span class="card-title">Kino</span>
       </div>
 
-      <div class="stats-row">
-        <div class="stat">
-          <div class="stat-val" id="kino-total">—</div>
-          <div class="stat-label">sorteos</div>
-        </div>
-        <div class="stat">
-          <div class="stat-val" id="kino-sugerencias">5</div>
-          <div class="stat-label">combinaciones</div>
-        </div>
+      <div class="ultimo-section">
+        <div class="section-label">Último sorteo (14 números)</div>
+        <p class="meta" id="kino-fecha"><span class="loading">cargando...</span></p>
+        <div class="nums" id="kino-nums"></div>
       </div>
 
-      <a href="kino/" class="btn btn-kino">Ver análisis completo →</a>
+      <div class="divider"></div>
+
+      <div>
+        <div class="section-label">Combinaciones sugeridas (elige 6)</div>
+        <div class="sugs-list" id="kino-sugs"><span class="loading">cargando...</span></div>
+      </div>
+
+      <div class="card-footer">
+        <div class="stat-mini"><strong id="kino-total">—</strong> sorteos registrados</div>
+        <a href="kino/" class="btn btn-kino">Análisis completo →</a>
+      </div>
     </div>
+
   </div>
 </main>
 
 <footer>
-  Datos obtenidos de <a href="https://www.polla.cl" target="_blank">polla.cl</a>
+  Datos de <a href="https://www.polla.cl" target="_blank">polla.cl</a>
   y <a href="https://www.loteria.cl" target="_blank">loteria.cl</a>.
   Actualización automática con GitHub Actions.
 </footer>
@@ -182,18 +198,33 @@ async function loadJSON(path) {
     const r = await fetch(path);
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     return await r.json();
-  } catch (e) {
-    return null;
-  }
+  } catch(e) { return null; }
 }
 
-function bolaHTML(n, cls) {
+function bola(n, cls) {
   return `<span class="bola ${cls}">${n}</span>`;
 }
 
-function formatFecha(str) {
-  if (!str) return '—';
-  return str.split(' ')[0];
+function sugBola(n, cls) {
+  return `<span class="sug-bola ${cls}">${n}</span>`;
+}
+
+function fecha(str) {
+  return str ? str.split(' ')[0] : '—';
+}
+
+function renderSugs(sugs, containerId, bolaCls) {
+  const el = document.getElementById(containerId);
+  if (!sugs || !sugs.length) {
+    el.innerHTML = '<span class="error">Sin datos aún</span>';
+    return;
+  }
+  el.innerHTML = sugs.map((s, i) => `
+    <div class="sug-row">
+      <span class="sug-idx">#${i+1}</span>
+      ${s.combo.map(n => sugBola(n, bolaCls)).join('')}
+      <span class="sug-sum">Σ <strong>${s.suma}</strong></span>
+    </div>`).join('');
 }
 
 async function init() {
@@ -202,39 +233,38 @@ async function init() {
     loadJSON('data/kino_metrics.json'),
   ]);
 
-  // --- LOTO ---
+  // ── Loto ──
   if (loto) {
     const ult = loto.ultimo_sorteo || {};
     document.getElementById('loto-fecha').innerHTML =
-      `Sorteo <strong>#${ult.sorteo || '—'}</strong> · ${formatFecha(ult.fecha)} · ${ult.dia || ''}`;
+      `Sorteo <strong>#${ult.sorteo || '—'}</strong> · ${fecha(ult.fecha)} · ${ult.dia || ''}`;
     document.getElementById('loto-total').textContent = loto.total_sorteos ?? '—';
-
-    const numsEl = document.getElementById('loto-nums');
-    if (ult.numeros && ult.numeros.length) {
-      numsEl.innerHTML =
-        ult.numeros.map(n => bolaHTML(n, 'bola-loto')).join('') +
-        (ult.comodin ? bolaHTML(ult.comodin, 'bola-comodin') : '');
+    if (ult.numeros?.length) {
+      document.getElementById('loto-nums').innerHTML =
+        ult.numeros.map(n => bola(n, 'bola-loto')).join('');
     }
+    renderSugs(loto.suggestions, 'loto-sugs', 'sug-bola-loto');
   } else {
-    document.getElementById('loto-fecha').innerHTML = '<span class="error">Datos no disponibles aún</span>';
+    document.getElementById('loto-fecha').innerHTML = '<span class="error">Datos no disponibles</span>';
+    document.getElementById('loto-sugs').innerHTML  = '<span class="error">Sin datos</span>';
   }
 
-  // --- KINO ---
+  // ── Kino ──
   if (kino) {
     const ult = kino.ultimo_sorteo || {};
     document.getElementById('kino-fecha').innerHTML =
-      `Sorteo <strong>#${ult.sorteo || '—'}</strong> · ${formatFecha(ult.fecha)} · ${ult.dia || ''}`;
+      `Sorteo <strong>#${ult.sorteo || '—'}</strong> · ${fecha(ult.fecha)} · ${ult.dia || ''}`;
     document.getElementById('kino-total').textContent = kino.total_sorteos ?? '—';
-
-    const numsEl = document.getElementById('kino-nums');
-    if (ult.numeros && ult.numeros.length) {
-      numsEl.innerHTML = ult.numeros.map(n => bolaHTML(n, 'bola-kino')).join('');
+    if (ult.numeros?.length) {
+      document.getElementById('kino-nums').innerHTML =
+        ult.numeros.map(n => bola(n, 'bola-kino')).join('');
     }
+    renderSugs(kino.suggestions, 'kino-sugs', 'sug-bola-kino');
   } else {
-    document.getElementById('kino-fecha').innerHTML = '<span class="error">Datos no disponibles aún</span>';
+    document.getElementById('kino-fecha').innerHTML = '<span class="error">Datos no disponibles</span>';
+    document.getElementById('kino-sugs').innerHTML  = '<span class="error">Sin datos</span>';
   }
 
-  // Fecha de actualización
   document.getElementById('last-update').textContent =
     `Actualizado: ${new Date().toLocaleDateString('es-CL')}`;
 }
