@@ -87,6 +87,15 @@
     }
     .sug-meta { margin-left: auto; font-size: 0.78rem; color: var(--muted); }
     .sug-meta strong { color: var(--text); }
+    .sug-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 4px; }
+    .sug-pill {
+      padding: 3px 10px; border-radius: 999px; font-size: 0.67rem; font-weight: 700;
+      cursor: pointer; border: 1px solid var(--border); background: transparent;
+      color: var(--muted); letter-spacing: 0.03em; transition: all 0.15s;
+      font-family: var(--font);
+    }
+    .sug-pill:hover { border-color: var(--text); color: var(--text); }
+    .sug-pill-active { background: rgba(245,158,11,0.15); color: var(--accent); border-color: rgba(245,158,11,0.4); }
 
     /* Hot / Cold list */
     .hc-list { display: flex; flex-direction: column; gap: 6px; }
@@ -345,17 +354,40 @@ function renderSumChart() {
   });
 }
 
+const RANGE_LABELS = {
+  '50':'Últ. 50','100':'Últ. 100','250':'Últ. 250',
+  '500':'Últ. 500','1000':'Últ. 1000','all':'Todos'
+};
+
 function renderSugerencias() {
   const d = globalData;
   if (!d || !d.suggestions) return;
+  const sugs = d.suggestions;
+  const el   = document.getElementById('sugerencias');
+  const keys = Object.keys(sugs);
+  if (!keys.length) { el.innerHTML = '<span style="color:var(--muted)">Sin datos</span>'; return; }
 
-  const el = document.getElementById('sugerencias');
-  el.innerHTML = d.suggestions.map((s, i) => `
-    <div class="sug-card">
-      <span class="sug-num">#${i+1}</span>
-      ${s.combo.map(n => `<span class="bola" style="width:34px;height:34px;font-size:0.8rem">${n}</span>`).join('')}
-      <span class="sug-meta">Suma: <strong>${s.suma}</strong> · Score: <strong>${s.score}</strong></span>
-    </div>`).join('');
+  let active = keys.includes('all') ? 'all' : keys[keys.length - 1];
+
+  function combosHTML(key) {
+    return (sugs[key] || []).map((s, i) => `
+      <div class="sug-card">
+        <span class="sug-num">#${i+1}</span>
+        ${s.combo.map(n => `<span class="bola" style="width:34px;height:34px;font-size:0.8rem">${n}</span>`).join('')}
+        <span class="sug-meta">Suma: <strong>${s.suma}</strong> · Score: <strong>${s.score}</strong></span>
+      </div>`).join('');
+  }
+
+  function render() {
+    const pills = keys.map(k =>
+      `<button class="sug-pill${k===active?' sug-pill-active':''}" data-key="${k}">${RANGE_LABELS[k]||k}</button>`
+    ).join('');
+    el.innerHTML = `<div class="sug-pills">${pills}</div><div>${combosHTML(active)}</div>`;
+    el.querySelectorAll('.sug-pill').forEach(btn =>
+      btn.addEventListener('click', () => { active = btn.dataset.key; render(); })
+    );
+  }
+  render();
 }
 
 loadData();
