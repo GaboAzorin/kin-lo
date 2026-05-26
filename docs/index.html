@@ -90,6 +90,18 @@
     .sug-sum { margin-left: auto; font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
     .sug-sum strong { color: var(--text); }
 
+    /* ── Pills de rango ── */
+    .sug-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+    .sug-pill {
+      padding: 3px 10px; border-radius: 999px; font-size: 0.67rem; font-weight: 700;
+      cursor: pointer; border: 1px solid var(--border); background: transparent;
+      color: var(--muted); letter-spacing: 0.03em; transition: all 0.15s;
+      font-family: var(--font);
+    }
+    .sug-pill:hover { border-color: var(--text); color: var(--text); }
+    .sug-pill-loto-active { background: rgba(245,158,11,0.15); color: var(--loto); border-color: rgba(245,158,11,0.4); }
+    .sug-pill-kino-active { background: rgba(59,130,246,0.15); color: var(--kino); border-color: rgba(59,130,246,0.4); }
+
     /* ── Stat + botón ── */
     .card-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
     .stat-mini { font-size: 0.78rem; color: var(--muted); }
@@ -422,18 +434,44 @@ function fecha(str) {
   return str ? str.split(' ')[0] : '—';
 }
 
+const RANGE_LABELS = {
+  '50': 'Últ. 50', '100': 'Últ. 100', '250': 'Últ. 250',
+  '500': 'Últ. 500', '1000': 'Últ. 1000', 'all': 'Todos'
+};
+
 function renderSugs(sugs, containerId, bolaCls) {
   const el = document.getElementById(containerId);
-  if (!sugs || !sugs.length) {
-    el.innerHTML = '<span class="error">Sin datos aún</span>';
-    return;
+  if (!sugs) { el.innerHTML = '<span class="error">Sin datos aún</span>'; return; }
+
+  const isKino      = bolaCls.includes('kino');
+  const pillActive  = isKino ? 'sug-pill-kino-active' : 'sug-pill-loto-active';
+  const keys        = Object.keys(sugs);
+  if (!keys.length) { el.innerHTML = '<span class="error">Sin datos aún</span>'; return; }
+
+  let activeKey = keys.includes('all') ? 'all' : keys[keys.length - 1];
+
+  function combosHTML(key) {
+    const list = sugs[key] || [];
+    if (!list.length) return '<span class="error">Sin datos para este rango</span>';
+    return list.map((s, i) => `
+      <div class="sug-row">
+        <span class="sug-idx">#${i+1}</span>
+        ${s.combo.map(n => sugBola(n, bolaCls)).join('')}
+        <span class="sug-sum">Σ <strong>${s.suma}</strong></span>
+      </div>`).join('');
   }
-  el.innerHTML = sugs.map((s, i) => `
-    <div class="sug-row">
-      <span class="sug-idx">#${i+1}</span>
-      ${s.combo.map(n => sugBola(n, bolaCls)).join('')}
-      <span class="sug-sum">Σ <strong>${s.suma}</strong></span>
-    </div>`).join('');
+
+  function render() {
+    const pills = keys.map(k =>
+      `<button class="sug-pill${k === activeKey ? ' '+pillActive : ''}" data-key="${k}">${RANGE_LABELS[k] || k}</button>`
+    ).join('');
+    el.innerHTML = `<div class="sug-pills">${pills}</div><div class="sug-combos">${combosHTML(activeKey)}</div>`;
+    el.querySelectorAll('.sug-pill').forEach(btn =>
+      btn.addEventListener('click', () => { activeKey = btn.dataset.key; render(); })
+    );
+  }
+
+  render();
 }
 
 function fmtMillones(m) {

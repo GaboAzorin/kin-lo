@@ -29,6 +29,11 @@ DOCS_DATA = REPO_ROOT / "docs" / "data"
 DOCS_DATA.mkdir(parents=True, exist_ok=True)
 
 # ---------------------------------------------------------------------------
+# Rangos para sugerencias
+# ---------------------------------------------------------------------------
+SUGGESTION_RANGES = [50, 100, 250, 500, 1000]  # "all" siempre se añade al final
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
@@ -123,6 +128,57 @@ def _ultimo_sorteo(df: pd.DataFrame, cols: list[str], comodin_col: str | None) -
 
 
 # ---------------------------------------------------------------------------
+# Sugerencias por rango
+# ---------------------------------------------------------------------------
+
+def _stats_ligeros(df: pd.DataFrame, cols: list[str], num_range: int) -> dict:
+    """
+    Stats mínimos para generar sugerencias (frequencies + sum_stats).
+    Más rápido que _metricas_juego(): omite gaps, top_pairs y ultimo_sorteo.
+    """
+    mask  = df[cols].apply(pd.to_numeric, errors="coerce").notna().all(axis=1)
+    df_c  = df[mask].copy()
+    if df_c.empty:
+        return {"total_sorteos": 0}
+    return {
+        "total_sorteos": len(df_c),
+        "frequencies":   _frecuencias(df_c, cols, num_range),
+        "sum_stats":     _sum_stats(df_c, cols),
+    }
+
+
+def _sugerencias_por_rango(df_full: pd.DataFrame, prefix: str,
+                            num_range: int, pick: int) -> dict:
+    """
+    Genera 3 sugerencias por cada rango válido (últimos N sorteos + todos).
+
+    - Estadísticas calculadas sobre el slice del rango.
+    - Unicidad verificada contra df_full (historial completo).
+
+    Devuelve un dict con claves "50", "100", "250", "500", "1000", "all"
+    (solo incluye los rangos donde N < total de sorteos disponibles).
+    """
+    cols  = [f"{prefix}_n{i}" for i in range(1, pick + 1)]
+    total = len(df_full)
+    rangos = [n for n in SUGGESTION_RANGES if n < total] + [None]  # None → "all"
+
+    result: dict = {}
+    for n in rangos:
+        label    = str(n) if n is not None else "all"
+        df_rango = df_full.tail(n) if n is not None else df_full
+        stats    = _stats_ligeros(df_rango, cols, num_range)
+        if stats.get("total_sorteos", 0) == 0:
+            continue
+        result[label] = generar_sugerencias(
+            df_rango, stats,
+            num_range=num_range, pick=pick,
+            n_sugerencias=3, num_col_prefix=prefix,
+            df_history=df_full,
+        )
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Calculadores por juego
 # ---------------------------------------------------------------------------
 
@@ -173,10 +229,8 @@ def generar_loto(df: pd.DataFrame) -> dict:
     print("  Calculando Loto principal...")
     base = _metricas_juego(df, "LOTO", num_range=41, pick=6, comodin=True)
 
-    print("  Generando sugerencias Loto...")
-    base["suggestions"] = generar_sugerencias(
-        df, base, num_range=41, pick=6, num_col_prefix="LOTO"
-    )
+    print("  Generando sugerencias Loto (por rango)...")
+    base["suggestions"] = _sugerencias_por_rango(df, "LOTO", num_range=41, pick=6)
 
     print("  Calculando Recargado...")
     base["recargado"] = _metricas_juego(df, "RECARGADO", 41, 6, True)
@@ -200,10 +254,8 @@ def generar_kino(df: pd.DataFrame) -> dict:
     print("  Calculando Kino principal...")
     base = _metricas_juego(df, "KINO", num_range=25, pick=14, comodin=False)
 
-    print("  Generando sugerencias Kino...")
-    base["suggestions"] = generar_sugerencias(
-        df, base, num_range=25, pick=14, num_col_prefix="KINO"
-    )
+    print("  Generando sugerencias Kino (por rango)...")
+    base["suggestions"] = _sugerencias_por_rango(df, "KINO", num_range=25, pick=14)
 
     print("  Calculando ReKino...")
     base["rekino"]       = _metricas_juego(df, "REKINO",       25, 14, False)

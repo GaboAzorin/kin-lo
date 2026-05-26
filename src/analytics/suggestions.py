@@ -96,23 +96,27 @@ def _score(combo: tuple, freq: dict, sum_p10: int, sum_p90: int,
 
 def generar_sugerencias(df, metricas: dict, num_range: int = 41,
                         pick: int = 6, n_sugerencias: int = 5,
-                        num_col_prefix: str = "LOTO") -> list[dict]:
+                        num_col_prefix: str = "LOTO",
+                        df_history=None) -> list[dict]:
     """
     Genera `n_sugerencias` combinaciones de `pick` números (1..num_range).
 
     Args:
-        df:             DataFrame con el historial completo.
-        metricas:       Dict generado por calcular_metricas() (con sum_stats y frequencies).
-        num_range:      Rango de números (41 para Loto y Kino).
-        pick:           Cuántos números elige el apostador (6).
+        df:             DataFrame del rango a analizar (stats estadísticos).
+        metricas:       Dict con sum_stats y frequencies calculados sobre df.
+        num_range:      Rango de números (41 para Loto, 25 para Kino).
+        pick:           Cuántos números elige el apostador (6 Loto, 14 Kino).
         n_sugerencias:  Cuántas combinaciones devolver.
         num_col_prefix: Prefijo de las columnas numéricas ("LOTO" o "KINO").
+        df_history:     DataFrame completo para verificar unicidad histórica.
+                        Si None, se usa df (comportamiento original).
 
     Returns:
         Lista de dicts: [{"combo": [n1..n6], "suma": X, "score": Y}, ...]
     """
-    num_cols = [f"{num_col_prefix}_n{i}" for i in range(1, pick + 1)]
-    history  = _build_history_set(df, num_cols)
+    num_cols  = [f"{num_col_prefix}_n{i}" for i in range(1, pick + 1)]
+    hist_df   = df_history if df_history is not None else df
+    history   = _build_history_set(hist_df, num_cols)
 
     freq     = metricas.get("frequencies", {})
     sum_p10  = metricas.get("sum_stats", {}).get("p10", 70)
