@@ -23,8 +23,10 @@ import pandas as pd
 # ---------------------------------------------------------------------------
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "src" / "analytics"))
+sys.path.insert(0, str(REPO_ROOT / "src" / "notifications"))
 
 from suggestions import generar_sugerencias
+from tg_notify   import send as tg_send
 
 DATA_DIR  = REPO_ROOT / "data"
 DOCS_DATA = REPO_ROOT / "docs" / "data"
@@ -34,6 +36,14 @@ PENDING_LOTO = DATA_DIR / "loto_suggestions_pending.json"
 PENDING_KINO = DATA_DIR / "kino_suggestions_pending.json"
 HISTORY_PATH = DATA_DIR / "suggestions_history.csv"
 HISTORY_COLS = ["juego", "sorteo_predicho", "fecha_sorteo", "rango", "combo", "aciertos"]
+
+# Notificaciones Telegram
+_DIA_ES = {
+    "Monday": "lunes", "Tuesday": "martes", "Wednesday": "miércoles",
+    "Thursday": "jueves", "Friday": "viernes", "Saturday": "sábado", "Sunday": "domingo",
+}
+_RANGOS_ORDEN  = ["50", "100", "250", "500", "1000", "all"]
+_UMBRAL_ALERTA = {"kino": 12, "loto": 5}   # aciertos mínimos para alerta destacada
 
 # ---------------------------------------------------------------------------
 # Rangos para sugerencias
@@ -197,9 +207,12 @@ def _evaluar_y_registrar(df: pd.DataFrame, juego: str,
 
     resultado_set = set(resultado)
     filas_nuevas  = []
+    per_rango_raw: dict[str, list] = {}   # rango → lista de {combo, aciertos}
+
     for rango, combos in pending.get("sugerencias", {}).items():
+        per_rango_raw[rango] = []
         for s in combos:
-            combo    = s["combo"]
+            combo    = s["combo"]          # list[int]
             aciertos = len(set(combo) & resultado_set)
             filas_nuevas.append({
                 "juego":           juego,
@@ -209,9 +222,10 @@ def _evaluar_y_registrar(df: pd.DataFrame, juego: str,
                 "combo":           ",".join(str(n) for n in combo),
                 "aciertos":        aciertos,
             })
+            per_rango_raw[rango].append({"combo": combo, "aciertos": aciertos})
 
     if not filas_nuevas:
-        return 0
+        return None
 
     file_exists = HISTORY_PATH.exists() and HISTORY_PATH.stat().st_size > 10
     with open(HISTORY_PATH, "a", encoding="utf-8", newline="") as f:
@@ -221,13 +235,20 @@ def _evaluar_y_registrar(df: pd.DataFrame, juego: str,
         writer.writerows(filas_nuevas)
 
     print(f"  Evaluado sorteo #{sorteo_n} ({fecha}) | resultado: {sorted(resultado_set)}")
-    for rango in pending.get("sugerencias", {}).keys():
-        rf    = [r for r in filas_nuevas if r["rango"] == rango]
-        max_a = max(r["aciertos"] for r in rf)
-        avg_a = sum(r["aciertos"] for r in rf) / len(rf)
+    per_rango: dict[str, dict] = {}
+    for rango, cs in per_rango_raw.items():
+        max_a = max(c["aciertos"] for c in cs)
+        avg_a = round(sum(c["aciertos"] for c in cs) / len(cs), 2)
         print(f"    [{rango:>4}] max={max_a}  avg={avg_a:.2f}")
+        per_rango[rango] = {"max": max_a, "avg": avg_a, "combos": cs}
 
-    return len(filas_nuevas)
+    return {
+        "sorteo_n":  sorteo_n,
+        "fecha":     fecha,
+        "resultado": sorted(resultado_set),
+        "per_rango": per_rango,
+        "pick":      len(num_cols),
+    }
 
 
 def _range_scores(juego: str) -> dict:
@@ -395,6 +416,73 @@ def generar_kino(df: pd.DataFrame) -> dict:
 # CLI
 # ---------------------------------------------------------------------------
 
+def _enviar_notificaciones(juego: str, ultimo: dict,
+                           eval_data: dict | None, range_scores: dict):
+    """
+    Envía hasta 3 mensajes a Telegram:
+      1. Resultado del sorteo recién scrapeado.
+      2. Tabla de rendimiento de sugerencias por rango.
+      3. Alerta si alguna combinación alcanzó el umbral de aciertos destacados.
+    Solo envía si hubo una evaluación nueva (eval_data no es None).
+    """
+    if eval_data is None:
+        return
+
+    pick      = eval_data["pick"]
+    emoji     = "🟦" if juego == "kino" else "🟡"
+    cap       = juego.capitalize()
+    sorteo_n  = eval_data["sorteo_n"]
+    resultado = eval_data["resultado"]
+    fecha     = eval_data["fecha"]
+
+    # ── 1. Nuevo sorteo ──────────────────────────────────────────────────
+    dia     = _DIA_ES.get(ultimo.get("dia", ""), ultimo.get("dia", ""))
+    nums_s  = "  ".join(str(n).rjust(2) for n in resultado)
+    tg_send(
+        f"{emoji} <b>{cap} · Sorteo #{sorteo_n}</b>\n"
+        f"📅 {dia} {fecha}\n\n"
+        f"🔢 <code>{nums_s}</code>"
+    )
+
+    # ── 2. Tabla de rendimiento ───────────────────────────────────────────
+    if range_scores:
+        hdr  = f"{'Rango':>5}  {'Avg aciertos':<14}  {'Max':>3}"
+        sep  = "─" * 30
+        rows = []
+        for r in _RANGOS_ORDEN:
+            if r not in range_scores:
+                continue
+            v     = range_scores[r]
+            label = r.rjust(5) if r != "all" else "Todos"
+            avg_s = f"{v['aciertos_avg']:.2f} / {pick}"
+            rows.append(f"{label}  {avg_s:<14}  {v['aciertos_max']:>3}")
+
+        if rows:
+            n_eval = range_scores.get("all", {}).get("sorteos_evaluados", 1)
+            pie    = f"\n({n_eval} sorteo{'s' if n_eval != 1 else ''} evaluado{'s' if n_eval != 1 else ''})"
+            tabla  = "\n".join([hdr, sep] + rows)
+            tg_send(
+                f"📊 <b>Rendimiento de sugerencias · {cap}</b>\n"
+                f"Evaluadas vs sorteo #{sorteo_n}\n\n"
+                f"<pre>{tabla}{pie}</pre>"
+            )
+
+    # ── 3. Alertas de resultados destacados ──────────────────────────────
+    umbral = _UMBRAL_ALERTA[juego]
+    for rango, v in eval_data["per_rango"].items():
+        for c in v["combos"]:
+            if c["aciertos"] >= umbral:
+                label  = f"Últ. {rango}" if rango != "all" else "Todos"
+                nums_c = "  ".join(str(n).rjust(2) for n in c["combo"])
+                sufijo = " 🎉🎉🎉" if c["aciertos"] == pick else ""
+                tg_send(
+                    f"🚨 <b>RESULTADO DESTACADO · {cap}</b>\n\n"
+                    f"Rango <b>{label}</b>\n"
+                    f"<code>{nums_c}</code>\n"
+                    f"✅ <b>{c['aciertos']} de {pick} aciertos</b>{sufijo}"
+                )
+
+
 def main():
     parser = argparse.ArgumentParser(description="Genera métricas JSON para el frontend.")
     parser.add_argument("--game", required=True, choices=["loto", "kino"],
@@ -423,10 +511,11 @@ def main():
     print(f"  {len(df)} sorteos cargados.")
 
     # 1. Evaluar sugerencias del sorteo anterior (si existen)
-    pending = _cargar_pending(pending_path)
+    eval_data = None
+    pending   = _cargar_pending(pending_path)
     if pending:
         print("  Evaluando sugerencias del sorteo anterior...")
-        _evaluar_y_registrar(df, juego_key, num_cols, pending)
+        eval_data = _evaluar_y_registrar(df, juego_key, num_cols, pending)
 
     # 2. Calcular métricas y sugerencias nuevas
     data = generar_loto(df) if args.game == "loto" else generar_kino(df)
@@ -434,7 +523,11 @@ def main():
     # 3. Añadir scores históricos de rangos al JSON
     data["range_scores"] = _range_scores(juego_key)
 
-    # 4. Guardar pending para el próximo sorteo
+    # 4. Enviar notificaciones Telegram
+    _enviar_notificaciones(juego_key, data.get("ultimo_sorteo", {}),
+                           eval_data, data["range_scores"])
+
+    # 5. Guardar pending para el próximo sorteo
     ultimo = int(pd.to_numeric(df["sorteo"], errors="coerce").max())
     _guardar_pending(pending_path, ultimo, data["suggestions"])
 

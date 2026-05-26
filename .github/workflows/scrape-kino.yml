@@ -44,6 +44,9 @@ jobs:
 
       - name: Calcular métricas y sugerencias (Kino)
         run: python src/analytics/metrics.py --game kino
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
       - name: Actualizar pozos estimados
         # rckino.loteria.cl no bloquea IPs → Kino siempre OK.
