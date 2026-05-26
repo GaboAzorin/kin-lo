@@ -1,19 +1,24 @@
-name: Scrape Loto (polla.cl)
+name: Scrape Loto (polla.cl) [DESACTIVADO]
 
-# polla.cl bloquea las IPs de GitHub Actions → este workflow no puede obtener
-# datos nuevos de Loto de forma automática.
+# polla.cl bloquea las IPs de GitHub Actions → este workflow no funciona en CI.
 # El flujo correcto es correr scripts/actualizar_loto.ps1 localmente
 # después de cada sorteo (mar/jue/dom ~22:15 CLT) y hacer push manual.
 #
-# Se mantiene workflow_dispatch para pruebas manuales desde la UI de GitHub.
+# Workflow desactivado: sin triggers, no se puede disparar desde la UI ni por cron.
 on:
-  workflow_dispatch: # Solo ejecución manual
+  workflow_dispatch:
+    inputs:
+      DISABLED:
+        description: "Este workflow está desactivado. Usar actualizar_loto.ps1 localmente."
+        required: true
+        default: "Cancelar"
 
 permissions:
   contents: write # Necesario para commitear los CSV actualizados
 
 jobs:
   scrape-loto:
+    if: false  # DESACTIVADO: polla.cl bloquea IPs de GitHub. Usar actualizar_loto.ps1 local.
     runs-on: ubuntu-latest
 
     steps:
