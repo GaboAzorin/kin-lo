@@ -144,6 +144,15 @@ def fetch_loto() -> dict:
 
 # ─────────────────────────────────────────────
 def fetch_pozos() -> dict:
+    # Cargar datos existentes para preservarlos en caso de error
+    existing: dict = {}
+    if OUT_PATH.exists():
+        try:
+            with open(OUT_PATH, "r", encoding="utf-8") as f:
+                existing = json.load(f)
+        except Exception:
+            pass
+
     pozos = {"updated": datetime.now().strftime("%Y-%m-%d %H:%M")}
 
     logger.info("Obteniendo pozos Kino...")
@@ -152,7 +161,12 @@ def fetch_pozos() -> dict:
         logger.info(f"  Kino OK: {pozos['kino']['variantes']}")
     except Exception as e:
         logger.error(f"  Kino error: {e}")
-        pozos["kino"] = {"error": str(e), "variantes": []}
+        prev = existing.get("kino", {})
+        if prev and "error" not in prev:
+            logger.info("  Conservando datos Kino anteriores.")
+            pozos["kino"] = prev
+        else:
+            pozos["kino"] = {"error": str(e), "variantes": []}
 
     logger.info("Obteniendo pozos Loto...")
     try:
@@ -160,7 +174,12 @@ def fetch_pozos() -> dict:
         logger.info(f"  Loto OK: {pozos['loto']['variantes']}")
     except Exception as e:
         logger.error(f"  Loto error: {e}")
-        pozos["loto"] = {"error": str(e), "variantes": []}
+        prev = existing.get("loto", {})
+        if prev and "error" not in prev:
+            logger.info("  Conservando datos Loto anteriores.")
+            pozos["loto"] = prev
+        else:
+            pozos["loto"] = {"error": str(e), "variantes": []}
 
     with open(OUT_PATH, "w", encoding="utf-8") as f:
         json.dump(pozos, f, ensure_ascii=False, indent=2)
