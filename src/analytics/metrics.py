@@ -1,7 +1,8 @@
 """
 metrics.py
 Lee los CSVs históricos y genera docs/data/{loto,kino}_metrics.json.
-También llama a suggestions.py para incluir 5 combinaciones sugeridas.
+Registra sugerencias pendientes y las compara contra resultados reales
+para acumular un historial de aciertos por rango en suggestions_history.csv.
 
 Uso:
     python src/analytics/metrics.py --game loto
@@ -9,6 +10,7 @@ Uso:
 """
 
 import argparse
+import csv
 import json
 import sys
 from itertools import combinations as iter_combinations
@@ -27,6 +29,11 @@ from suggestions import generar_sugerencias
 DATA_DIR  = REPO_ROOT / "data"
 DOCS_DATA = REPO_ROOT / "docs" / "data"
 DOCS_DATA.mkdir(parents=True, exist_ok=True)
+
+PENDING_LOTO = DATA_DIR / "loto_suggestions_pending.json"
+PENDING_KINO = DATA_DIR / "kino_suggestions_pending.json"
+HISTORY_PATH = DATA_DIR / "suggestions_history.csv"
+HISTORY_COLS = ["juego", "sorteo_predicho", "fecha_sorteo", "rango", "combo", "aciertos"]
 
 # ---------------------------------------------------------------------------
 # Rangos para sugerencias
@@ -124,6 +131,124 @@ def _ultimo_sorteo(df: pd.DataFrame, cols: list[str], comodin_col: str | None) -
             result["comodin"] = int(last[comodin_col])
         except (TypeError, ValueError):
             pass
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Tracking: pending → evaluación → historial
+# ---------------------------------------------------------------------------
+
+def _cargar_pending(path: Path) -> dict | None:
+    """Lee el archivo de sugerencias pendientes. Devuelve None si no existe."""
+    if not path.exists():
+        return None
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _guardar_pending(path: Path, tras_sorteo: int, sugerencias: dict):
+    """Guarda las sugerencias actuales para comparar en el próximo run."""
+    obj = {"generado_tras_sorteo": tras_sorteo, "sugerencias": sugerencias}
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(obj, f, ensure_ascii=False, indent=2)
+    print(f"  Pending guardado: sugerencias para sorteo posterior a #{tras_sorteo}.")
+
+
+def _evaluar_y_registrar(df: pd.DataFrame, juego: str,
+                          num_cols: list[str], pending: dict) -> int:
+    """
+    Compara las sugerencias pendientes contra el primer resultado real
+    posterior al sorteo en que fueron generadas.
+    Appends filas a suggestions_history.csv y retorna cuántas se agregaron.
+    """
+    tras_sorteo = pending.get("generado_tras_sorteo")
+    if tras_sorteo is None:
+        return 0
+
+    # Primer sorteo > tras_sorteo disponible en el CSV
+    df_num = df.copy()
+    df_num["_s"] = pd.to_numeric(df_num["sorteo"], errors="coerce")
+    siguientes = df_num[df_num["_s"] > tras_sorteo].sort_values("_s")
+
+    if siguientes.empty:
+        print(f"  Sin resultado posterior a sorteo #{tras_sorteo} todavía.")
+        return 0
+
+    fila     = siguientes.iloc[0]
+    sorteo_n = int(fila["_s"])
+    fecha    = str(fila.get("fecha", ""))
+
+    resultado = []
+    for c in num_cols:
+        try:
+            resultado.append(int(fila[c]))
+        except (TypeError, ValueError):
+            pass
+    if not resultado:
+        return 0
+
+    # Evitar duplicados
+    if HISTORY_PATH.exists() and HISTORY_PATH.stat().st_size > 10:
+        df_h = pd.read_csv(HISTORY_PATH)
+        if ((df_h["juego"] == juego) &
+                (pd.to_numeric(df_h["sorteo_predicho"], errors="coerce") == sorteo_n)).any():
+            print(f"  Sorteo #{sorteo_n} ya estaba en el historial. Omitido.")
+            return 0
+
+    resultado_set = set(resultado)
+    filas_nuevas  = []
+    for rango, combos in pending.get("sugerencias", {}).items():
+        for s in combos:
+            combo    = s["combo"]
+            aciertos = len(set(combo) & resultado_set)
+            filas_nuevas.append({
+                "juego":           juego,
+                "sorteo_predicho": sorteo_n,
+                "fecha_sorteo":    fecha,
+                "rango":           rango,
+                "combo":           ",".join(str(n) for n in combo),
+                "aciertos":        aciertos,
+            })
+
+    if not filas_nuevas:
+        return 0
+
+    file_exists = HISTORY_PATH.exists() and HISTORY_PATH.stat().st_size > 10
+    with open(HISTORY_PATH, "a", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=HISTORY_COLS)
+        if not file_exists:
+            writer.writeheader()
+        writer.writerows(filas_nuevas)
+
+    print(f"  Evaluado sorteo #{sorteo_n} ({fecha}) | resultado: {sorted(resultado_set)}")
+    for rango in pending.get("sugerencias", {}).keys():
+        rf    = [r for r in filas_nuevas if r["rango"] == rango]
+        max_a = max(r["aciertos"] for r in rf)
+        avg_a = sum(r["aciertos"] for r in rf) / len(rf)
+        print(f"    [{rango:>4}] max={max_a}  avg={avg_a:.2f}")
+
+    return len(filas_nuevas)
+
+
+def _range_scores(juego: str) -> dict:
+    """
+    Lee suggestions_history.csv y calcula el rendimiento promedio por rango.
+    Devuelve {} si no hay historial todavía.
+    """
+    if not HISTORY_PATH.exists():
+        return {}
+    df_h = pd.read_csv(HISTORY_PATH)
+    df_h = df_h[df_h["juego"] == juego]
+    if df_h.empty:
+        return {}
+
+    result = {}
+    for rango, grp in df_h.groupby("rango"):
+        result[str(rango)] = {
+            "sorteos_evaluados": int(grp["sorteo_predicho"].nunique()),
+            "aciertos_avg":      round(float(grp["aciertos"].mean()), 2),
+            "aciertos_max":      int(grp["aciertos"].max()),
+        }
     return result
 
 
@@ -277,26 +402,41 @@ def main():
     args = parser.parse_args()
 
     if args.game == "loto":
-        csv_path = DATA_DIR / "polla_historial.csv"
-        out_path = DOCS_DATA / "loto_metrics.json"
-        if not csv_path.exists():
-            print(f"ERROR: No se encontró {csv_path}")
-            sys.exit(1)
-        print(f"Leyendo {csv_path}...")
-        df = pd.read_csv(csv_path)
-        print(f"  {len(df)} sorteos cargados.")
-        data = generar_loto(df)
+        csv_path     = DATA_DIR / "polla_historial.csv"
+        out_path     = DOCS_DATA / "loto_metrics.json"
+        pending_path = PENDING_LOTO
+        num_cols     = [f"LOTO_n{i}" for i in range(1, 7)]
+        juego_key    = "loto"
+    else:
+        csv_path     = DATA_DIR / "loteria_historial.csv"
+        out_path     = DOCS_DATA / "kino_metrics.json"
+        pending_path = PENDING_KINO
+        num_cols     = [f"KINO_n{i}" for i in range(1, 15)]
+        juego_key    = "kino"
 
-    else:  # kino
-        csv_path = DATA_DIR / "loteria_historial.csv"
-        out_path = DOCS_DATA / "kino_metrics.json"
-        if not csv_path.exists():
-            print(f"ERROR: No se encontró {csv_path}")
-            sys.exit(1)
-        print(f"Leyendo {csv_path}...")
-        df = pd.read_csv(csv_path)
-        print(f"  {len(df)} sorteos cargados.")
-        data = generar_kino(df)
+    if not csv_path.exists():
+        print(f"ERROR: No se encontró {csv_path}")
+        sys.exit(1)
+
+    print(f"Leyendo {csv_path}...")
+    df = pd.read_csv(csv_path)
+    print(f"  {len(df)} sorteos cargados.")
+
+    # 1. Evaluar sugerencias del sorteo anterior (si existen)
+    pending = _cargar_pending(pending_path)
+    if pending:
+        print("  Evaluando sugerencias del sorteo anterior...")
+        _evaluar_y_registrar(df, juego_key, num_cols, pending)
+
+    # 2. Calcular métricas y sugerencias nuevas
+    data = generar_loto(df) if args.game == "loto" else generar_kino(df)
+
+    # 3. Añadir scores históricos de rangos al JSON
+    data["range_scores"] = _range_scores(juego_key)
+
+    # 4. Guardar pending para el próximo sorteo
+    ultimo = int(pd.to_numeric(df["sorteo"], errors="coerce").max())
+    _guardar_pending(pending_path, ultimo, data["suggestions"])
 
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
