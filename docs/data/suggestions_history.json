@@ -1,0 +1,80 @@
+{
+  "loto": {
+    "por_rango": {},
+    "historial": [],
+    "pick": 6
+  },
+  "kino": {
+    "por_rango": {
+      "50": {
+        "sorteos": 1,
+        "avg": 8.33,
+        "max": 9,
+        "pick": 14
+      },
+      "100": {
+        "sorteos": 1,
+        "avg": 9.0,
+        "max": 9,
+        "pick": 14
+      },
+      "250": {
+        "sorteos": 1,
+        "avg": 8.33,
+        "max": 9,
+        "pick": 14
+      },
+      "500": {
+        "sorteos": 1,
+        "avg": 8.33,
+        "max": 9,
+        "pick": 14
+      },
+      "1000": {
+        "sorteos": 1,
+        "avg": 8.0,
+        "max": 9,
+        "pick": 14
+      },
+      "all": {
+        "sorteos": 1,
+        "avg": 8.0,
+        "max": 9,
+        "pick": 14
+      }
+    },
+    "historial": [
+      {
+        "sorteo": 3231,
+        "fecha": "2026-05-24",
+        "rangos": {
+          "50": {
+            "max": 9,
+            "avg": 8.33
+          },
+          "100": {
+            "max": 9,
+            "avg": 9.0
+          },
+          "250": {
+            "max": 9,
+            "avg": 8.33
+          },
+          "500": {
+            "max": 9,
+            "avg": 8.33
+          },
+          "1000": {
+            "max": 9,
+            "avg": 8.0
+          },
+          "all": {
+            "max": 9,
+            "avg": 8.0
+          }
+        }
+      }
+    ],
+    "pick": 14
+  }
+}

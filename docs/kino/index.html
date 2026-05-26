@@ -124,6 +124,19 @@
       color: var(--muted); margin-bottom: 16px;
     }
     .info-box strong { color: var(--text); }
+
+    /* Rendimiento histórico */
+    .rdm-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .rdm-table th { color: var(--muted); font-size: 0.75rem; text-transform: uppercase;
+      letter-spacing: 0.06em; padding: 8px 14px; text-align: left;
+      border-bottom: 1px solid var(--border); font-weight: 600; }
+    .rdm-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    .rdm-table tbody tr:last-child td { border-bottom: none; }
+    .rdm-table tbody tr:hover td { background: rgba(255,255,255,0.02); }
+    .rdm-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 7px; vertical-align: middle; }
+    .rdm-empty { color: var(--muted); font-size: 0.85rem; font-style: italic;
+      padding: 28px; text-align: center; background: var(--card);
+      border-radius: var(--radius); border: 1px solid var(--border); }
   </style>
 </head>
 <body>
@@ -202,17 +215,35 @@
     <div class="sugerencias" id="sugerencias"><span class="loading">cargando...</span></div>
   </div>
 
+  <!-- Rendimiento histórico de sugerencias -->
+  <div class="section">
+    <div class="section-title">Rendimiento histórico de sugerencias</div>
+    <p style="font-size:0.82rem; color:var(--muted); margin-bottom:16px">
+      Comparación de las combinaciones sugeridas vs los resultados reales de cada sorteo.
+    </p>
+    <div id="rdm-tabla"><span class="loading">cargando...</span></div>
+    <div id="rdm-chart-wrap" style="margin-top:24px; display:none">
+      <div class="card"><canvas id="rdm-chart" height="160"></canvas></div>
+    </div>
+  </div>
+
 </main>
 
 <script>
 let globalData = null;
+let historialData = null;
 let sumChart = null;
+let rdmChart = null;
 
 async function loadData() {
   try {
-    const r = await fetch('../data/kino_metrics.json');
-    if (!r.ok) throw new Error('No data');
-    globalData = await r.json();
+    const [r1, r2] = await Promise.all([
+      fetch('../data/kino_metrics.json'),
+      fetch('../data/suggestions_history.json').catch(() => null)
+    ]);
+    if (!r1.ok) throw new Error('No data');
+    globalData = await r1.json();
+    historialData = r2 && r2.ok ? await r2.json() : null;
     render();
   } catch(e) {
     document.querySelector('main').innerHTML =
@@ -248,6 +279,7 @@ function render() {
   renderHotCold('KINO');
   renderSumChart();
   renderSugerencias();
+  renderRendimiento();
 }
 
 function switchGame(key, btn) {
@@ -378,6 +410,99 @@ function renderSugerencias() {
     );
   }
   render();
+}
+
+const RDM_COLORS = ['#3b82f6','#f59e0b','#22c55e','#a855f7','#f97316','#06b6d4'];
+const RANGO_ORDER = ['50','100','250','500','1000','all'];
+
+function renderRendimiento() {
+  const tablaEl   = document.getElementById('rdm-tabla');
+  const chartWrap = document.getElementById('rdm-chart-wrap');
+  const gameKey   = 'kino';
+  const pick      = 14;
+  const randomBaseline = +(14 * 14 / 25).toFixed(2); // ~7.84 por combo
+
+  if (!historialData || !historialData[gameKey]) {
+    tablaEl.innerHTML = '<div class="rdm-empty">Aún no hay sorteos evaluados. Aparecerá aquí tras el primer sorteo con sugerencias registradas.</div>';
+    chartWrap.style.display = 'none';
+    return;
+  }
+
+  const gd        = historialData[gameKey];
+  const porRango  = gd.por_rango || {};
+  const historial = gd.historial || [];
+  const validRangos = RANGO_ORDER.filter(r => porRango[r]);
+
+  if (!validRangos.length) {
+    tablaEl.innerHTML = '<div class="rdm-empty">Aún no hay sorteos evaluados. Aparecerá aquí tras el primer sorteo con sugerencias registradas.</div>';
+    chartWrap.style.display = 'none';
+    return;
+  }
+
+  // Tabla resumen
+  const rows = validRangos.map((r, i) => {
+    const rd    = porRango[r];
+    const label = RANGE_LABELS[r] || r;
+    const color = RDM_COLORS[i % RDM_COLORS.length];
+    return `<tr>
+      <td><span class="rdm-dot" style="background:${color}"></span>${label}</td>
+      <td style="text-align:center">${rd.sorteos}</td>
+      <td style="text-align:center">${rd.avg.toFixed(2)} / ${pick}</td>
+      <td style="text-align:center">${rd.max} / ${pick}</td>
+    </tr>`;
+  }).join('');
+
+  tablaEl.innerHTML = `
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="rdm-table">
+        <thead><tr>
+          <th>Rango</th>
+          <th style="text-align:center">Sorteos eval.</th>
+          <th style="text-align:center">Avg aciertos / combo</th>
+          <th style="text-align:center">Mejor combo</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p style="font-size:0.75rem;color:var(--muted);margin-top:8px">
+      Azar esperado por combo: ~${randomBaseline} / ${pick} &nbsp;·&nbsp; Se evalúan 3 combinaciones por rango.
+    </p>`;
+
+  // Gráfico de evolución (solo si hay ≥ 2 sorteos)
+  if (historial.length < 2) {
+    chartWrap.style.display = 'none';
+    return;
+  }
+
+  chartWrap.style.display = 'block';
+  const labels   = historial.map(h => `#${h.sorteo}`);
+  const datasets = validRangos.map((r, i) => ({
+    label: RANGE_LABELS[r] || r,
+    data: historial.map(h => h.rangos[r]?.avg ?? null),
+    borderColor: RDM_COLORS[i % RDM_COLORS.length],
+    backgroundColor: 'transparent',
+    tension: 0.3, pointRadius: 4, borderWidth: 2,
+  }));
+  datasets.push({
+    label: `Azar (~${randomBaseline})`,
+    data: historial.map(() => randomBaseline),
+    borderColor: '#4b5563', backgroundColor: 'transparent',
+    borderDash: [5,5], pointRadius: 0, borderWidth: 1.5,
+  });
+
+  if (rdmChart) rdmChart.destroy();
+  rdmChart = new Chart(document.getElementById('rdm-chart').getContext('2d'), {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#8892a4', font: { size: 11 } } } },
+      scales: {
+        y: { min: 0, max: pick, ticks: { color: '#8892a4' }, grid: { color: '#2a2d3e' } },
+        x: { ticks: { color: '#8892a4' }, grid: { display: false } }
+      }
+    }
+  });
 }
 
 loadData();

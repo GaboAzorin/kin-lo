@@ -173,7 +173,7 @@ def _evaluar_y_registrar(df: pd.DataFrame, juego: str,
     """
     tras_sorteo = pending.get("generado_tras_sorteo")
     if tras_sorteo is None:
-        return 0
+        return None
 
     # Primer sorteo > tras_sorteo disponible en el CSV
     df_num = df.copy()
@@ -182,7 +182,7 @@ def _evaluar_y_registrar(df: pd.DataFrame, juego: str,
 
     if siguientes.empty:
         print(f"  Sin resultado posterior a sorteo #{tras_sorteo} todavía.")
-        return 0
+        return None
 
     fila     = siguientes.iloc[0]
     sorteo_n = int(fila["_s"])
@@ -195,7 +195,7 @@ def _evaluar_y_registrar(df: pd.DataFrame, juego: str,
         except (TypeError, ValueError):
             pass
     if not resultado:
-        return 0
+        return None
 
     # Evitar duplicados
     if HISTORY_PATH.exists() and HISTORY_PATH.stat().st_size > 10:
@@ -203,7 +203,7 @@ def _evaluar_y_registrar(df: pd.DataFrame, juego: str,
         if ((df_h["juego"] == juego) &
                 (pd.to_numeric(df_h["sorteo_predicho"], errors="coerce") == sorteo_n)).any():
             print(f"  Sorteo #{sorteo_n} ya estaba en el historial. Omitido.")
-            return 0
+            return None
 
     resultado_set = set(resultado)
     filas_nuevas  = []
@@ -416,6 +416,67 @@ def generar_kino(df: pd.DataFrame) -> dict:
 # CLI
 # ---------------------------------------------------------------------------
 
+def _exportar_historial_json():
+    """
+    Lee suggestions_history.csv y genera docs/data/suggestions_history.json
+    con estructura procesada lista para el frontend.
+    """
+    out_path = DOCS_DATA / "suggestions_history.json"
+
+    estructura_vacia = {j: {"por_rango": {}, "historial": []} for j in ["loto", "kino"]}
+
+    if not HISTORY_PATH.exists() or HISTORY_PATH.stat().st_size < 10:
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(estructura_vacia, f, ensure_ascii=False, indent=2)
+        return
+
+    df_h   = pd.read_csv(HISTORY_PATH)
+    result = {}
+
+    for juego in ["loto", "kino"]:
+        pick = 14 if juego == "kino" else 6
+        dj   = df_h[df_h["juego"] == juego].copy()
+
+        # Resumen acumulado por rango
+        por_rango: dict = {}
+        for r in _RANGOS_ORDEN:
+            dr = dj[dj["rango"] == r]
+            if dr.empty:
+                continue
+            por_rango[r] = {
+                "sorteos": int(dr["sorteo_predicho"].nunique()),
+                "avg":     round(float(dr["aciertos"].mean()), 2),
+                "max":     int(dr["aciertos"].max()),
+                "pick":    pick,
+            }
+
+        # Historial por sorteo (para el gráfico de evolución)
+        historial: list = []
+        for sorteo_n, gs in dj.groupby("sorteo_predicho"):
+            fecha  = str(gs["fecha_sorteo"].iloc[0])
+            rangos = {}
+            for r in _RANGOS_ORDEN:
+                gr = gs[gs["rango"] == r]
+                if gr.empty:
+                    continue
+                rangos[r] = {
+                    "max": int(gr["aciertos"].max()),
+                    "avg": round(float(gr["aciertos"].mean()), 2),
+                }
+            historial.append({"sorteo": int(sorteo_n), "fecha": fecha, "rangos": rangos})
+
+        historial.sort(key=lambda x: x["sorteo"])
+        result[juego] = {"por_rango": por_rango, "historial": historial, "pick": pick}
+
+    # Rellenar juegos sin datos
+    for j in ["loto", "kino"]:
+        result.setdefault(j, estructura_vacia[j])
+
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
+    print(f"  Historial exportado: {out_path.name}")
+
+
 def _enviar_notificaciones(juego: str, ultimo: dict,
                            eval_data: dict | None, range_scores: dict):
     """
@@ -530,6 +591,9 @@ def main():
     # 5. Guardar pending para el próximo sorteo
     ultimo = int(pd.to_numeric(df["sorteo"], errors="coerce").max())
     _guardar_pending(pending_path, ultimo, data["suggestions"])
+
+    # 6. Exportar historial al frontend
+    _exportar_historial_json()
 
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
