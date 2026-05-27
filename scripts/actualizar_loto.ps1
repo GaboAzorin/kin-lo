@@ -40,4 +40,4 @@ $fecha = Get-Date -Format "yyyy-MM-dd"
 git commit -m "data(loto): actualizar historial $fecha"
 git push origin main
 
-Write-Host "`n✓ Listo." -ForegroundColor Green
+Write-Host "`nListo." -ForegroundColor Green

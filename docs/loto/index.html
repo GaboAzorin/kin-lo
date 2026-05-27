@@ -197,7 +197,7 @@
 
   <!-- Sugerencias -->
   <div class="section">
-    <div class="section-title">Combinaciones sugeridas para el próximo sorteo</div>
+    <div class="section-title" id="sugs-title">Combinaciones sugeridas para el próximo sorteo</div>
     <p style="font-size:0.82rem; color:var(--muted); margin-bottom:16px">
       Balanceadas estadísticamente · Dentro del rango de sumas histórico ·
       Nunca han salido antes en los <span id="total-sorteos">—</span> sorteos registrados.
@@ -210,6 +210,7 @@
     <div class="section-title">Rendimiento histórico de sugerencias</div>
     <p style="font-size:0.82rem; color:var(--muted); margin-bottom:16px">
       Comparación de las combinaciones sugeridas vs los resultados reales de cada sorteo.
+      <a href="../sugerencias/" style="color:var(--accent); margin-left:8px">Ver detalle por combinación →</a>
     </p>
     <div id="rdm-tabla"><span class="loading">cargando...</span></div>
     <div id="rdm-chart-wrap" style="margin-top:24px; display:none">
@@ -260,6 +261,8 @@ function render() {
 
   // Último sorteo
   document.getElementById('sorteo-num').textContent = `Sorteo #${ult.sorteo}`;
+  if (ult.sorteo) document.getElementById('sugs-title').textContent =
+    `Combinaciones sugeridas para sorteo #${ult.sorteo + 1}`;
   document.getElementById('sorteo-fecha').textContent =
     `${(ult.fecha||'').split(' ')[0]} · ${ult.dia||''}`;
 

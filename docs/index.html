@@ -261,7 +261,7 @@
       <div class="divider"></div>
 
       <div>
-        <div class="section-label">Combinaciones sugeridas</div>
+        <div class="section-label" id="loto-sugs-label">Combinaciones sugeridas</div>
         <div class="sugs-list" id="loto-sugs"><span class="loading">cargando...</span></div>
       </div>
 
@@ -294,7 +294,7 @@
       <div class="divider"></div>
 
       <div>
-        <div class="section-label">Combinaciones sugeridas</div>
+        <div class="section-label" id="kino-sugs-label">Combinaciones sugeridas</div>
         <div class="sugs-list" id="kino-sugs"><span class="loading">cargando...</span></div>
       </div>
 
@@ -528,6 +528,8 @@ async function init() {
       document.getElementById('loto-nums').innerHTML =
         ult.numeros.map(n => bola(n, 'bola-loto')).join('');
     }
+    if (ult.sorteo) document.getElementById('loto-sugs-label').textContent =
+      `Combinaciones sugeridas para sorteo #${ult.sorteo + 1}`;
     renderSugs(loto.suggestions, 'loto-sugs', 'sug-bola-loto');
   } else {
     document.getElementById('loto-fecha').innerHTML = '<span class="error">Datos no disponibles</span>';
@@ -544,6 +546,8 @@ async function init() {
       document.getElementById('kino-nums').innerHTML =
         ult.numeros.map(n => bola(n, 'bola-kino')).join('');
     }
+    if (ult.sorteo) document.getElementById('kino-sugs-label').textContent =
+      `Combinaciones sugeridas para sorteo #${ult.sorteo + 1}`;
     renderSugs(kino.suggestions, 'kino-sugs', 'sug-bola-kino');
   } else {
     document.getElementById('kino-fecha').innerHTML = '<span class="error">Datos no disponibles</span>';

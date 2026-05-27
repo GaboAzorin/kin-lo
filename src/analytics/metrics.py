@@ -25,7 +25,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "src" / "analytics"))
 sys.path.insert(0, str(REPO_ROOT / "src" / "notifications"))
 
-from suggestions import generar_sugerencias
+from suggestions import generar_sugerencias, combo_rank
 from tg_notify   import send as tg_send
 
 DATA_DIR  = REPO_ROOT / "data"
@@ -477,6 +477,108 @@ def _exportar_historial_json():
     print(f"  Historial exportado: {out_path.name}")
 
 
+def _exportar_detalle_json():
+    """
+    Genera docs/data/suggestions_detail.json con datos por combinación incluyendo
+    el rango lexicográfico de cada sugerencia y del resultado real.
+    """
+    out_path = DOCS_DATA / "suggestions_detail.json"
+
+    juego_config = {
+        "loto": {
+            "csv":      DATA_DIR / "polla_historial.csv",
+            "num_cols": [f"LOTO_n{i}" for i in range(1, 7)],
+            "n": 41, "k": 6, "total_combos": 4_496_388,
+        },
+        "kino": {
+            "csv":      DATA_DIR / "loteria_historial.csv",
+            "num_cols": [f"KINO_n{i}" for i in range(1, 15)],
+            "n": 25, "k": 14, "total_combos": 4_457_400,
+        },
+    }
+
+    empty = {j: {"sorteos": [], "n": cfg["n"], "k": cfg["k"],
+                 "total_combos": cfg["total_combos"]}
+             for j, cfg in juego_config.items()}
+
+    if not HISTORY_PATH.exists() or HISTORY_PATH.stat().st_size < 10:
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(empty, f, ensure_ascii=False, indent=2)
+        return
+
+    df_h = pd.read_csv(HISTORY_PATH)
+    result = {}
+
+    for juego, cfg in juego_config.items():
+        n, k     = cfg["n"], cfg["k"]
+        num_cols = cfg["num_cols"]
+        dj       = df_h[df_h["juego"] == juego].copy()
+
+        df_loto = None
+        if cfg["csv"].exists():
+            df_loto = pd.read_csv(cfg["csv"])
+            df_loto["_s"] = pd.to_numeric(df_loto["sorteo"], errors="coerce")
+
+        sorteos = []
+        for sorteo_n, grp in dj.groupby("sorteo_predicho"):
+            sorteo_n = int(sorteo_n)
+            fecha    = str(grp["fecha_sorteo"].iloc[0])
+
+            resultado    = None
+            rank_res     = None
+            if df_loto is not None:
+                fila = df_loto[df_loto["_s"] == sorteo_n]
+                if not fila.empty:
+                    nums = []
+                    for c in num_cols:
+                        try:
+                            nums.append(int(fila.iloc[0][c]))
+                        except (TypeError, ValueError):
+                            pass
+                    if len(nums) == k:
+                        resultado = sorted(nums)
+                        rank_res  = combo_rank(resultado, n, k)
+
+            rangos: dict[str, list] = {}
+            for _, row in grp.iterrows():
+                try:
+                    combo = [int(x) for x in str(row["combo"]).split(",")]
+                except Exception:
+                    continue
+                if len(combo) != k:
+                    continue
+                combo_s  = sorted(combo)
+                rank_c   = combo_rank(combo_s, n, k)
+                diff     = (rank_res - rank_c) if rank_res is not None else None
+                r = str(row["rango"])
+                rangos.setdefault(r, []).append({
+                    "combo":      combo_s,
+                    "aciertos":   int(row["aciertos"]),
+                    "rank_combo": rank_c,
+                    "diff_rank":  diff,
+                })
+
+            sorteos.append({
+                "sorteo":         sorteo_n,
+                "fecha":          fecha,
+                "resultado":      resultado,
+                "rank_resultado": rank_res,
+                "rangos":         {r: rangos[r] for r in _RANGOS_ORDEN if r in rangos},
+            })
+
+        sorteos.sort(key=lambda x: x["sorteo"], reverse=True)
+        result[juego] = {
+            "sorteos":      sorteos,
+            "n":            n,
+            "k":            k,
+            "total_combos": cfg["total_combos"],
+        }
+
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
+    print(f"  Detalle exportado: {out_path.name}")
+
+
 def _enviar_notificaciones(juego: str, ultimo: dict,
                            eval_data: dict | None, range_scores: dict):
     """
@@ -594,6 +696,7 @@ def main():
 
     # 6. Exportar historial al frontend
     _exportar_historial_json()
+    _exportar_detalle_json()
 
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)

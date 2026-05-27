@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detalle de Sugerencias · kino-loto</title>
+  <style>
+    :root {
+      --bg: #0f1117; --card: #1a1d27; --border: #2a2d3e;
+      --text: #e2e8f0; --muted: #8892a4;
+      --accent: #f59e0b; --green: #22c55e; --red: #ef4444;
+      --blue: #3b82f6;
+      --radius: 12px; --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); }
+
+    header {
+      padding: 16px 24px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    header a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+    header a:hover { color: var(--text); }
+    header h1 { font-size: 1.2rem; font-weight: 700; }
+    .header-nav { margin-left: auto; display: flex; gap: 16px; font-size: 0.85rem; }
+    .header-nav a { color: var(--muted); }
+    .header-nav a:hover { color: var(--accent); }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+    .tab-bar { display: flex; gap: 8px; margin-bottom: 28px; }
+    .tab {
+      padding: 7px 18px; border-radius: 6px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600;
+      border: 1px solid var(--border); color: var(--muted);
+      background: transparent; transition: all 0.15s; font-family: var(--font);
+    }
+    .tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+    .sorteo-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-bottom: 28px; overflow: hidden;
+    }
+    .sorteo-header {
+      padding: 18px 22px; border-bottom: 1px solid var(--border);
+      display: flex; flex-wrap: wrap; align-items: center; gap: 16px;
+    }
+    .sorteo-title { font-size: 1.05rem; font-weight: 700; }
+    .sorteo-fecha { font-size: 0.82rem; color: var(--muted); }
+    .resultado-wrap { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .resultado-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--muted); }
+    .bola {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 0.78rem; font-weight: 700;
+      background: rgba(245,158,11,0.15); color: var(--accent);
+      border: 1px solid rgba(245,158,11,0.35);
+    }
+    .bola-resultado {
+      background: rgba(34,197,94,0.15); color: var(--green);
+      border: 1px solid rgba(34,197,94,0.35);
+    }
+    .rank-badge {
+      margin-left: auto; text-align: right;
+      font-size: 0.78rem; color: var(--muted); line-height: 1.5;
+    }
+    .rank-badge strong { color: var(--text); font-size: 0.88rem; }
+
+    /* Rango section inside card */
+    .rango-section { border-top: 1px solid var(--border); }
+    .rango-header {
+      padding: 10px 22px; background: rgba(255,255,255,0.02);
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted);
+    }
+
+    /* Table */
+    .combos-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .combos-table th {
+      padding: 8px 12px; text-align: left; font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);
+      border-bottom: 1px solid var(--border); background: transparent;
+    }
+    .combos-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .combos-table tr:last-child td { border-bottom: none; }
+    .combos-table tbody tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .combo-nums { display: flex; flex-wrap: wrap; gap: 4px; }
+    .bola-sm {
+      width: 26px; height: 26px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 700;
+      background: rgba(245,158,11,0.12); color: var(--accent);
+      border: 1px solid rgba(245,158,11,0.28);
+    }
+    .bola-sm.hit {
+      background: rgba(34,197,94,0.2); color: var(--green);
+      border-color: rgba(34,197,94,0.45);
+    }
+
+    .aciertos-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 700;
+      background: rgba(255,255,255,0.07); color: var(--text);
+    }
+
+    .diff-pos { color: var(--green); }
+    .diff-neg { color: var(--red); }
+    .diff-zero { color: var(--accent); }
+
+    .rank-num { font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+    .empty-state {
+      text-align: center; color: var(--muted); font-size: 0.88rem;
+      font-style: italic; padding: 60px 24px;
+    }
+    .loading { color: var(--muted); font-style: italic; padding: 40px 0; display: block; text-align: center; }
+
+    @media (max-width: 640px) {
+      .combos-table th:nth-child(4),
+      .combos-table td:nth-child(4) { display: none; }
+      .bola { width: 28px; height: 28px; font-size: 0.7rem; }
+      .bola-sm { width: 22px; height: 22px; font-size: 0.62rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="../">← kino-loto</a>
+  <span style="color:var(--border)">|</span>
+  <h1>Historial de sugerencias</h1>
+  <nav class="header-nav">
+    <a href="../loto/">Loto</a>
+    <a href="../kino/">Kino</a>
+  </nav>
+</header>
+
+<main>
+  <p style="font-size:0.82rem; color:var(--muted); margin-bottom:24px">
+    Combinaciones sugeridas vs resultados reales · ID lexicográfico de cada combinación entre todas las posibles.
+  </p>
+
+  <div class="tab-bar">
+    <button class="tab active" onclick="showGame('loto', this)">🎱 Loto</button>
+    <button class="tab" onclick="showGame('kino', this)">🟦 Kino</button>
+  </div>
+
+  <div id="content"><span class="loading">cargando...</span></div>
+</main>
+
+<script>
+let detailData = null;
+let activeGame = 'loto';
+
+const RANGE_LABELS = {
+  '50':'Últ. 50', '100':'Últ. 100', '250':'Últ. 250',
+  '500':'Últ. 500', '1000':'Últ. 1000', 'all':'Todos los sorteos'
+};
+const RANGO_ORDER = ['50','100','250','500','1000','all'];
+
+async function loadData() {
+  try {
+    const r = await fetch('../data/suggestions_detail.json');
+    if (!r.ok) throw new Error('no data');
+    detailData = await r.json();
+    render();
+  } catch(e) {
+    document.getElementById('content').innerHTML =
+      '<p style="color:#f87171;padding:40px">Error cargando datos. Ejecuta metrics.py para generar suggestions_detail.json.</p>';
+  }
+}
+
+function showGame(game, btn) {
+  activeGame = game;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function fmt(n) {
+  return n == null ? '—' : n.toLocaleString('es-CL');
+}
+
+function fmtDiff(d) {
+  if (d == null) return '<span style="color:var(--muted)">—</span>';
+  const sign = d > 0 ? '+' : d < 0 ? '' : '';
+  const cls  = d > 0 ? 'diff-pos' : d < 0 ? 'diff-neg' : 'diff-zero';
+  return `<span class="${cls} rank-num">${sign}${d.toLocaleString('es-CL')}</span>`;
+}
+
+function render() {
+  const el = document.getElementById('content');
+  if (!detailData) return;
+
+  const gd = detailData[activeGame];
+  if (!gd || !gd.sorteos || gd.sorteos.length === 0) {
+    el.innerHTML = '<div class="empty-state">Aún no hay sorteos evaluados para este juego.</div>';
+    return;
+  }
+
+  const totalCombos = gd.total_combos;
+  const k = gd.k;
+
+  const cards = gd.sorteos.map(s => {
+    const resultadoBolas = (s.resultado || []).map(n =>
+      `<span class="bola bola-resultado">${n}</span>`
+    ).join('');
+
+    const rankResHtml = s.rank_resultado != null
+      ? `<strong class="rank-num">${fmt(s.rank_resultado)}</strong><br>de ${fmt(totalCombos)} combinaciones`
+      : '—';
+
+    // Build rango sections
+    const rangoSections = RANGO_ORDER.filter(r => gd.sorteos[0] && s.rangos[r])
+      .map(r => {
+        const combos = s.rangos[r] || [];
+        const resultadoSet = new Set(s.resultado || []);
+
+        const rows = combos.map(c => {
+          const bolas = c.combo.map(n => {
+            const cls = resultadoSet.has(n) ? 'bola-sm hit' : 'bola-sm';
+            return `<span class="${cls}">${n}</span>`;
+          }).join('');
+
+          return `<tr>
+            <td><div class="combo-nums">${bolas}</div></td>
+            <td style="text-align:center">
+              <span class="aciertos-badge">${c.aciertos} / ${k}</span>
+            </td>
+            <td class="rank-num" style="text-align:right">${fmt(c.rank_combo)}</td>
+            <td style="text-align:right">${fmtDiff(c.diff_rank)}</td>
+          </tr>`;
+        }).join('');
+
+        return `
+          <div class="rango-section">
+            <div class="rango-header">${RANGE_LABELS[r] || r}</div>
+            <table class="combos-table">
+              <thead><tr>
+                <th>Combinación <span style="font-weight:400;color:var(--green)">(verde = acierto)</span></th>
+                <th style="text-align:center">Aciertos</th>
+                <th style="text-align:right">ID sugerida</th>
+                <th style="text-align:right">Dif. de ID</th>
+              </tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>`;
+      }).join('');
+
+    const fechaStr = (s.fecha || '').split(' ')[0];
+
+    return `
+      <div class="sorteo-card">
+        <div class="sorteo-header">
+          <div>
+            <div class="sorteo-title">Sorteo #${s.sorteo}</div>
+            <div class="sorteo-fecha">${fechaStr}</div>
+          </div>
+          <div class="resultado-wrap">
+            <span class="resultado-label">Resultado</span>
+            ${resultadoBolas || '<span style="color:var(--muted)">—</span>'}
+          </div>
+          <div class="rank-badge">
+            ID resultado<br>${rankResHtml}
+          </div>
+        </div>
+        ${rangoSections}
+      </div>`;
+  }).join('');
+
+  el.innerHTML = cards;
+}
+
+loadData();
+</script>
+</body>
+</html>

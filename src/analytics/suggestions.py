@@ -13,6 +13,27 @@ Restricciones que debe cumplir cada combinación sugerida:
 
 import random
 from itertools import combinations as iter_combinations
+from math import comb as math_comb
+
+
+# ---------------------------------------------------------------------------
+# Rango lexicográfico
+# ---------------------------------------------------------------------------
+
+def combo_rank(combo: list[int], n: int, k: int) -> int:
+    """
+    Rango 1-indexado de una combinación en orden lexicográfico entre C(n,k).
+    combo_rank([1,2,3,4,5,6], 41, 6) == 1
+    combo_rank([1,2,3,4,5,7], 41, 6) == 2
+    """
+    combo = sorted(combo)
+    rank = 1
+    prev = 0
+    for i, c in enumerate(combo):
+        for a in range(prev + 1, c):
+            rank += math_comb(n - a, k - i - 1)
+        prev = c
+    return rank
 
 
 # ---------------------------------------------------------------------------
