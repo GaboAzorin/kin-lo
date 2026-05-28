@@ -39,12 +39,22 @@
 
     .sorteo-card {
       background: var(--card); border: 1px solid var(--border);
-      border-radius: var(--radius); margin-bottom: 28px; overflow: hidden;
+      border-radius: var(--radius); margin-bottom: 16px; overflow: hidden;
     }
     .sorteo-header {
-      padding: 18px 22px; border-bottom: 1px solid var(--border);
+      padding: 18px 22px;
       display: flex; flex-wrap: wrap; align-items: center; gap: 16px;
+      cursor: pointer; user-select: none;
     }
+    .sorteo-header:hover { background: rgba(255,255,255,0.02); }
+    .sorteo-card.open .sorteo-header { border-bottom: 1px solid var(--border); }
+    .sorteo-body { display: none; }
+    .sorteo-card.open .sorteo-body { display: block; }
+    .chevron {
+      margin-left: auto; color: var(--muted); font-size: 1rem;
+      transition: transform 0.2s; line-height: 1;
+    }
+    .sorteo-card.open .chevron { transform: rotate(180deg); }
     .sorteo-title { font-size: 1.05rem; font-weight: 700; }
     .sorteo-fecha { font-size: 0.82rem; color: var(--muted); }
     .resultado-wrap { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -62,7 +72,7 @@
       border: 1px solid rgba(34,197,94,0.35);
     }
     .rank-badge {
-      margin-left: auto; text-align: right;
+      text-align: right;
       font-size: 0.78rem; color: var(--muted); line-height: 1.5;
     }
     .rank-badge strong { color: var(--text); font-size: 0.88rem; }
@@ -203,7 +213,7 @@ function render() {
   const totalCombos = gd.total_combos;
   const k = gd.k;
 
-  const cards = gd.sorteos.map(s => {
+  const cards = gd.sorteos.map((s, idx) => {
     const resultadoBolas = (s.resultado || []).map(n =>
       `<span class="bola bola-resultado">${n}</span>`
     ).join('');
@@ -212,8 +222,7 @@ function render() {
       ? `<strong class="rank-num">${fmt(s.rank_resultado)}</strong><br>de ${fmt(totalCombos)} combinaciones`
       : '—';
 
-    // Build rango sections
-    const rangoSections = RANGO_ORDER.filter(r => gd.sorteos[0] && s.rangos[r])
+    const rangoSections = RANGO_ORDER.filter(r => s.rangos[r])
       .map(r => {
         const combos = s.rangos[r] || [];
         const resultadoSet = new Set(s.resultado || []);
@@ -250,10 +259,11 @@ function render() {
       }).join('');
 
     const fechaStr = (s.fecha || '').split(' ')[0];
+    const openClass = idx === 0 ? ' open' : '';
 
     return `
-      <div class="sorteo-card">
-        <div class="sorteo-header">
+      <div class="sorteo-card${openClass}">
+        <div class="sorteo-header" onclick="this.closest('.sorteo-card').classList.toggle('open')">
           <div>
             <div class="sorteo-title">Sorteo #${s.sorteo}</div>
             <div class="sorteo-fecha">${fechaStr}</div>
@@ -265,8 +275,9 @@ function render() {
           <div class="rank-badge">
             ID resultado<br>${rankResHtml}
           </div>
+          <span class="chevron">▾</span>
         </div>
-        ${rangoSections}
+        <div class="sorteo-body">${rangoSections}</div>
       </div>`;
   }).join('');
 
