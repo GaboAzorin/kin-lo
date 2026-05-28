@@ -292,8 +292,9 @@ function renderStats(jugadas) {
   const nKino    = jugadas.filter(j => j.juego === 'kino').length;
   const evaluadas  = jugadas.filter(j => j.aciertos != null);
   const pendientes = total - evaluadas.length;
-  const mejorLoto  = evaluadas.filter(j=>j.juego==='loto').reduce((m,j)=>Math.max(m,j.aciertos),-1);
-  const mejorKino  = evaluadas.filter(j=>j.juego==='kino').reduce((m,j)=>Math.max(m,j.aciertos),-1);
+  const mainAc = (j) => typeof j.aciertos === 'object' ? (j.aciertos[j.juego] ?? 0) : (j.aciertos ?? 0);
+  const mejorLoto  = evaluadas.filter(j=>j.juego==='loto').reduce((m,j)=>Math.max(m,mainAc(j)),-1);
+  const mejorKino  = evaluadas.filter(j=>j.juego==='kino').reduce((m,j)=>Math.max(m,mainAc(j)),-1);
   let html = `
     <div class="stat-card"><div class="val">${total}</div><div class="lbl">Total jugadas</div></div>
     <div class="stat-card"><div class="val">${nLoto}</div><div class="lbl">Loto</div></div>
@@ -315,10 +316,21 @@ function renderRow(j, origIdx) {
   const origenHTML = j.rango_sugerencia
     ? `<span class="rango">${j.rango_sugerencia}</span>`
     : `<span class="manual-tag">Manual</span>`;
+  const pick = esKino ? 14 : 6;
   let aciertosHTML;
-  if (j.aciertos == null) aciertosHTML = '<span class="aciertos-pending">Pendiente</span>';
-  else if (j.aciertos === 0) aciertosHTML = `<span class="aciertos-cero">0 / ${j.numeros?.length ?? (esKino?14:6)}</span>`;
-  else aciertosHTML = `<span class="aciertos-ok">${j.aciertos} / ${j.numeros?.length ?? (esKino?14:6)}</span>`;
+  if (j.aciertos == null) {
+    aciertosHTML = '<span class="aciertos-pending">Pendiente</span>';
+  } else if (typeof j.aciertos === 'object') {
+    aciertosHTML = variantes.map(v => {
+      const val = j.aciertos[v];
+      if (val == null) return '';
+      const cls = val === 0 ? 'aciertos-cero' : 'aciertos-ok';
+      return `<div style="white-space:nowrap"><span style="color:var(--muted);font-size:0.72rem">${LABEL[v]||v}: </span><span class="${cls}">${val}/${pick}</span></div>`;
+    }).filter(Boolean).join('') || '<span class="aciertos-pending">—</span>';
+  } else {
+    const cls = j.aciertos === 0 ? 'aciertos-cero' : 'aciertos-ok';
+    aciertosHTML = `<span class="${cls}">${j.aciertos}/${pick}</span>`;
+  }
 
   return `<tr>
     <td class="fecha">${j.fecha_jugada||'—'}</td>
@@ -435,11 +447,17 @@ function validateNums() {
   }
 }
 
-function computeAciertos(juego, sorteo, numeros) {
-  const resultado = (historialIndex[juego] || {})[String(sorteo)];
-  if (!resultado) return null;
-  const set = new Set(resultado);
-  return numeros.filter(n => set.has(n)).length;
+function computeAciertos(juego, sorteo, variantes, numeros) {
+  const sorteoData = (historialIndex[juego] || {})[String(sorteo)];
+  if (!sorteoData) return null;
+  const result = {};
+  for (const v of variantes) {
+    const res = sorteoData[v];
+    if (!res) continue;
+    const s = new Set(res);
+    result[v] = numeros.filter(n => s.has(n)).length;
+  }
+  return Object.keys(result).length ? result : null;
 }
 
 function getVariantes() {
@@ -535,7 +553,7 @@ async function submitJugada() {
         [...(j.numeros||[])].sort((a,b)=>a-b).join(',') === origKey
       );
       if (contentIdx === -1) throw new Error('No se encontró el registro a editar. Recarga la página.');
-      const aciertosEdit = computeAciertos(juego, sorteo, numeros);
+      const aciertosEdit = computeAciertos(juego, sorteo, variantes, numeros);
       content[contentIdx] = {
         ...content[contentIdx],
         fecha_jugada: fecha, juego, variantes, sorteo, numeros,
@@ -550,7 +568,7 @@ async function submitJugada() {
         [...(j.numeros||[])].sort((a,b)=>a-b).join(',') === key
       );
       if (!dup) {
-        const aciertosNew = computeAciertos(juego, sorteo, numeros);
+        const aciertosNew = computeAciertos(juego, sorteo, variantes, numeros);
         content.push({ fecha_jugada: fecha, juego, variantes, sorteo, numeros, rango_sugerencia: null, aciertos: aciertosNew });
         await ghPutFile(content, sha, `jugada manual: ${juego} #${sorteo}`);
       }
