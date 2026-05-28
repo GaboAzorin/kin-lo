@@ -288,5 +288,25 @@
     "aciertos": {
       "loto": 1
     }
+  },
+  {
+    "fecha_jugada": "03-05-2026",
+    "juego": "loto",
+    "variantes": [
+      "loto"
+    ],
+    "sorteo": 5420,
+    "numeros": [
+      2,
+      12,
+      20,
+      29,
+      33,
+      37
+    ],
+    "rango_sugerencia": null,
+    "aciertos": {
+      "loto": 2
+    }
   }
 ]
