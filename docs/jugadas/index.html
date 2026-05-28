@@ -338,7 +338,10 @@ function refreshTable() {
   }
   const sorted = [...allJugadas]
     .map((j, i) => ({ j, i }))
-    .sort((a, b) => b.j.sorteo - a.j.sorteo || b.j.juego.localeCompare(a.j.juego));
+    .sort((a, b) => {
+      const fd = j => (j.fecha_jugada || '').split('-').reverse().join(''); // dd-mm-yyyy → yyyymmdd
+      return fd(b.j).localeCompare(fd(a.j)) || b.j.sorteo - a.j.sorteo;
+    });
   renderStats(allJugadas);
   document.getElementById('tbody').innerHTML = sorted.map(({ j, i }) => renderRow(j, i)).join('');
 }
