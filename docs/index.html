@@ -607,15 +607,16 @@ const GH_OWNER = 'GaboAzorin', GH_REPO = 'kin-lo', GH_FILE = 'data/jugadas.json'
 function getToken() {
   const hash = location.hash;
   if (hash.startsWith('#setup=')) {
-    localStorage.setItem('kl_gh_token', hash.slice(7));
+    localStorage.setItem('kl_gh_token', hash.slice(7).trim());
     history.replaceState(null, '', location.pathname + location.search);
   }
   const stored = localStorage.getItem('kl_gh_token');
   if (!stored) return '';
-  try { return atob(stored); } catch {
-    localStorage.removeItem('kl_gh_token');
-    return '';
-  }
+  try {
+    const b64 = stored.trim().replace(/-/g, '+').replace(/_/g, '/');
+    const padded = b64 + '==='.slice(0, (4 - b64.length % 4) % 4);
+    return atob(padded);
+  } catch { return ''; }
 }
 
 async function ghGetFile() {
@@ -646,6 +647,12 @@ async function ghPutFile(content, sha, msg) {
 }
 
 async function handleJugar(btn, juego, sorteo, numeros, rango) {
+  if (!getToken()) {
+    const b64 = prompt('Token no configurado.\nPega aquí el resultado de:\n  btoa("github_pat_TU_TOKEN")');
+    if (!b64) return;
+    localStorage.setItem('kl_gh_token', b64.trim());
+    if (!getToken()) { alert('Token inválido. Debe ser el resultado exacto de btoa().'); return; }
+  }
   btn.disabled = true;
   btn.textContent = '...';
   try {
