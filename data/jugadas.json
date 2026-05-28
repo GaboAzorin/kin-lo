@@ -67,5 +67,33 @@
     ],
     "rango_sugerencia": null,
     "aciertos": null
+  },
+  {
+    "fecha_jugada": "23-05-2026",
+    "juego": "kino",
+    "variantes": [
+      "kino",
+      "rekino",
+      "requetekino"
+    ],
+    "sorteo": 3231,
+    "numeros": [
+      3,
+      5,
+      6,
+      7,
+      9,
+      11,
+      12,
+      13,
+      14,
+      15,
+      17,
+      18,
+      24,
+      25
+    ],
+    "rango_sugerencia": null,
+    "aciertos": null
   }
 ]
