@@ -559,13 +559,19 @@ function getToken() {
     history.replaceState(null, '', location.pathname + location.search);
   }
   const stored = localStorage.getItem('kl_gh_token');
-  return stored ? atob(stored) : '';
+  if (!stored) return '';
+  try { return atob(stored); } catch {
+    localStorage.removeItem('kl_gh_token');
+    return '';
+  }
 }
 
 async function ghGetFile() {
+  const token = getToken();
+  if (!token) throw new Error('Token no configurado');
   const r = await fetch(
     `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
-    { headers: { Authorization: `Bearer ${getToken()}`, Accept: 'application/vnd.github+json' } }
+    { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } }
   );
   if (r.status === 404) return { content: [], sha: null };
   if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.message || `GitHub ${r.status}`); }
