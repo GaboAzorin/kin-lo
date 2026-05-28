@@ -642,9 +642,18 @@ async function init() {
     document.getElementById('kino-sugs').innerHTML  = '<span class="error">Sin datos</span>';
   }
 
+  // Fecha más reciente en los datos (último sorteo entre loto y kino)
+  const fechas = [loto?.ultimo_sorteo?.fecha, kino?.ultimo_sorteo?.fecha]
+    .filter(Boolean).map(f => f.split(' ')[0]).sort();
+  const dataFecha = fechas.length
+    ? fechas[fechas.length - 1].split('-').reverse().join('-') : '—';
   const _now = new Date();
-  document.getElementById('last-update').textContent =
-    `Actualizado: ${_now.toLocaleDateString('es-CL')} ${_now.toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit'})}`;
+  const pageStamp = `${_now.toLocaleDateString('es-CL')} ${_now.toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit'})}`;
+  document.getElementById('last-update').innerHTML =
+    `<span style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:0.76rem;line-height:1.4">
+      <span>Datos: <strong style="color:var(--text)">${dataFecha}</strong></span>
+      <span>Cargado: <strong style="color:var(--text)">${pageStamp}</strong></span>
+    </span>`;
 }
 
 init();
