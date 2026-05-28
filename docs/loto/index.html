@@ -243,15 +243,19 @@ let existingJugadas = [];
 
 async function loadData() {
   try {
-    const [r1, r2, r3] = await Promise.all([
+    const [r1, r2] = await Promise.all([
       fetch('../data/loto_metrics.json'),
       fetch('../data/suggestions_history.json').catch(() => null),
-      fetch('https://raw.githubusercontent.com/GaboAzorin/kin-lo/main/data/jugadas.json', { cache: 'no-store' }).catch(() => null),
     ]);
     if (!r1.ok) throw new Error('No data');
     globalData   = await r1.json();
     historialData = r2 && r2.ok ? await r2.json() : null;
-    existingJugadas = r3 && r3.ok ? await r3.json() : [];
+    try {
+      const ghH = { Accept: 'application/vnd.github+json' };
+      const tok = getToken(); if (tok) ghH.Authorization = `Bearer ${tok}`;
+      const r3 = await fetch('https://api.github.com/repos/GaboAzorin/kin-lo/contents/data/jugadas.json', { headers: ghH, cache: 'no-store' });
+      if (r3.ok) { const d = await r3.json(); existingJugadas = JSON.parse(atob(d.content.replace(/\n/g, ''))); }
+    } catch {}
     render();
   } catch(e) {
     document.querySelector('main').innerHTML =

@@ -534,13 +534,17 @@ function renderPozos(variantes, containerId, accentVar, total) {
 let existingJugadas = [];
 
 async function init() {
-  const [loto, kino, pozos, jugadasResp] = await Promise.all([
+  const [loto, kino, pozos] = await Promise.all([
     loadJSON('data/loto_metrics.json'),
     loadJSON('data/kino_metrics.json'),
     loadJSON('data/pozos.json'),
-    fetch('https://raw.githubusercontent.com/GaboAzorin/kin-lo/main/data/jugadas.json', { cache: 'no-store' }).catch(() => null),
   ]);
-  existingJugadas = jugadasResp && jugadasResp.ok ? await jugadasResp.json().catch(()=>[]) : [];
+  try {
+    const ghH = { Accept: 'application/vnd.github+json' };
+    const tok = getToken(); if (tok) ghH.Authorization = `Bearer ${tok}`;
+    const r = await fetch('https://api.github.com/repos/GaboAzorin/kin-lo/contents/data/jugadas.json', { headers: ghH, cache: 'no-store' });
+    if (r.ok) { const d = await r.json(); existingJugadas = JSON.parse(atob(d.content.replace(/\n/g, ''))); }
+  } catch {}
 
   // ── Pozos ──
   if (pozos?.loto) {
