@@ -126,6 +126,56 @@
     canvas { max-width: 100%; }
     .loading { color: var(--muted); font-style: italic; padding: 20px 0; }
     .tab-bar { display: flex; gap: 8px; margin-bottom: 20px; }
+
+    /* ── Jugadas ── */
+    .settings-btn {
+      background: none; border: none; cursor: pointer; color: var(--muted);
+      font-size: 1.1rem; padding: 4px 6px; border-radius: 4px;
+      transition: color 0.15s; line-height: 1; font-family: var(--font);
+    }
+    .settings-btn:hover { color: var(--text); }
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+      z-index: 200; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px; max-width: 460px; width: 92%;
+    }
+    .modal-box h3 { font-size: 1rem; margin-bottom: 8px; }
+    .modal-box p  { font-size: 0.82rem; color: var(--muted); margin-bottom: 12px; line-height: 1.6; }
+    .modal-box code { background: #0f1117; padding: 1px 5px; border-radius: 3px; font-size: 0.79rem; }
+    .modal-input {
+      width: 100%; background: #0f1117; border: 1px solid var(--border);
+      border-radius: 6px; padding: 9px 12px; color: var(--text);
+      font-family: monospace; font-size: 0.8rem; margin-bottom: 12px;
+    }
+    .modal-input:focus { outline: none; border-color: var(--accent); }
+    .modal-footer { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
+    .modal-clear { margin-right: auto; font-size: 0.75rem; color: var(--muted); background: none; border: none; cursor: pointer; font-family: var(--font); }
+    .modal-clear:hover { color: var(--red); }
+    .btn-cancel {
+      padding: 7px 16px; border-radius: 6px; background: transparent;
+      color: var(--muted); border: 1px solid var(--border); cursor: pointer;
+      font-size: 0.83rem; font-family: var(--font);
+    }
+    .btn-save {
+      padding: 7px 16px; border-radius: 6px; background: var(--accent);
+      color: #000; border: none; cursor: pointer; font-weight: 700;
+      font-size: 0.83rem; font-family: var(--font);
+    }
+    .jugar-btn {
+      padding: 4px 11px; border-radius: 6px; font-size: 0.72rem; font-weight: 700;
+      cursor: pointer; border: 1px solid rgba(245,158,11,0.4);
+      background: rgba(245,158,11,0.08); color: var(--accent);
+      transition: all 0.15s; white-space: nowrap; flex-shrink: 0;
+      font-family: var(--font);
+    }
+    .jugar-btn:hover:not(:disabled) { background: rgba(245,158,11,0.2); }
+    .jugar-btn.ok  { background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.4); color: var(--green); cursor: default; }
+    .jugar-btn.err { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.4); color: var(--red); }
+    .jugar-btn:disabled { opacity: 0.7; cursor: default; }
     .tab {
       padding: 6px 14px; border-radius: 6px; cursor: pointer;
       font-size: 0.83rem; font-weight: 600;
@@ -142,6 +192,7 @@
   <span style="color:var(--border)">|</span>
   <h1>🎱 Loto</h1>
   <span style="margin-left:auto; font-size:0.8rem; color:var(--muted)" id="update-label">—</span>
+  <button class="settings-btn" onclick="openTokenModal()" title="Configurar GitHub token para guardar jugadas">⚙</button>
 </header>
 
 <main>
@@ -226,16 +277,19 @@ let historialData = null;
 let currentGame = 'LOTO';
 let sumChart = null;
 let rdmChart = null;
+let existingJugadas = [];
 
 async function loadData() {
   try {
-    const [r1, r2] = await Promise.all([
+    const [r1, r2, r3] = await Promise.all([
       fetch('../data/loto_metrics.json'),
-      fetch('../data/suggestions_history.json').catch(() => null)
+      fetch('../data/suggestions_history.json').catch(() => null),
+      fetch('https://raw.githubusercontent.com/GaboAzorin/kin-lo/main/data/jugadas.json', { cache: 'no-store' }).catch(() => null),
     ]);
     if (!r1.ok) throw new Error('No data');
-    globalData = await r1.json();
+    globalData   = await r1.json();
     historialData = r2 && r2.ok ? await r2.json() : null;
+    existingJugadas = r3 && r3.ok ? await r3.json() : [];
     render();
   } catch(e) {
     document.querySelector('main').innerHTML =
@@ -402,25 +456,43 @@ function renderSugerencias() {
   const keys = Object.keys(sugs);
   if (!keys.length) { el.innerHTML = '<span style="color:var(--muted)">Sin datos</span>'; return; }
 
+  const sorteoProximo = (d.ultimo_sorteo?.sorteo || 0) + 1;
   let active = keys.includes('all') ? 'all' : keys[keys.length - 1];
 
   function combosHTML(key) {
-    return (sugs[key] || []).map((s, i) => `
-      <div class="sug-card">
-        <span class="sug-num">#${i+1}</span>
-        ${s.combo.map(n => `<span class="bola" style="width:34px;height:34px;font-size:0.8rem">${n}</span>`).join('')}
-        <span class="sug-meta">Suma: <strong>${s.suma}</strong> · Score: <strong>${s.score}</strong></span>
-      </div>`).join('');
+    return (sugs[key] || []).map((s, i) => {
+      const numsKey = [...s.combo].sort((a,b)=>a-b).join(',');
+      const yaReg   = existingJugadas.some(j =>
+        j.juego === 'loto' && j.sorteo === sorteoProximo &&
+        [...j.numeros].sort((a,b)=>a-b).join(',') === numsKey
+      );
+      return `
+        <div class="sug-card">
+          <span class="sug-num">#${i+1}</span>
+          ${s.combo.map(n => `<span class="bola" style="width:34px;height:34px;font-size:0.8rem">${n}</span>`).join('')}
+          <span class="sug-meta">Suma: <strong>${s.suma}</strong> · Score: <strong>${s.score}</strong></span>
+          <button class="jugar-btn${yaReg?' ok':''}" ${yaReg?'disabled':''}
+            data-sorteo="${sorteoProximo}" data-nums="${s.combo.join(',')}" data-rango="${key}">
+            ${yaReg ? '✓ Registrada' : '🎟 Jugué esta'}
+          </button>
+        </div>`;
+    }).join('');
   }
 
   function render() {
     const pills = keys.map(k =>
       `<button class="sug-pill${k===active?' sug-pill-active':''}" data-key="${k}">${RANGE_LABELS[k]||k}</button>`
     ).join('');
-    el.innerHTML = `<div class="sug-pills">${pills}</div><div>${combosHTML(active)}</div>`;
+    el.innerHTML = `<div class="sug-pills">${pills}</div><div id="combos-wrap">${combosHTML(active)}</div>`;
     el.querySelectorAll('.sug-pill').forEach(btn =>
       btn.addEventListener('click', () => { active = btn.dataset.key; render(); })
     );
+    document.getElementById('combos-wrap').addEventListener('click', e => {
+      const btn = e.target.closest('.jugar-btn');
+      if (!btn || btn.disabled) return;
+      handleJugar(btn, 'loto', +btn.dataset.sorteo,
+        btn.dataset.nums.split(',').map(Number), btn.dataset.rango);
+    });
   }
   render();
 }
@@ -519,6 +591,94 @@ function renderRendimiento() {
 }
 
 loadData();
+
+// ── GitHub API + Token modal ─────────────────────────
+const GH_OWNER = 'GaboAzorin', GH_REPO = 'kin-lo', GH_FILE = 'data/jugadas.json';
+const LS_TOKEN = 'kl_gh_token';
+
+function getToken() { return localStorage.getItem(LS_TOKEN) || ''; }
+
+function openTokenModal() {
+  document.getElementById('token-input').value = getToken();
+  document.getElementById('token-modal').classList.add('open');
+}
+function closeTokenModal() { document.getElementById('token-modal').classList.remove('open'); }
+function saveToken() {
+  const t = document.getElementById('token-input').value.trim();
+  if (t) localStorage.setItem(LS_TOKEN, t);
+  else localStorage.removeItem(LS_TOKEN);
+  closeTokenModal();
+}
+function clearToken() { localStorage.removeItem(LS_TOKEN); closeTokenModal(); }
+
+async function ghGetFile() {
+  const r = await fetch(
+    `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
+    { headers: { Authorization: `Bearer ${getToken()}`, Accept: 'application/vnd.github+json' } }
+  );
+  if (r.status === 404) return { content: [], sha: null };
+  if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.message || `GitHub ${r.status}`); }
+  const d = await r.json();
+  return { content: JSON.parse(atob(d.content.replace(/\n/g, ''))), sha: d.sha };
+}
+
+async function ghPutFile(content, sha, msg) {
+  const body = { message: msg, content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))) };
+  if (sha) body.sha = sha;
+  const r = await fetch(
+    `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
+    {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${getToken()}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }
+  );
+  if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.message || `GitHub ${r.status}`); }
+}
+
+async function handleJugar(btn, juego, sorteo, numeros, rango) {
+  if (!getToken()) { openTokenModal(); return; }
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    const { content, sha } = await ghGetFile();
+    const key = [...numeros].sort((a,b)=>a-b).join(',');
+    if (!content.some(j => j.juego === juego && j.sorteo === sorteo &&
+        [...j.numeros].sort((a,b)=>a-b).join(',') === key)) {
+      content.push({ fecha_jugada: new Date().toLocaleDateString('es-CL'),
+        juego, sorteo, numeros, rango_sugerencia: rango, aciertos: null });
+      await ghPutFile(content, sha, `jugada: ${juego} #${sorteo}`);
+      existingJugadas.push({ juego, sorteo, numeros, rango_sugerencia: rango });
+    }
+    btn.classList.add('ok');
+    btn.textContent = '✓ Registrada';
+  } catch(e) {
+    btn.disabled = false;
+    btn.classList.add('err');
+    btn.textContent = '⚠ ' + e.message.slice(0, 28);
+    setTimeout(() => { btn.classList.remove('err'); btn.textContent = '🎟 Jugué esta'; }, 5000);
+  }
+}
 </script>
+
+<div class="modal-overlay" id="token-modal">
+  <div class="modal-box">
+    <h3>🔑 GitHub Token</h3>
+    <p>
+      Para guardar jugadas en el repositorio necesitas un
+      <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" style="color:var(--accent)">Fine-Grained PAT</a>
+      con permiso <code>Contents: Read and Write</code> en el repo
+      <code>GaboAzorin/kin-lo</code>.<br><br>
+      El token se guarda solo en este navegador.
+    </p>
+    <input class="modal-input" type="password" id="token-input" placeholder="github_pat_..." autocomplete="off" />
+    <div class="modal-footer">
+      <button class="modal-clear" onclick="clearToken()">Borrar token</button>
+      <button class="btn-cancel" onclick="closeTokenModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveToken()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

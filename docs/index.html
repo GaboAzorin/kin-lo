@@ -144,6 +144,56 @@
     .loading { color: var(--muted); font-style: italic; font-size: 0.85rem; }
     .error   { color: #f87171; font-size: 0.85rem; }
 
+    /* ── Jugadas ── */
+    .settings-btn {
+      background: none; border: none; cursor: pointer; color: var(--muted);
+      font-size: 1.1rem; padding: 4px 6px; border-radius: 4px;
+      transition: color 0.15s; line-height: 1; font-family: var(--font);
+    }
+    .settings-btn:hover { color: var(--text); }
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+      z-index: 200; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px; max-width: 460px; width: 92%;
+    }
+    .modal-box h3 { font-size: 1rem; margin-bottom: 8px; }
+    .modal-box p  { font-size: 0.82rem; color: var(--muted); margin-bottom: 12px; line-height: 1.6; }
+    .modal-box code { background: #0f1117; padding: 1px 5px; border-radius: 3px; font-size: 0.79rem; }
+    .modal-input {
+      width: 100%; background: #0f1117; border: 1px solid var(--border);
+      border-radius: 6px; padding: 9px 12px; color: var(--text);
+      font-family: monospace; font-size: 0.8rem; margin-bottom: 12px;
+    }
+    .modal-input:focus { outline: none; border-color: var(--muted); }
+    .modal-footer { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
+    .modal-clear { margin-right: auto; font-size: 0.75rem; color: var(--muted); background: none; border: none; cursor: pointer; font-family: var(--font); }
+    .modal-clear:hover { color: #f87171; }
+    .btn-cancel {
+      padding: 7px 16px; border-radius: 6px; background: transparent;
+      color: var(--muted); border: 1px solid var(--border); cursor: pointer;
+      font-size: 0.83rem; font-family: var(--font);
+    }
+    .btn-save {
+      padding: 7px 16px; border-radius: 6px; background: var(--muted);
+      color: var(--bg); border: none; cursor: pointer; font-weight: 700;
+      font-size: 0.83rem; font-family: var(--font);
+    }
+    .jugar-btn {
+      padding: 4px 10px; border-radius: 6px; font-size: 0.68rem; font-weight: 700;
+      cursor: pointer; border: 1px solid var(--border);
+      background: transparent; color: var(--muted);
+      transition: all 0.15s; white-space: nowrap; flex-shrink: 0;
+      font-family: var(--font);
+    }
+    .jugar-btn:hover:not(:disabled) { border-color: var(--text); color: var(--text); }
+    .jugar-btn.ok  { background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.4); color: var(--green); cursor: default; }
+    .jugar-btn.err { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.4); color: #f87171; }
+    .jugar-btn:disabled { opacity: 0.7; cursor: default; }
+
     /* ── Countdown ── */
     .countdown-bar {
       display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
@@ -192,6 +242,7 @@
   </svg>
   <h1>kino-loto</h1>
   <span id="last-update">cargando...</span>
+  <button class="settings-btn" onclick="openTokenModal()" title="Configurar GitHub token para guardar jugadas">⚙</button>
 </header>
 
 <main>
@@ -439,7 +490,7 @@ const RANGE_LABELS = {
   '500': 'Últ. 500', '1000': 'Últ. 1000', 'all': 'Todos'
 };
 
-function renderSugs(sugs, containerId, bolaCls) {
+function renderSugs(sugs, containerId, bolaCls, juego, sorteoProximo) {
   const el = document.getElementById(containerId);
   if (!sugs) { el.innerHTML = '<span class="error">Sin datos aún</span>'; return; }
 
@@ -453,22 +504,40 @@ function renderSugs(sugs, containerId, bolaCls) {
   function combosHTML(key) {
     const list = sugs[key] || [];
     if (!list.length) return '<span class="error">Sin datos para este rango</span>';
-    return list.map((s, i) => `
-      <div class="sug-row">
-        <span class="sug-idx">#${i+1}</span>
-        ${s.combo.map(n => sugBola(n, bolaCls)).join('')}
-        <span class="sug-sum">Σ <strong>${s.suma}</strong></span>
-      </div>`).join('');
+    return list.map((s, i) => {
+      const numsKey = [...s.combo].sort((a,b)=>a-b).join(',');
+      const yaReg   = existingJugadas.some(j =>
+        j.juego === juego && j.sorteo === sorteoProximo &&
+        [...j.numeros].sort((a,b)=>a-b).join(',') === numsKey
+      );
+      return `
+        <div class="sug-row">
+          <span class="sug-idx">#${i+1}</span>
+          ${s.combo.map(n => sugBola(n, bolaCls)).join('')}
+          <span class="sug-sum">Σ <strong>${s.suma}</strong></span>
+          <button class="jugar-btn${yaReg?' ok':''}" ${yaReg?'disabled':''}
+            data-juego="${juego}" data-sorteo="${sorteoProximo}"
+            data-nums="${s.combo.join(',')}" data-rango="${key}">
+            ${yaReg ? '✓' : '🎟'}
+          </button>
+        </div>`;
+    }).join('');
   }
 
   function render() {
     const pills = keys.map(k =>
       `<button class="sug-pill${k === activeKey ? ' '+pillActive : ''}" data-key="${k}">${RANGE_LABELS[k] || k}</button>`
     ).join('');
-    el.innerHTML = `<div class="sug-pills">${pills}</div><div class="sug-combos">${combosHTML(activeKey)}</div>`;
+    el.innerHTML = `<div class="sug-pills">${pills}</div><div class="sug-combos" id="${containerId}-combos">${combosHTML(activeKey)}</div>`;
     el.querySelectorAll('.sug-pill').forEach(btn =>
       btn.addEventListener('click', () => { activeKey = btn.dataset.key; render(); })
     );
+    document.getElementById(`${containerId}-combos`).addEventListener('click', e => {
+      const btn = e.target.closest('.jugar-btn');
+      if (!btn || btn.disabled) return;
+      handleJugar(btn, btn.dataset.juego, +btn.dataset.sorteo,
+        btn.dataset.nums.split(',').map(Number), btn.dataset.rango);
+    });
   }
 
   render();
@@ -500,12 +569,16 @@ function renderPozos(variantes, containerId, accentVar, total) {
   el.innerHTML = rows + totalRow;
 }
 
+let existingJugadas = [];
+
 async function init() {
-  const [loto, kino, pozos] = await Promise.all([
+  const [loto, kino, pozos, jugadasResp] = await Promise.all([
     loadJSON('data/loto_metrics.json'),
     loadJSON('data/kino_metrics.json'),
     loadJSON('data/pozos.json'),
+    fetch('https://raw.githubusercontent.com/GaboAzorin/kin-lo/main/data/jugadas.json', { cache: 'no-store' }).catch(() => null),
   ]);
+  existingJugadas = jugadasResp && jugadasResp.ok ? await jugadasResp.json().catch(()=>[]) : [];
 
   // ── Pozos ──
   if (pozos?.loto) {
@@ -530,7 +603,7 @@ async function init() {
     }
     if (ult.sorteo) document.getElementById('loto-sugs-label').textContent =
       `Combinaciones sugeridas para sorteo #${ult.sorteo + 1}`;
-    renderSugs(loto.suggestions, 'loto-sugs', 'sug-bola-loto');
+    renderSugs(loto.suggestions, 'loto-sugs', 'sug-bola-loto', 'loto', (ult.sorteo || 0) + 1);
   } else {
     document.getElementById('loto-fecha').innerHTML = '<span class="error">Datos no disponibles</span>';
     document.getElementById('loto-sugs').innerHTML  = '<span class="error">Sin datos</span>';
@@ -548,7 +621,7 @@ async function init() {
     }
     if (ult.sorteo) document.getElementById('kino-sugs-label').textContent =
       `Combinaciones sugeridas para sorteo #${ult.sorteo + 1}`;
-    renderSugs(kino.suggestions, 'kino-sugs', 'sug-bola-kino');
+    renderSugs(kino.suggestions, 'kino-sugs', 'sug-bola-kino', 'kino', (ult.sorteo || 0) + 1);
   } else {
     document.getElementById('kino-fecha').innerHTML = '<span class="error">Datos no disponibles</span>';
     document.getElementById('kino-sugs').innerHTML  = '<span class="error">Sin datos</span>';
@@ -559,6 +632,95 @@ async function init() {
 }
 
 init();
+
+// ── GitHub API + Token modal ─────────────────────────
+const GH_OWNER = 'GaboAzorin', GH_REPO = 'kin-lo', GH_FILE = 'data/jugadas.json';
+const LS_TOKEN = 'kl_gh_token';
+
+function getToken() { return localStorage.getItem(LS_TOKEN) || ''; }
+
+function openTokenModal() {
+  document.getElementById('token-input').value = getToken();
+  document.getElementById('token-modal').classList.add('open');
+}
+function closeTokenModal() { document.getElementById('token-modal').classList.remove('open'); }
+function saveToken() {
+  const t = document.getElementById('token-input').value.trim();
+  if (t) localStorage.setItem(LS_TOKEN, t);
+  else localStorage.removeItem(LS_TOKEN);
+  closeTokenModal();
+}
+function clearToken() { localStorage.removeItem(LS_TOKEN); closeTokenModal(); }
+
+async function ghGetFile() {
+  const r = await fetch(
+    `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
+    { headers: { Authorization: `Bearer ${getToken()}`, Accept: 'application/vnd.github+json' } }
+  );
+  if (r.status === 404) return { content: [], sha: null };
+  if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.message || `GitHub ${r.status}`); }
+  const d = await r.json();
+  return { content: JSON.parse(atob(d.content.replace(/\n/g, ''))), sha: d.sha };
+}
+
+async function ghPutFile(content, sha, msg) {
+  const body = { message: msg, content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))) };
+  if (sha) body.sha = sha;
+  const r = await fetch(
+    `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
+    {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${getToken()}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }
+  );
+  if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.message || `GitHub ${r.status}`); }
+}
+
+async function handleJugar(btn, juego, sorteo, numeros, rango) {
+  if (!getToken()) { openTokenModal(); return; }
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    const { content, sha } = await ghGetFile();
+    const key = [...numeros].sort((a,b)=>a-b).join(',');
+    if (!content.some(j => j.juego === juego && j.sorteo === sorteo &&
+        [...j.numeros].sort((a,b)=>a-b).join(',') === key)) {
+      content.push({ fecha_jugada: new Date().toLocaleDateString('es-CL'),
+        juego, sorteo, numeros, rango_sugerencia: rango, aciertos: null });
+      await ghPutFile(content, sha, `jugada: ${juego} #${sorteo}`);
+      existingJugadas.push({ juego, sorteo, numeros, rango_sugerencia: rango });
+    }
+    btn.classList.add('ok');
+    btn.textContent = '✓';
+  } catch(e) {
+    btn.disabled = false;
+    btn.classList.add('err');
+    btn.textContent = '⚠';
+    btn.title = e.message;
+    setTimeout(() => { btn.classList.remove('err'); btn.textContent = '🎟'; btn.title = ''; }, 5000);
+  }
+}
 </script>
+
+<div class="modal-overlay" id="token-modal">
+  <div class="modal-box">
+    <h3>🔑 GitHub Token</h3>
+    <p>
+      Para guardar jugadas en el repositorio necesitas un
+      <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" style="color:var(--loto)">Fine-Grained PAT</a>
+      con permiso <code>Contents: Read and Write</code> en el repo
+      <code>GaboAzorin/kin-lo</code>.<br><br>
+      El token se guarda solo en este navegador.
+    </p>
+    <input class="modal-input" type="password" id="token-input" placeholder="github_pat_..." autocomplete="off" />
+    <div class="modal-footer">
+      <button class="modal-clear" onclick="clearToken()">Borrar token</button>
+      <button class="btn-cancel" onclick="closeTokenModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveToken()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
