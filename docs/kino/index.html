@@ -547,10 +547,16 @@ loadData();
 // ── GitHub API ────────────────────────────────────────
 const GH_OWNER = 'GaboAzorin', GH_REPO = 'kin-lo', GH_FILE = 'data/jugadas.json';
 
-// Token en base64 para evitar detección automática de GitHub Secret Scanning.
-// Para actualizar: correr btoa("github_pat_...") en la consola del navegador y pegar el resultado.
-const _T = 'REEMPLAZAR_CON_BASE64_DEL_TOKEN';
-function getToken() { try { return atob(_T); } catch { return ''; } }
+// Token guardado en localStorage. Configurar visitando: #setup=BASE64_DEL_TOKEN
+function getToken() {
+  const hash = location.hash;
+  if (hash.startsWith('#setup=')) {
+    localStorage.setItem('kl_gh_token', hash.slice(7));
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+  const stored = localStorage.getItem('kl_gh_token');
+  return stored ? atob(stored) : '';
+}
 
 async function ghGetFile() {
   const r = await fetch(
