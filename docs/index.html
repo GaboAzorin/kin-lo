@@ -102,6 +102,8 @@
     .sug-pill:hover { border-color: var(--text); color: var(--text); }
     .sug-pill-loto-active { background: rgba(245,158,11,0.15); color: var(--loto); border-color: rgba(245,158,11,0.4); }
     .sug-pill-kino-active { background: rgba(59,130,246,0.15); color: var(--kino); border-color: rgba(59,130,246,0.4); }
+    .sug-pill-best { border-color: rgba(34,197,94,0.45); color: var(--green); }
+    .sug-pill-best:hover { border-color: var(--green); }
 
     /* ── Stat + botón ── */
     .card-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
@@ -454,14 +456,26 @@ const RANGE_LABELS = {
   '500': 'Últ. 500', '1000': 'Últ. 1000', 'all': 'Todos'
 };
 
-function renderSugs(sugs, containerId, bolaCls, juego, sorteoProximo) {
+function renderSugs(sugs, containerId, bolaCls, juego, sorteoProximo, rangeScores) {
   const el = document.getElementById(containerId);
   if (!sugs) { el.innerHTML = '<span class="error">Sin datos aún</span>'; return; }
 
-  const isKino      = bolaCls.includes('kino');
-  const pillActive  = isKino ? 'sug-pill-kino-active' : 'sug-pill-loto-active';
-  const keys        = Object.keys(sugs);
+  const isKino     = bolaCls.includes('kino');
+  const pillActive = isKino ? 'sug-pill-kino-active' : 'sug-pill-loto-active';
+  const keys       = Object.keys(sugs);
   if (!keys.length) { el.innerHTML = '<span class="error">Sin datos aún</span>'; return; }
+
+  // Determinar el rango con mejor promedio de aciertos (mínimo 2 sorteos evaluados)
+  let bestKey = null;
+  if (rangeScores) {
+    let bestAvg = -1;
+    for (const [k, v] of Object.entries(rangeScores)) {
+      if ((v.sorteos_evaluados || 0) >= 2 && (v.aciertos_avg || 0) > bestAvg) {
+        bestAvg = v.aciertos_avg;
+        bestKey = k;
+      }
+    }
+  }
 
   let activeKey = keys.includes('all') ? 'all' : keys[keys.length - 1];
 
@@ -489,9 +503,18 @@ function renderSugs(sugs, containerId, bolaCls, juego, sorteoProximo) {
   }
 
   function render() {
-    const pills = keys.map(k =>
-      `<button class="sug-pill${k === activeKey ? ' '+pillActive : ''}" data-key="${k}">${RANGE_LABELS[k] || k}</button>`
-    ).join('');
+    const pills = keys.map(k => {
+      const isBest   = k === bestKey;
+      const isActive = k === activeKey;
+      let cls = 'sug-pill';
+      if (isActive) cls += ' ' + pillActive;
+      else if (isBest) cls += ' sug-pill-best';
+      const label = (RANGE_LABELS[k] || k) + (isBest ? ' ★' : '');
+      const title = isBest && rangeScores?.[k]
+        ? `Mejor historial: ${rangeScores[k].aciertos_avg} aciertos promedio (${rangeScores[k].sorteos_evaluados} sorteos)`
+        : '';
+      return `<button class="${cls}" data-key="${k}"${title ? ` title="${title}"` : ''}>${label}</button>`;
+    }).join('');
     el.innerHTML = `<div class="sug-pills">${pills}</div><div class="sug-combos" id="${containerId}-combos">${combosHTML(activeKey)}</div>`;
     el.querySelectorAll('.sug-pill').forEach(btn =>
       btn.addEventListener('click', () => { activeKey = btn.dataset.key; render(); })
@@ -571,7 +594,7 @@ async function init() {
     }
     if (ult.sorteo) document.getElementById('loto-sugs-label').textContent =
       `Combinaciones sugeridas para sorteo #${ult.sorteo + 1}`;
-    renderSugs(loto.suggestions, 'loto-sugs', 'sug-bola-loto', 'loto', (ult.sorteo || 0) + 1);
+    renderSugs(loto.suggestions, 'loto-sugs', 'sug-bola-loto', 'loto', (ult.sorteo || 0) + 1, loto.range_scores);
   } else {
     document.getElementById('loto-fecha').innerHTML = '<span class="error">Datos no disponibles</span>';
     document.getElementById('loto-sugs').innerHTML  = '<span class="error">Sin datos</span>';
@@ -589,7 +612,7 @@ async function init() {
     }
     if (ult.sorteo) document.getElementById('kino-sugs-label').textContent =
       `Combinaciones sugeridas para sorteo #${ult.sorteo + 1}`;
-    renderSugs(kino.suggestions, 'kino-sugs', 'sug-bola-kino', 'kino', (ult.sorteo || 0) + 1);
+    renderSugs(kino.suggestions, 'kino-sugs', 'sug-bola-kino', 'kino', (ult.sorteo || 0) + 1, kino.range_scores);
   } else {
     document.getElementById('kino-fecha').innerHTML = '<span class="error">Datos no disponibles</span>';
     document.getElementById('kino-sugs').innerHTML  = '<span class="error">Sin datos</span>';
