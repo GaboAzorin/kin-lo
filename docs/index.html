@@ -642,8 +642,9 @@ async function init() {
     document.getElementById('kino-sugs').innerHTML  = '<span class="error">Sin datos</span>';
   }
 
+  const _now = new Date();
   document.getElementById('last-update').textContent =
-    `Actualizado: ${new Date().toLocaleDateString('es-CL')}`;
+    `Actualizado: ${_now.toLocaleDateString('es-CL')} ${_now.toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit'})}`;
 }
 
 init();
