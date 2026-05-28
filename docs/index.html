@@ -465,7 +465,16 @@ const RANGE_LABELS = {
   '500': 'Últ. 500', '1000': 'Últ. 1000', 'all': 'Todos'
 };
 
-function renderSugs(sugs, containerId, bolaCls, juego, sorteoProximo, rangeScores) {
+function sumStyle(suma, ss) {
+  if (!ss) return { color: 'var(--muted)', title: '' };
+  if (suma >= ss.p25 && suma <= ss.p75)
+    return { color: 'var(--green)',  title: `Zona central (${ss.p25}–${ss.p75}, 50% de los sorteos)` };
+  if (suma >= ss.p10 && suma <= ss.p90)
+    return { color: 'var(--loto)',   title: `Zona moderada (${ss.p10}–${ss.p90}, 80% de los sorteos)` };
+  return   { color: '#f87171',       title: `Fuera del rango habitual (p10=${ss.p10}, p90=${ss.p90})` };
+}
+
+function renderSugs(sugs, containerId, bolaCls, juego, sorteoProximo, rangeScores, sumStats) {
   const el = document.getElementById(containerId);
   if (!sugs) { el.innerHTML = '<span class="error">Sin datos aún</span>'; return; }
 
@@ -501,7 +510,7 @@ function renderSugs(sugs, containerId, bolaCls, juego, sorteoProximo, rangeScore
         <div class="sug-row">
           <span class="sug-idx">#${i+1}</span>
           ${s.combo.map(n => sugBola(n, bolaCls)).join('')}
-          <span class="sug-sum">Σ <strong>${s.suma}</strong></span>
+          ${(()=>{ const {color,title}=sumStyle(s.suma,sumStats); return `<span class="sug-sum" title="${title}" style="color:${color}">Σ <strong>${s.suma}</strong></span>`; })()}
           <button class="jugar-btn${yaReg?' ok':''}" ${yaReg?'disabled':''}
             data-juego="${juego}" data-sorteo="${sorteoProximo}"
             data-nums="${s.combo.join(',')}" data-rango="${key}">
@@ -609,7 +618,7 @@ async function init() {
     }
     if (ult.sorteo) document.getElementById('loto-sugs-label').textContent =
       `Combinaciones sugeridas para sorteo #${ult.sorteo + 1}`;
-    renderSugs(loto.suggestions, 'loto-sugs', 'sug-bola-loto', 'loto', (ult.sorteo || 0) + 1, loto.range_scores);
+    renderSugs(loto.suggestions, 'loto-sugs', 'sug-bola-loto', 'loto', (ult.sorteo || 0) + 1, loto.range_scores, loto.sum_stats);
   } else {
     document.getElementById('loto-fecha').innerHTML = '<span class="error">Datos no disponibles</span>';
     document.getElementById('loto-sugs').innerHTML  = '<span class="error">Sin datos</span>';
@@ -627,7 +636,7 @@ async function init() {
     }
     if (ult.sorteo) document.getElementById('kino-sugs-label').textContent =
       `Combinaciones sugeridas para sorteo #${ult.sorteo + 1}`;
-    renderSugs(kino.suggestions, 'kino-sugs', 'sug-bola-kino', 'kino', (ult.sorteo || 0) + 1, kino.range_scores);
+    renderSugs(kino.suggestions, 'kino-sugs', 'sug-bola-kino', 'kino', (ult.sorteo || 0) + 1, kino.range_scores, kino.sum_stats);
   } else {
     document.getElementById('kino-fecha').innerHTML = '<span class="error">Datos no disponibles</span>';
     document.getElementById('kino-sugs').innerHTML  = '<span class="error">Sin datos</span>';

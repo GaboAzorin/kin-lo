@@ -423,6 +423,13 @@ function renderSugerencias() {
   const sorteoProximo = (d.ultimo_sorteo?.sorteo || 0) + 1;
   let active = keys.includes('all') ? 'all' : keys[keys.length - 1];
   const jugadasSorteo = existingJugadas.filter(j => j.juego === 'kino' && j.sorteo === sorteoProximo);
+  const ss = d.sum_stats;
+  function sumStyle(suma) {
+    if (!ss) return { color: 'var(--muted)', title: '' };
+    if (suma >= ss.p25 && suma <= ss.p75) return { color: 'var(--green)', title: `Zona central (${ss.p25}–${ss.p75}, 50% de los sorteos)` };
+    if (suma >= ss.p10 && suma <= ss.p90) return { color: 'var(--accent)', title: `Zona moderada (${ss.p10}–${ss.p90}, 80% de los sorteos)` };
+    return { color: '#f87171', title: `Fuera del rango habitual (p10=${ss.p10}, p90=${ss.p90})` };
+  }
 
   function combosHTML(key) {
     return (sugs[key] || []).map((s, i) => {
@@ -435,7 +442,7 @@ function renderSugerencias() {
         <div class="sug-card">
           <span class="sug-num">#${i+1}</span>
           ${s.combo.map(n => `<span class="sug-bola">${n}</span>`).join('')}
-          <span class="sug-meta">Suma: <strong>${s.suma}</strong> · Score: <strong>${s.score}</strong></span>
+          ${(()=>{ const {color,title}=sumStyle(s.suma); return `<span class="sug-meta" title="${title}">Suma: <strong style="color:${color}">${s.suma}</strong> · Score: <strong>${s.score}</strong></span>`; })()}
           <button class="jugar-btn${yaReg?' ok':''}" ${yaReg?'disabled':''}
             data-sorteo="${sorteoProximo}" data-nums="${s.combo.join(',')}" data-rango="${key}">
             ${yaReg ? '✓ Registrada' : '🎟 Jugué esta'}
