@@ -66,7 +66,23 @@
       25
     ],
     "rango_sugerencia": null,
-    "aciertos": null
+    "aciertos": 8,
+    "resultado_sorteo": [
+      1,
+      5,
+      6,
+      7,
+      9,
+      10,
+      12,
+      13,
+      14,
+      16,
+      17,
+      18,
+      21,
+      24
+    ]
   },
   {
     "fecha_jugada": "23-05-2026",
@@ -94,7 +110,23 @@
       25
     ],
     "rango_sugerencia": null,
-    "aciertos": null
+    "aciertos": 7,
+    "resultado_sorteo": [
+      1,
+      2,
+      3,
+      4,
+      7,
+      9,
+      10,
+      12,
+      14,
+      15,
+      16,
+      19,
+      20,
+      24
+    ]
   },
   {
     "fecha_jugada": "21-05-2026",
@@ -122,6 +154,22 @@
       25
     ],
     "rango_sugerencia": null,
-    "aciertos": null
+    "aciertos": 7,
+    "resultado_sorteo": [
+      1,
+      2,
+      4,
+      5,
+      6,
+      7,
+      8,
+      11,
+      14,
+      16,
+      21,
+      22,
+      24,
+      25
+    ]
   }
 ]
