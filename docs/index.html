@@ -105,6 +105,15 @@
     .sug-pill-best { border-color: rgba(34,197,94,0.45); color: var(--green); }
     .sug-pill-best:hover { border-color: var(--green); }
 
+    /* ── Aviso "ya jugaste" ── */
+    .ya-jugaste {
+      font-size: 0.78rem; color: var(--green);
+      background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25);
+      border-radius: 8px; padding: 7px 12px; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .ya-jugaste a { color: var(--green); text-decoration: underline; }
+
     /* ── Stat + botón ── */
     .card-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
     .stat-mini { font-size: 0.78rem; color: var(--muted); }
@@ -502,6 +511,9 @@ function renderSugs(sugs, containerId, bolaCls, juego, sorteoProximo, rangeScore
     }).join('');
   }
 
+  // Jugadas ya registradas para este sorteo
+  const jugadasSorteo = existingJugadas.filter(j => j.juego === juego && j.sorteo === sorteoProximo);
+
   function render() {
     const pills = keys.map(k => {
       const isBest   = k === bestKey;
@@ -515,7 +527,10 @@ function renderSugs(sugs, containerId, bolaCls, juego, sorteoProximo, rangeScore
         : '';
       return `<button class="${cls}" data-key="${k}"${title ? ` title="${title}"` : ''}>${label}</button>`;
     }).join('');
-    el.innerHTML = `<div class="sug-pills">${pills}</div><div class="sug-combos" id="${containerId}-combos">${combosHTML(activeKey)}</div>`;
+    const aviso = jugadasSorteo.length
+      ? `<div class="ya-jugaste">✓ Tienes ${jugadasSorteo.length} jugada${jugadasSorteo.length > 1 ? 's' : ''} registrada${jugadasSorteo.length > 1 ? 's' : ''} para este sorteo — <a href="jugadas/">ver en Mis jugadas</a></div>`
+      : '';
+    el.innerHTML = `${aviso}<div class="sug-pills">${pills}</div><div class="sug-combos" id="${containerId}-combos">${combosHTML(activeKey)}</div>`;
     el.querySelectorAll('.sug-pill').forEach(btn =>
       btn.addEventListener('click', () => { activeKey = btn.dataset.key; render(); })
     );

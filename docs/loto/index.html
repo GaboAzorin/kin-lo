@@ -97,6 +97,13 @@
     }
     .sug-pill:hover { border-color: var(--text); color: var(--text); }
     .sug-pill-active { background: rgba(245,158,11,0.15); color: var(--accent); border-color: rgba(245,158,11,0.4); }
+    .ya-jugaste {
+      font-size: 0.78rem; color: var(--green);
+      background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25);
+      border-radius: 8px; padding: 7px 12px; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .ya-jugaste a { color: var(--green); text-decoration: underline; }
 
     /* Rendimiento histórico */
     .rdm-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
@@ -425,6 +432,7 @@ function renderSugerencias() {
 
   const sorteoProximo = (d.ultimo_sorteo?.sorteo || 0) + 1;
   let active = keys.includes('all') ? 'all' : keys[keys.length - 1];
+  const jugadasSorteo = existingJugadas.filter(j => j.juego === 'loto' && j.sorteo === sorteoProximo);
 
   function combosHTML(key) {
     return (sugs[key] || []).map((s, i) => {
@@ -450,7 +458,10 @@ function renderSugerencias() {
     const pills = keys.map(k =>
       `<button class="sug-pill${k===active?' sug-pill-active':''}" data-key="${k}">${RANGE_LABELS[k]||k}</button>`
     ).join('');
-    el.innerHTML = `<div class="sug-pills">${pills}</div><div id="combos-wrap">${combosHTML(active)}</div>`;
+    const aviso = jugadasSorteo.length
+      ? `<div class="ya-jugaste">✓ Tienes ${jugadasSorteo.length} jugada${jugadasSorteo.length>1?'s':''} registrada${jugadasSorteo.length>1?'s':''} para el sorteo #${sorteoProximo} — <a href="../jugadas/">ver en Mis jugadas</a></div>`
+      : '';
+    el.innerHTML = `${aviso}<div class="sug-pills">${pills}</div><div id="combos-wrap">${combosHTML(active)}</div>`;
     el.querySelectorAll('.sug-pill').forEach(btn =>
       btn.addEventListener('click', () => { active = btn.dataset.key; render(); })
     );
