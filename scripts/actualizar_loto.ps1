@@ -28,7 +28,7 @@ python src/scrapers/fetch_pozos.py
 # No es crítico si falla
 
 Write-Host "`n=== 4/4  Commit y push ===" -ForegroundColor Cyan
-git add data/polla_historial.csv docs/data/loto_metrics.json docs/data/pozos.json data/loto_suggestions_pending.json data/suggestions_history.csv docs/data/suggestions_history.json docs/data/suggestions_detail.json data/jugadas.json
+git add data/polla_historial.csv docs/data/loto_metrics.json docs/data/pozos.json data/loto_suggestions_pending.json data/suggestions_history.csv docs/data/suggestions_history.json docs/data/suggestions_detail.json data/jugadas.json docs/data/historial_index.json
 
 $status = git status --porcelain
 if (-not $status) {

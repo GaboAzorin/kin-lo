@@ -237,6 +237,7 @@
 <script>
 // ── GitHub API ────────────────────────────────────────────────────────────────
 const GH_OWNER = 'GaboAzorin', GH_REPO = 'kin-lo', GH_FILE = 'data/jugadas.json';
+let historialIndex = {}; // {juego: {sorteo_str: [nums]}}
 
 function getToken() {
   const hash = location.hash;
@@ -434,6 +435,13 @@ function validateNums() {
   }
 }
 
+function computeAciertos(juego, sorteo, numeros) {
+  const resultado = (historialIndex[juego] || {})[String(sorteo)];
+  if (!resultado) return null;
+  const set = new Set(resultado);
+  return numeros.filter(n => set.has(n)).length;
+}
+
 function getVariantes() {
   const juego = getJuego();
   const vs    = [juego];
@@ -527,10 +535,12 @@ async function submitJugada() {
         [...(j.numeros||[])].sort((a,b)=>a-b).join(',') === origKey
       );
       if (contentIdx === -1) throw new Error('No se encontró el registro a editar. Recarga la página.');
+      const aciertosEdit = computeAciertos(juego, sorteo, numeros);
       content[contentIdx] = {
         ...content[contentIdx],
         fecha_jugada: fecha, juego, variantes, sorteo, numeros,
         rango_sugerencia: content[contentIdx].rango_sugerencia ?? null,
+        aciertos: aciertosEdit !== null ? aciertosEdit : content[contentIdx].aciertos,
       };
       await ghPutFile(content, sha, `jugada editada: ${juego} #${sorteo}`);
     } else {
@@ -540,7 +550,8 @@ async function submitJugada() {
         [...(j.numeros||[])].sort((a,b)=>a-b).join(',') === key
       );
       if (!dup) {
-        content.push({ fecha_jugada: fecha, juego, variantes, sorteo, numeros, rango_sugerencia: null, aciertos: null });
+        const aciertosNew = computeAciertos(juego, sorteo, numeros);
+        content.push({ fecha_jugada: fecha, juego, variantes, sorteo, numeros, rango_sugerencia: null, aciertos: aciertosNew });
         await ghPutFile(content, sha, `jugada manual: ${juego} #${sorteo}`);
       }
     }
@@ -571,7 +582,11 @@ document.getElementById('tbody').addEventListener('click', e => {
 });
 
 // ── Carga inicial ─────────────────────────────────────────────────────────────
-ghGetFile().then(({ content }) => {
+Promise.all([
+  ghGetFile(),
+  fetch('../data/historial_index.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : {}).catch(() => ({})),
+]).then(([{ content }, idx]) => {
+  historialIndex = idx;
   allJugadas = content;
   refreshTable();
 }).catch(() => {

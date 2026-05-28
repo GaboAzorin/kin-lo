@@ -641,6 +641,35 @@ def _exportar_detalle_json():
     print(f"  Detalle exportado: {out_path.name}")
 
 
+def _exportar_historial_index():
+    """Genera docs/data/historial_index.json con {juego: {sorteo_str: [nums]}} para todos los sorteos."""
+    out_path = DOCS_DATA / "historial_index.json"
+    result = {}
+
+    configs = [
+        ("loto", DATA_DIR / "polla_historial.csv",    [f"LOTO_n{i}" for i in range(1, 7)]),
+        ("kino", DATA_DIR / "loteria_historial.csv",  [f"KINO_n{i}" for i in range(1, 15)]),
+    ]
+    for juego, csv_path, num_cols in configs:
+        if not csv_path.exists():
+            continue
+        df = pd.read_csv(csv_path)
+        idx = {}
+        for _, row in df.iterrows():
+            try:
+                sorteo = int(row["sorteo"])
+                nums   = sorted(int(row[c]) for c in num_cols if pd.notna(row[c]))
+                if nums:
+                    idx[str(sorteo)] = nums
+            except Exception:
+                continue
+        result[juego] = idx
+
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, separators=(",", ":"))
+    print(f"  Índice histórico exportado: {out_path.name} ({sum(len(v) for v in result.values())} sorteos)")
+
+
 def _enviar_notificaciones(juego: str, ultimo: dict,
                            eval_data: dict | None, range_scores: dict):
     """
@@ -774,6 +803,7 @@ def main():
     # 6. Exportar historial al frontend
     _exportar_historial_json()
     _exportar_detalle_json()
+    _exportar_historial_index()
 
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
