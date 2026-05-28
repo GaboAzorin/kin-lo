@@ -12,7 +12,11 @@
       41
     ],
     "rango_sugerencia": "500",
-    "aciertos": null
+    "aciertos": null,
+    "variantes": [
+      "loto",
+      "recargado"
+    ]
   },
   {
     "fecha_jugada": "28-05-2026",
