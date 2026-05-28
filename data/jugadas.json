@@ -308,5 +308,25 @@
     "aciertos": {
       "loto": 2
     }
+  },
+  {
+    "fecha_jugada": "28-04-2026",
+    "juego": "loto",
+    "variantes": [
+      "loto"
+    ],
+    "sorteo": 5418,
+    "numeros": [
+      4,
+      14,
+      20,
+      27,
+      33,
+      38
+    ],
+    "rango_sugerencia": null,
+    "aciertos": {
+      "loto": 0
+    }
   }
 ]
