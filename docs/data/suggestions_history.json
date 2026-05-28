@@ -75,38 +75,38 @@
   "kino": {
     "por_rango": {
       "50": {
-        "sorteos": 1,
-        "avg": 8.33,
+        "sorteos": 2,
+        "avg": 7.5,
         "max": 9,
         "pick": 14
       },
       "100": {
-        "sorteos": 1,
-        "avg": 9.0,
+        "sorteos": 2,
+        "avg": 8.33,
         "max": 9,
         "pick": 14
       },
       "250": {
-        "sorteos": 1,
+        "sorteos": 2,
         "avg": 8.33,
         "max": 9,
         "pick": 14
       },
       "500": {
-        "sorteos": 1,
-        "avg": 8.33,
-        "max": 9,
+        "sorteos": 2,
+        "avg": 8.67,
+        "max": 10,
         "pick": 14
       },
       "1000": {
-        "sorteos": 1,
+        "sorteos": 2,
         "avg": 8.0,
         "max": 9,
         "pick": 14
       },
       "all": {
-        "sorteos": 1,
-        "avg": 8.0,
+        "sorteos": 2,
+        "avg": 8.17,
         "max": 9,
         "pick": 14
       }
@@ -139,6 +139,36 @@
           "all": {
             "max": 9,
             "avg": 8.0
+          }
+        }
+      },
+      {
+        "sorteo": 3232,
+        "fecha": "2026-05-27",
+        "rangos": {
+          "50": {
+            "max": 8,
+            "avg": 6.67
+          },
+          "100": {
+            "max": 8,
+            "avg": 7.67
+          },
+          "250": {
+            "max": 9,
+            "avg": 8.33
+          },
+          "500": {
+            "max": 10,
+            "avg": 9.0
+          },
+          "1000": {
+            "max": 8,
+            "avg": 8.0
+          },
+          "all": {
+            "max": 9,
+            "avg": 8.33
           }
         }
       }
