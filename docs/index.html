@@ -653,6 +653,18 @@ async function handleJugar(btn, juego, sorteo, numeros, rango) {
     localStorage.setItem('kl_gh_token', b64.trim());
     if (!getToken()) { alert('Token inválido. Debe ser el resultado exacto de btoa().'); return; }
   }
+  const variantes = [juego];
+  if (juego === 'loto') {
+    if (confirm('¿Jugaste también Recargado?')) {
+      variantes.push('recargado');
+      if (confirm('¿Jugaste también Revancha?')) variantes.push('revancha');
+    }
+  } else if (juego === 'kino') {
+    if (confirm('¿Jugaste también ReKino?')) {
+      variantes.push('rekino');
+      if (confirm('¿Jugaste también RequeteKino?')) variantes.push('requetekino');
+    }
+  }
   btn.disabled = true;
   btn.textContent = '...';
   try {
@@ -661,7 +673,7 @@ async function handleJugar(btn, juego, sorteo, numeros, rango) {
     if (!content.some(j => j.juego === juego && j.sorteo === sorteo &&
         [...j.numeros].sort((a,b)=>a-b).join(',') === key)) {
       content.push({ fecha_jugada: new Date().toLocaleDateString('es-CL'),
-        juego, sorteo, numeros, rango_sugerencia: rango, aciertos: null });
+        juego, variantes, sorteo, numeros, rango_sugerencia: rango, aciertos: null });
       await ghPutFile(content, sha, `jugada: ${juego} #${sorteo}`);
       existingJugadas.push({ juego, sorteo, numeros, rango_sugerencia: rango });
     }
