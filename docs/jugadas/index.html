@@ -34,7 +34,7 @@
     .stat-card .val { font-size: 2rem; font-weight: 800; color: var(--accent); line-height: 1; }
     .stat-card .lbl { font-size: 0.78rem; color: var(--muted); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
 
-    /* ── Form toggle button ── */
+    /* ── Buttons ── */
     .btn-add {
       display: flex; align-items: center; gap: 8px;
       background: var(--accent); color: #000; border: none; border-radius: 8px;
@@ -54,7 +54,7 @@
     .form-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 140px; }
     .form-group label { font-size: 0.78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
 
-    .radio-tabs { display: flex; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .radio-tabs { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
     .radio-tabs input { display: none; }
     .radio-tabs label {
       flex: 1; text-align: center; padding: 8px 12px;
@@ -82,8 +82,8 @@
     .check-group input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; }
 
     .nums-hint { font-size: 0.78rem; margin-top: 4px; color: var(--muted); min-height: 18px; }
-    .nums-hint.ok   { color: var(--green); }
-    .nums-hint.bad  { color: var(--red); }
+    .nums-hint.ok  { color: var(--green); }
+    .nums-hint.bad { color: var(--red); }
 
     .form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
     .btn-cancel {
@@ -133,11 +133,18 @@
     .aciertos-ok   { color: var(--green); font-weight: 700; font-size: 1rem; }
     .aciertos-cero { color: var(--muted); font-weight: 600; }
     .aciertos-pending { color: var(--muted); font-style: italic; font-size: 0.82rem; }
-    .manual-tag { font-size: 0.7rem; color: var(--muted); margin-left: 4px; }
 
     .rango { font-size: 0.8rem; color: var(--muted); }
+    .manual-tag { font-size: 0.7rem; color: var(--muted); }
     .fecha { color: var(--muted); font-size: 0.83rem; white-space: nowrap; }
     .sorteo-num { font-weight: 700; }
+
+    .btn-edit {
+      background: transparent; border: 1px solid var(--border); border-radius: 6px;
+      color: var(--muted); padding: 4px 8px; font-size: 0.78rem; cursor: pointer;
+      transition: border-color 0.15s, color 0.15s; line-height: 1;
+    }
+    .btn-edit:hover { border-color: var(--accent); color: var(--accent); }
 
     .empty, .loading { text-align: center; padding: 60px 24px; color: var(--muted); }
 
@@ -163,7 +170,7 @@
 
   <!-- ── Formulario ── -->
   <div class="form-panel" id="form-panel" style="display:none">
-    <h2>Nueva jugada</h2>
+    <h2 id="form-title">Nueva jugada</h2>
 
     <div class="form-row">
       <div class="form-group" style="max-width:200px">
@@ -194,8 +201,8 @@
 
     <div class="form-row">
       <div class="form-group">
-        <label id="nums-label">Números <span style="font-weight:400;text-transform:none">(6 de 1–41)</span></label>
-        <input type="text" id="f-nums" placeholder="ej: 1, 5, 30, 32, 34, 41" autocomplete="off">
+        <label id="nums-label">Números</label>
+        <input type="text" id="f-nums" autocomplete="off">
         <div class="nums-hint" id="nums-hint"></div>
       </div>
     </div>
@@ -217,10 +224,11 @@
           <th>Números jugados</th>
           <th>Origen</th>
           <th>Aciertos</th>
+          <th></th>
         </tr>
       </thead>
       <tbody id="tbody">
-        <tr><td colspan="6" class="loading">Cargando…</td></tr>
+        <tr><td colspan="7" class="loading">Cargando…</td></tr>
       </tbody>
     </table>
   </div>
@@ -272,8 +280,10 @@ async function ghPutFile(content, sha, msg) {
   if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.message || `GitHub ${r.status}`); }
 }
 
-// ── Render tabla ──────────────────────────────────────────────────────────────
+// ── Render ────────────────────────────────────────────────────────────────────
 const LABEL = { loto:'Loto', kino:'Kino', recargado:'Recargado', revancha:'Revancha', rekino:'ReKino', requetekino:'RequeteKino' };
+
+let allJugadas = [];
 
 function renderStats(jugadas) {
   const total    = jugadas.length;
@@ -281,8 +291,8 @@ function renderStats(jugadas) {
   const nKino    = jugadas.filter(j => j.juego === 'kino').length;
   const evaluadas  = jugadas.filter(j => j.aciertos != null);
   const pendientes = total - evaluadas.length;
-  const mejorLoto  = evaluadas.filter(j=>j.juego==='loto').reduce((m,j)=>Math.max(m,j.aciertos), -1);
-  const mejorKino  = evaluadas.filter(j=>j.juego==='kino').reduce((m,j)=>Math.max(m,j.aciertos), -1);
+  const mejorLoto  = evaluadas.filter(j=>j.juego==='loto').reduce((m,j)=>Math.max(m,j.aciertos),-1);
+  const mejorKino  = evaluadas.filter(j=>j.juego==='kino').reduce((m,j)=>Math.max(m,j.aciertos),-1);
   let html = `
     <div class="stat-card"><div class="val">${total}</div><div class="lbl">Total jugadas</div></div>
     <div class="stat-card"><div class="val">${nLoto}</div><div class="lbl">Loto</div></div>
@@ -293,7 +303,7 @@ function renderStats(jugadas) {
   document.getElementById('stats').innerHTML = html;
 }
 
-function renderRow(j) {
+function renderRow(j, origIdx) {
   const esKino  = j.juego === 'kino';
   const bolaCls = esKino ? 'bola-kino' : 'bola-loto';
   const tagCls  = esKino ? 'tag kino' : 'tag';
@@ -316,20 +326,21 @@ function renderRow(j) {
     <td><div class="nums">${numsHTML}</div></td>
     <td>${origenHTML}</td>
     <td>${aciertosHTML}</td>
+    <td><button class="btn-edit" data-idx="${origIdx}" title="Editar">✏</button></td>
   </tr>`;
 }
 
-let allJugadas = [];
-
 function refreshTable() {
   if (!allJugadas.length) {
-    document.getElementById('tbody').innerHTML = '<tr><td colspan="6" class="empty">No hay jugadas registradas aún.</td></tr>';
+    document.getElementById('tbody').innerHTML = '<tr><td colspan="7" class="empty">No hay jugadas registradas aún.</td></tr>';
     document.getElementById('stats').innerHTML = '';
     return;
   }
-  const sorted = [...allJugadas].sort((a,b) => b.sorteo - a.sorteo || b.juego.localeCompare(a.juego));
+  const sorted = [...allJugadas]
+    .map((j, i) => ({ j, i }))
+    .sort((a, b) => b.j.sorteo - a.j.sorteo || b.j.juego.localeCompare(a.j.juego));
   renderStats(allJugadas);
-  document.getElementById('tbody').innerHTML = sorted.map(renderRow).join('');
+  document.getElementById('tbody').innerHTML = sorted.map(({ j, i }) => renderRow(j, i)).join('');
 }
 
 // ── Formulario ────────────────────────────────────────────────────────────────
@@ -338,37 +349,42 @@ const VARIANTES_LOTO = [
   { val: 'revancha',  lbl: 'Revancha',  requires: 'recargado' },
 ];
 const VARIANTES_KINO = [
-  { val: 'rekino',      lbl: 'ReKino',       requires: null },
-  { val: 'requetekino', lbl: 'RequeteKino',  requires: 'rekino' },
+  { val: 'rekino',      lbl: 'ReKino',      requires: null },
+  { val: 'requetekino', lbl: 'RequeteKino', requires: 'rekino' },
 ];
+
+let editIndex = -1; // -1 = nueva jugada, >=0 = edición
 
 function getJuego() { return document.querySelector('input[name="juego"]:checked').value; }
 
-function renderVarianteChecks() {
+function renderVarianteChecks(checked = []) {
   const list = getJuego() === 'loto' ? VARIANTES_LOTO : VARIANTES_KINO;
-  document.getElementById('variantes-checks').innerHTML = list.map(v => `
-    <label class="${v.requires ? 'sub' : ''}" id="lbl-${v.val}">
-      <input type="checkbox" id="chk-${v.val}" value="${v.val}" ${v.requires ? 'disabled' : ''}>
+  document.getElementById('variantes-checks').innerHTML = list.map(v => {
+    const isChecked  = checked.includes(v.val);
+    const isDisabled = v.requires && !checked.includes(v.requires);
+    return `<label id="lbl-${v.val}" ${isDisabled ? 'class="disabled"' : ''}>
+      <input type="checkbox" id="chk-${v.val}" value="${v.val}"
+        ${isChecked ? 'checked' : ''} ${isDisabled ? 'disabled' : ''}>
       ${v.lbl}
-    </label>`).join('');
+    </label>`;
+  }).join('');
 
-  // enforce hierarchy on change
   list.forEach(v => {
     if (!v.requires) {
       document.getElementById(`chk-${v.val}`).addEventListener('change', () => {
-        const child = list.find(c => c.requires === v.val);
+        const child   = list.find(c => c.requires === v.val);
         if (!child) return;
-        const chkParent = document.getElementById(`chk-${v.val}`);
-        const chkChild  = document.getElementById(`chk-${child.val}`);
-        const lblChild  = document.getElementById(`lbl-${child.val}`);
-        if (!chkParent.checked) { chkChild.checked = false; chkChild.disabled = true; lblChild.classList.add('disabled'); }
-        else { chkChild.disabled = false; lblChild.classList.remove('disabled'); }
+        const checked = document.getElementById(`chk-${v.val}`).checked;
+        const chkChild = document.getElementById(`chk-${child.val}`);
+        const lblChild = document.getElementById(`lbl-${child.val}`);
+        if (!checked) { chkChild.checked = false; chkChild.disabled = true; lblChild.classList.add('disabled'); }
+        else          { chkChild.disabled = false; lblChild.classList.remove('disabled'); }
       });
     }
   });
 }
 
-function updateNumsHint() {
+function updateNumsUI() {
   const juego   = getJuego();
   const maxNums = juego === 'kino' ? 14 : 6;
   const maxVal  = juego === 'kino' ? 25 : 41;
@@ -391,71 +407,99 @@ function validateNums() {
   const nums    = parseNums();
   const hint    = document.getElementById('nums-hint');
   const input   = document.getElementById('f-nums');
+  const btnS    = document.getElementById('btn-submit');
 
-  if (!document.getElementById('f-nums').value.trim()) {
+  if (!input.value.trim()) {
     hint.textContent = ''; hint.className = 'nums-hint';
-    input.classList.remove('valid', 'invalid');
-    document.getElementById('btn-submit').disabled = true; return;
+    input.classList.remove('valid', 'invalid'); btnS.disabled = true; return;
   }
   const outOfRange = nums.filter(n => n < 1 || n > maxVal);
   const dupes = nums.length !== new Set(nums).size;
 
   if (outOfRange.length) {
-    hint.textContent = `Números fuera de rango (1–${maxVal}): ${outOfRange.join(', ')}`;
-    hint.className = 'nums-hint bad'; input.classList.add('invalid'); input.classList.remove('valid');
-    document.getElementById('btn-submit').disabled = true;
+    hint.textContent = `Fuera de rango (1–${maxVal}): ${outOfRange.join(', ')}`;
+    hint.className = 'nums-hint bad'; input.classList.add('invalid'); input.classList.remove('valid'); btnS.disabled = true;
   } else if (dupes) {
-    hint.textContent = 'Hay números repetidos'; hint.className = 'nums-hint bad';
-    input.classList.add('invalid'); input.classList.remove('valid');
-    document.getElementById('btn-submit').disabled = true;
+    hint.textContent = 'Hay números repetidos';
+    hint.className = 'nums-hint bad'; input.classList.add('invalid'); input.classList.remove('valid'); btnS.disabled = true;
   } else if (nums.length !== maxNums) {
-    hint.textContent = `${nums.length} / ${maxNums} números`;
-    hint.className = 'nums-hint'; input.classList.remove('valid', 'invalid');
-    document.getElementById('btn-submit').disabled = true;
+    hint.textContent = `${nums.length} / ${maxNums}`;
+    hint.className = 'nums-hint'; input.classList.remove('valid', 'invalid'); btnS.disabled = true;
   } else {
-    hint.textContent = `${maxNums} / ${maxNums} ✓`; hint.className = 'nums-hint ok';
-    input.classList.add('valid'); input.classList.remove('invalid');
-    document.getElementById('btn-submit').disabled = false;
+    hint.textContent = `${maxNums} / ${maxNums} ✓`;
+    hint.className = 'nums-hint ok'; input.classList.add('valid'); input.classList.remove('invalid'); btnS.disabled = false;
   }
 }
 
 function getVariantes() {
-  const juego  = getJuego();
-  const vs     = [juego];
-  const list   = juego === 'loto' ? VARIANTES_LOTO : VARIANTES_KINO;
-  list.forEach(v => { const chk = document.getElementById(`chk-${v.val}`); if (chk && chk.checked) vs.push(v.val); });
+  const juego = getJuego();
+  const vs    = [juego];
+  (juego === 'loto' ? VARIANTES_LOTO : VARIANTES_KINO).forEach(v => {
+    const chk = document.getElementById(`chk-${v.val}`);
+    if (chk && chk.checked) vs.push(v.val);
+  });
   return vs;
 }
 
 function openForm() {
+  editIndex = -1;
+  document.getElementById('form-title').textContent = 'Nueva jugada';
+  document.getElementById('btn-submit').textContent  = 'Registrar';
+  document.getElementById('r-loto').checked = true;
+  document.getElementById('f-sorteo').value = '';
+  document.getElementById('f-fecha').value  = new Date().toISOString().slice(0, 10);
+  document.getElementById('f-nums').value   = '';
+  document.getElementById('f-nums').classList.remove('valid', 'invalid');
+  document.getElementById('nums-hint').textContent = '';
+  document.getElementById('btn-submit').disabled = true;
+  renderVarianteChecks([]);
+  updateNumsUI();
   document.getElementById('form-panel').style.display = 'block';
   document.getElementById('btn-toggle-form').style.display = 'none';
-  // default date = today
-  const today = new Date().toISOString().slice(0, 10);
-  document.getElementById('f-fecha').value = today;
-  renderVarianteChecks();
-  updateNumsHint();
+  document.getElementById('f-sorteo').focus();
+}
+
+function openFormEdit(j, idx) {
+  editIndex = idx;
+  document.getElementById('form-title').textContent = 'Editar jugada';
+  document.getElementById('btn-submit').textContent  = 'Guardar cambios';
+  document.getElementById('btn-submit').disabled = false;
+
+  // juego
+  document.getElementById(j.juego === 'kino' ? 'r-kino' : 'r-loto').checked = true;
+
+  // sorteo
+  document.getElementById('f-sorteo').value = j.sorteo;
+
+  // fecha (stored as dd-mm-yyyy, input needs yyyy-mm-dd)
+  if (j.fecha_jugada) {
+    const [d, m, y] = j.fecha_jugada.split('-');
+    document.getElementById('f-fecha').value = `${y}-${m}-${d}`;
+  }
+
+  // variantes
+  const varChecked = (j.variantes || [j.juego]).slice(1); // extras (sin el juego base)
+  renderVarianteChecks(varChecked);
+
+  // números
+  document.getElementById('f-nums').value = (j.numeros || []).join(', ');
+  updateNumsUI();
+
+  document.getElementById('form-panel').style.display = 'block';
+  document.getElementById('btn-toggle-form').style.display = 'none';
+  document.getElementById('f-nums').focus();
 }
 
 function closeForm() {
   document.getElementById('form-panel').style.display = 'none';
   document.getElementById('btn-toggle-form').style.display = 'flex';
-  // reset
-  document.getElementById('f-sorteo').value = '';
-  document.getElementById('f-nums').value = '';
-  document.getElementById('r-loto').checked = true;
-  document.getElementById('nums-hint').textContent = '';
-  document.getElementById('f-nums').classList.remove('valid','invalid');
-  document.getElementById('btn-submit').disabled = true;
-  renderVarianteChecks();
-  updateNumsHint();
+  editIndex = -1;
 }
 
 async function submitJugada() {
   const juego   = getJuego();
   const sorteo  = parseInt(document.getElementById('f-sorteo').value, 10);
-  const fechaRaw = document.getElementById('f-fecha').value; // yyyy-mm-dd
-  const [y, m, d] = fechaRaw.split('-');
+  const [y, m, d] = document.getElementById('f-fecha').value.split('-');
   const fecha   = `${d}-${m}-${y}`;
   const numeros = parseNums();
   const variantes = getVariantes();
@@ -463,23 +507,48 @@ async function submitJugada() {
   if (!sorteo || sorteo < 1) { alert('Ingresa un número de sorteo válido.'); return; }
 
   const btn = document.getElementById('btn-submit');
-  btn.disabled = true; btn.textContent = 'Guardando…';
+  btn.disabled = true;
+  btn.textContent = 'Guardando…';
 
   try {
     const { content, sha } = await ghGetFile();
     const key = [...numeros].sort((a,b)=>a-b).join(',');
-    const dup = content.some(j => j.juego===juego && j.sorteo===sorteo &&
-      [...j.numeros].sort((a,b)=>a-b).join(',')===key);
-    if (!dup) {
-      content.push({ fecha_jugada: fecha, juego, variantes, sorteo, numeros, rango_sugerencia: null, aciertos: null });
-      await ghPutFile(content, sha, `jugada manual: ${juego} #${sorteo}`);
-      allJugadas = content;
-      refreshTable();
+
+    if (editIndex >= 0) {
+      // Edición: reemplazar el elemento en la posición correcta dentro de content
+      // Buscar por coincidencia de campos clave del registro original
+      const orig = allJugadas[editIndex];
+      const origKey = [...(orig.numeros||[])].sort((a,b)=>a-b).join(',');
+      const contentIdx = content.findIndex(j =>
+        j.juego === orig.juego && j.sorteo === orig.sorteo &&
+        [...(j.numeros||[])].sort((a,b)=>a-b).join(',') === origKey
+      );
+      if (contentIdx === -1) throw new Error('No se encontró el registro a editar. Recarga la página.');
+      content[contentIdx] = {
+        ...content[contentIdx],
+        fecha_jugada: fecha, juego, variantes, sorteo, numeros,
+        rango_sugerencia: content[contentIdx].rango_sugerencia ?? null,
+      };
+      await ghPutFile(content, sha, `jugada editada: ${juego} #${sorteo}`);
+    } else {
+      // Nueva jugada: verificar duplicado
+      const dup = content.some(j =>
+        j.juego === juego && j.sorteo === sorteo &&
+        [...(j.numeros||[])].sort((a,b)=>a-b).join(',') === key
+      );
+      if (!dup) {
+        content.push({ fecha_jugada: fecha, juego, variantes, sorteo, numeros, rango_sugerencia: null, aciertos: null });
+        await ghPutFile(content, sha, `jugada manual: ${juego} #${sorteo}`);
+      }
     }
+
+    allJugadas = content;
+    refreshTable();
     closeForm();
   } catch(e) {
     alert('Error al guardar: ' + e.message);
-    btn.disabled = false; btn.textContent = 'Registrar';
+    btn.disabled = false;
+    btn.textContent = editIndex >= 0 ? 'Guardar cambios' : 'Registrar';
   }
 }
 
@@ -488,9 +557,15 @@ document.getElementById('btn-toggle-form').addEventListener('click', openForm);
 document.getElementById('btn-cancel').addEventListener('click', closeForm);
 document.getElementById('btn-submit').addEventListener('click', submitJugada);
 document.getElementById('f-nums').addEventListener('input', validateNums);
-document.querySelectorAll('input[name="juego"]').forEach(r => r.addEventListener('change', () => {
-  renderVarianteChecks(); updateNumsHint();
-}));
+document.querySelectorAll('input[name="juego"]').forEach(r =>
+  r.addEventListener('change', () => { renderVarianteChecks([]); updateNumsUI(); })
+);
+document.getElementById('tbody').addEventListener('click', e => {
+  const btn = e.target.closest('.btn-edit');
+  if (!btn) return;
+  const idx = parseInt(btn.dataset.idx, 10);
+  openFormEdit(allJugadas[idx], idx);
+});
 
 // ── Carga inicial ─────────────────────────────────────────────────────────────
 ghGetFile().then(({ content }) => {
@@ -498,7 +573,7 @@ ghGetFile().then(({ content }) => {
   refreshTable();
 }).catch(() => {
   document.getElementById('tbody').innerHTML =
-    '<tr><td colspan="6" class="empty">Error al cargar los datos.</td></tr>';
+    '<tr><td colspan="7" class="empty">Error al cargar los datos.</td></tr>';
 });
 </script>
 
