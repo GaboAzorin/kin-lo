@@ -40,5 +40,32 @@
     ],
     "rango_sugerencia": "500",
     "aciertos": null
+  },
+  {
+    "fecha_jugada": "25-05-2026",
+    "juego": "kino",
+    "variantes": [
+      "kino",
+      "rekino"
+    ],
+    "sorteo": 5430,
+    "numeros": [
+      1,
+      2,
+      6,
+      8,
+      11,
+      12,
+      13,
+      16,
+      18,
+      19,
+      21,
+      23,
+      24,
+      25
+    ],
+    "rango_sugerencia": null,
+    "aciertos": null
   }
 ]
