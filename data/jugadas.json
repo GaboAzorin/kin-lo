@@ -1,0 +1,17 @@
+[
+  {
+    "fecha_jugada": "2026-05-28",
+    "juego": "loto",
+    "sorteo": 5431,
+    "numeros": [
+      1,
+      5,
+      30,
+      32,
+      34,
+      41
+    ],
+    "rango_sugerencia": "500",
+    "aciertos": null
+  }
+]

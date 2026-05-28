@@ -36,6 +36,7 @@ PENDING_LOTO = DATA_DIR / "loto_suggestions_pending.json"
 PENDING_KINO = DATA_DIR / "kino_suggestions_pending.json"
 HISTORY_PATH = DATA_DIR / "suggestions_history.csv"
 HISTORY_COLS = ["juego", "sorteo_predicho", "fecha_sorteo", "rango", "combo", "aciertos"]
+JUGADAS_PATH = DATA_DIR / "jugadas.json"
 
 # Notificaciones Telegram
 _DIA_ES = {
@@ -249,6 +250,67 @@ def _evaluar_y_registrar(df: pd.DataFrame, juego: str,
         "per_rango": per_rango,
         "pick":      len(num_cols),
     }
+
+
+def _evaluar_jugadas(df: pd.DataFrame, juego: str, num_cols: list[str]) -> list[dict]:
+    """
+    Lee data/jugadas.json, calcula aciertos para jugadas pendientes del juego dado
+    que ya tienen resultado disponible en el CSV. Actualiza el archivo en disco.
+    Retorna la lista de jugadas recién evaluadas.
+    """
+    if not JUGADAS_PATH.exists():
+        return []
+
+    with open(JUGADAS_PATH, encoding="utf-8") as f:
+        jugadas = json.load(f)
+
+    df_num = df.copy()
+    df_num["_s"] = pd.to_numeric(df_num["sorteo"], errors="coerce")
+    sorteos_disponibles = set(df_num["_s"].dropna().astype(int))
+
+    evaluadas = []
+    modificado = False
+
+    for j in jugadas:
+        if j.get("juego") != juego:
+            continue
+        if j.get("aciertos") is not None:
+            continue
+        sorteo_n = j.get("sorteo")
+        if sorteo_n not in sorteos_disponibles:
+            continue
+
+        fila = df_num[df_num["_s"] == sorteo_n].iloc[0]
+        resultado = []
+        for c in num_cols:
+            try:
+                resultado.append(int(fila[c]))
+            except (TypeError, ValueError):
+                pass
+
+        if not resultado:
+            continue
+
+        aciertos = len(set(j["numeros"]) & set(resultado))
+        j["aciertos"]        = aciertos
+        j["resultado_sorteo"] = sorted(resultado)
+        modificado = True
+        evaluadas.append({**j, "aciertos": aciertos, "resultado_sorteo": sorted(resultado)})
+
+        rango = j.get("rango_sugerencia") or "manual"
+        nums_j = "  ".join(str(n).rjust(2) for n in j["numeros"])
+        nums_r = "  ".join(str(n).rjust(2) for n in sorted(resultado))
+        pick   = len(num_cols)
+        print(f"  [Mi jugada] Sorteo #{sorteo_n}  rango={rango}")
+        print(f"    Jugué:     [ {nums_j} ]")
+        print(f"    Resultado: [ {nums_r} ]")
+        print(f"    Aciertos:  {aciertos} de {pick}")
+
+    if modificado:
+        with open(JUGADAS_PATH, "w", encoding="utf-8") as f:
+            json.dump(jugadas, f, ensure_ascii=False, indent=2)
+
+    return evaluadas
 
 
 def _range_scores(juego: str) -> dict:
@@ -679,6 +741,21 @@ def main():
     if pending:
         print("  Evaluando sugerencias del sorteo anterior...")
         eval_data = _evaluar_y_registrar(df, juego_key, num_cols, pending)
+
+    # 1b. Evaluar jugadas personales pendientes
+    print("  Evaluando jugadas personales...")
+    jugadas_evaluadas = _evaluar_jugadas(df, juego_key, num_cols)
+    for j in jugadas_evaluadas:
+        pick   = len(num_cols)
+        emoji  = "🟦" if juego_key == "kino" else "🟡"
+        rango  = j.get("rango_sugerencia") or "manual"
+        nums_j = "  ".join(str(n).rjust(2) for n in j["numeros"])
+        tg_send(
+            f"{emoji} <b>Mi jugada · {juego_key.capitalize()} #{j['sorteo']}</b>\n"
+            f"Rango: {rango}\n\n"
+            f"Jugué:   <code>{nums_j}</code>\n"
+            f"Aciertos: <b>{j['aciertos']} de {pick}</b>"
+        )
 
     # 2. Calcular métricas y sugerencias nuevas
     data = generar_loto(df) if args.game == "loto" else generar_kino(df)
