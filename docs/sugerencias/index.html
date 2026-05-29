@@ -121,6 +121,41 @@
 
     .rank-num { font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
 
+    .disclaimer {
+      background: rgba(59,130,246,0.07); border: 1px solid rgba(59,130,246,0.3);
+      border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px;
+      font-size: 0.82rem; line-height: 1.55; color: var(--text);
+    }
+    .disclaimer strong { color: var(--blue); }
+    .disclaimer ul { margin: 8px 0 0; padding-left: 20px; }
+    .disclaimer li { margin-bottom: 4px; color: var(--muted); }
+    .disclaimer li b { color: var(--text); }
+
+    .backtest-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 22px; margin-bottom: 28px;
+    }
+    .backtest-card h2 {
+      font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--muted); margin-bottom: 14px;
+    }
+    .bt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .bt-metric {
+      background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 14px;
+    }
+    .bt-metric .label {
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--muted); margin-bottom: 6px;
+    }
+    .bt-metric .vals { display: flex; gap: 14px; font-size: 0.82rem; align-items: baseline; }
+    .bt-metric .vals .smart { color: var(--green); font-weight: 700; font-size: 1.05rem; }
+    .bt-metric .vals .rand  { color: var(--muted); }
+    .bt-metric .note { font-size: 0.72rem; color: var(--muted); margin-top: 6px; }
+    .bt-metric .win { color: var(--green); font-weight: 700; }
+    .bt-metric .tie { color: var(--accent); font-weight: 700; }
+    @media (max-width: 640px) { .bt-grid { grid-template-columns: 1fr; } }
+
     .empty-state {
       text-align: center; color: var(--muted); font-size: 0.88rem;
       font-style: italic; padding: 60px 24px;
@@ -148,9 +183,25 @@
 </header>
 
 <main>
-  <p style="font-size:0.82rem; color:var(--muted); margin-bottom:24px">
+  <p style="font-size:0.82rem; color:var(--muted); margin-bottom:16px">
     Combinaciones sugeridas vs resultados reales · ID lexicográfico de cada combinación entre todas las posibles.
   </p>
+
+  <div class="disclaimer">
+    <strong>Cómo leer esto (honestamente).</strong>
+    La lotería es justa: todas las combinaciones son igual de probables y cada sorteo es
+    independiente. <b>Ninguna estrategia mejora tu probabilidad de ganar</b> — lo verificamos
+    con un backtest sobre todo el historial. Lo que sí optimiza el motor son las dos únicas
+    palancas con valor real:
+    <ul>
+      <li><b>Anti-reparto:</b> evita patrones que juega mucha gente (fechas, secuencias,
+        múltiplos). Si ganas, repartes el premio con menos personas → premio esperado mayor.</li>
+      <li><b>Diversidad:</b> las combinaciones se pisan poco entre sí, cubriendo más números
+        si juegas varios cartones.</li>
+    </ul>
+  </div>
+
+  <div id="backtest"></div>
 
   <div class="tab-bar">
     <button class="tab active" onclick="showGame('loto', this)">🎱 Loto</button>
@@ -162,6 +213,7 @@
 
 <script>
 let detailData = null;
+let backtestData = null;
 let activeGame = 'loto';
 
 const RANGE_LABELS = {
@@ -171,6 +223,12 @@ const RANGE_LABELS = {
 const RANGO_ORDER = ['50','100','250','500','1000','all'];
 
 async function loadData() {
+  // Backtest (opcional): no bloquea el render principal.
+  fetch('../data/backtest.json')
+    .then(r => r.ok ? r.json() : null)
+    .then(d => { backtestData = d; renderBacktest(); })
+    .catch(() => {});
+
   try {
     const r = await fetch('../data/suggestions_detail.json');
     if (!r.ok) throw new Error('no data');
@@ -187,6 +245,56 @@ function showGame(game, btn) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
   render();
+  renderBacktest();
+}
+
+function renderBacktest() {
+  const el = document.getElementById('backtest');
+  if (!el) return;
+  const bt = backtestData && backtestData[activeGame];
+  if (!bt) { el.innerHTML = ''; return; }
+
+  const ac = bt.aciertos, pop = bt.popularidad, ol = bt.solapamiento;
+  const acTie = !bt.aciertos_test.significativo;
+  const popWin = pop.smart < pop.random;
+  const olWin  = ol.smart < ol.random;
+
+  el.innerHTML = `
+    <div class="backtest-card">
+      <h2>Backtest: motor vs azar puro (${bt.n_sorteos} sorteos del historial)</h2>
+      <div class="bt-grid">
+        <div class="bt-metric">
+          <div class="label">Aciertos promedio</div>
+          <div class="vals">
+            <span class="smart">${ac.smart.toFixed(3)}</span>
+            <span class="rand">azar ${ac.random.toFixed(3)}</span>
+          </div>
+          <div class="note">${acTie
+            ? '<span class="tie">Empate</span> — ningún método predice mejor (lotería justa).'
+            : 'diferencia dentro de lo medible.'}</div>
+        </div>
+        <div class="bt-metric">
+          <div class="label">Popularidad (anti-reparto)</div>
+          <div class="vals">
+            <span class="smart">${pop.smart.toFixed(3)}</span>
+            <span class="rand">azar ${pop.random.toFixed(3)}</span>
+          </div>
+          <div class="note">${popWin
+            ? `<span class="win">−${Math.abs(pop.reduccion_pct).toFixed(0)}%</span> menos popular → menos reparto del premio.`
+            : 'sin ventaja.'}</div>
+        </div>
+        <div class="bt-metric">
+          <div class="label">Solapamiento entre combos</div>
+          <div class="vals">
+            <span class="smart">${ol.smart.toFixed(2)}</span>
+            <span class="rand">azar ${ol.random.toFixed(2)}</span>
+          </div>
+          <div class="note">${olWin
+            ? '<span class="win">más diverso</span> que el azar → mejor cobertura.'
+            : 'similar al azar.'}</div>
+        </div>
+      </div>
+    </div>`;
 }
 
 function fmt(n) {

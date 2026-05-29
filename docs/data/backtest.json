@@ -1,0 +1,56 @@
+{
+  "loto": {
+    "game": "loto",
+    "n_sorteos": 200,
+    "pick": 6,
+    "aciertos": {
+      "smart": 0.9165,
+      "random": 0.8945,
+      "teorico": 0.878
+    },
+    "aciertos_test": {
+      "diff": 0.022,
+      "z": 0.89,
+      "significativo": false
+    },
+    "popularidad": {
+      "smart": 0.0126,
+      "random": 0.1683,
+      "reduccion_pct": 92.5
+    },
+    "solapamiento": {
+      "smart": 0.7937,
+      "random": 0.8794
+    }
+  },
+  "_meta": {
+    "draws": 200,
+    "n": 10,
+    "rango": "all",
+    "seed": 42
+  },
+  "kino": {
+    "game": "kino",
+    "n_sorteos": 200,
+    "pick": 14,
+    "aciertos": {
+      "smart": 7.823,
+      "random": 7.8045,
+      "teorico": 7.84
+    },
+    "aciertos_test": {
+      "diff": 0.0185,
+      "z": 0.55,
+      "significativo": false
+    },
+    "popularidad": {
+      "smart": 0.056,
+      "random": 0.1158,
+      "reduccion_pct": 51.6
+    },
+    "solapamiento": {
+      "smart": 7.3573,
+      "random": 7.8491
+    }
+  }
+}
