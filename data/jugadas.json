@@ -369,5 +369,32 @@
     "aciertos": {
       "loto": 0
     }
+  },
+  {
+    "fecha_jugada": "30-05-2026",
+    "juego": "kino",
+    "variantes": [
+      "kino",
+      "rekino"
+    ],
+    "sorteo": 3234,
+    "numeros": [
+      1,
+      3,
+      4,
+      7,
+      10,
+      12,
+      15,
+      16,
+      18,
+      19,
+      21,
+      22,
+      24,
+      25
+    ],
+    "rango_sugerencia": "250",
+    "aciertos": null
   }
 ]
