@@ -60,7 +60,27 @@
       24
     ],
     "rango_sugerencia": "500",
-    "aciertos": null
+    "aciertos": {
+      "kino": 8
+    },
+    "resultado_sorteo": {
+      "kino": [
+        2,
+        4,
+        6,
+        8,
+        9,
+        10,
+        11,
+        15,
+        17,
+        18,
+        20,
+        23,
+        24,
+        25
+      ]
+    }
   },
   {
     "fecha_jugada": "25-05-2026",
