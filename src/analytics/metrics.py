@@ -69,6 +69,11 @@ _UMBRAL_ALERTA = {"kino": 12, "loto": 5}   # aciertos mínimos para alerta desta
 # ---------------------------------------------------------------------------
 SUGGESTION_RANGES = [50, 100, 250, 500, 1000]  # "all" siempre se añade al final
 
+# Cuántas combinaciones se generan y evalúan por rango (set masivo) vs. cuántas
+# se muestran al usuario / se exportan al detalle (las top por aciertos).
+N_EVAL    = 500   # combos generados + evaluados por rango → mejor grupo robusto
+N_DISPLAY = 3     # combos mostrados en Home y top-3 por aciertos en /sugerencias/
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -389,10 +394,12 @@ def _stats_ligeros(df: pd.DataFrame, cols: list[str], num_range: int) -> dict:
 def _sugerencias_por_rango(df_full: pd.DataFrame, prefix: str,
                             num_range: int, pick: int) -> dict:
     """
-    Genera 3 sugerencias por cada rango válido (últimos N sorteos + todos).
+    Genera N_EVAL (500) sugerencias por cada rango válido (últimos N sorteos + todos).
 
     - Estadísticas calculadas sobre el slice del rango.
     - Unicidad verificada contra df_full (historial completo).
+    - Las primeras N_DISPLAY van por diversidad MMR (lo que se muestra); el resto
+      por score, para evaluar el "mejor grupo" sobre una muestra grande.
 
     Devuelve un dict con claves "50", "100", "250", "500", "1000", "all"
     (solo incluye los rangos donde N < total de sorteos disponibles).
@@ -411,8 +418,8 @@ def _sugerencias_por_rango(df_full: pd.DataFrame, prefix: str,
         result[label] = generar_sugerencias(
             df_rango, stats,
             num_range=num_range, pick=pick,
-            n_sugerencias=3, num_col_prefix=prefix,
-            df_history=df_full,
+            n_sugerencias=N_EVAL, num_col_prefix=prefix,
+            df_history=df_full, n_display=N_DISPLAY,
         )
     return result
 
@@ -632,7 +639,10 @@ def _exportar_detalle_json():
                         resultado = sorted(nums)
                         rank_res  = combo_rank(resultado, n, k)
 
-            rangos: dict[str, list] = {}
+            # Agrupar las N_EVAL combos por rango y quedarnos con las top-N por
+            # aciertos (las que más acertaron en este sorteo). El rango léxico
+            # se calcula solo para esas, no para las 500.
+            por_rango_rows: dict[str, list] = {}
             for _, row in grp.iterrows():
                 try:
                     combo = [int(x) for x in str(row["combo"]).split(",")]
@@ -640,16 +650,22 @@ def _exportar_detalle_json():
                     continue
                 if len(combo) != k:
                     continue
-                combo_s  = sorted(combo)
-                rank_c   = combo_rank(combo_s, n, k)
-                diff     = (rank_res - rank_c) if rank_res is not None else None
-                r = str(row["rango"])
-                rangos.setdefault(r, []).append({
-                    "combo":      combo_s,
-                    "aciertos":   int(row["aciertos"]),
-                    "rank_combo": rank_c,
-                    "diff_rank":  diff,
-                })
+                por_rango_rows.setdefault(str(row["rango"]), []).append(
+                    (sorted(combo), int(row["aciertos"]))
+                )
+
+            rangos: dict[str, list] = {}
+            for r, combos in por_rango_rows.items():
+                combos.sort(key=lambda x: x[1], reverse=True)
+                for combo_s, aciertos in combos[:N_DISPLAY]:
+                    rank_c = combo_rank(combo_s, n, k)
+                    diff   = (rank_res - rank_c) if rank_res is not None else None
+                    rangos.setdefault(r, []).append({
+                        "combo":      combo_s,
+                        "aciertos":   aciertos,
+                        "rank_combo": rank_c,
+                        "diff_rank":  diff,
+                    })
 
             sorteos.append({
                 "sorteo":         sorteo_n,
@@ -763,17 +779,18 @@ def _enviar_notificaciones(juego: str, ultimo: dict,
     # ── 3. Alertas de resultados destacados ──────────────────────────────
     umbral = _UMBRAL_ALERTA[juego]
     for rango, v in eval_data["per_rango"].items():
-        for c in v["combos"]:
-            if c["aciertos"] >= umbral:
-                label  = f"Últ. {rango}" if rango != "all" else "Todos"
-                nums_c = "  ".join(str(n).rjust(2) for n in c["combo"])
-                sufijo = " 🎉🎉🎉" if c["aciertos"] == pick else ""
-                tg_send(
-                    f"🚨 <b>RESULTADO DESTACADO · {cap}</b>\n\n"
-                    f"Rango <b>{label}</b>\n"
-                    f"<code>{nums_c}</code>\n"
-                    f"✅ <b>{c['aciertos']} de {pick} aciertos</b>{sufijo}"
-                )
+        # Con N_EVAL combos por rango, alertar solo la mejor (evita inundar Telegram).
+        c = max(v["combos"], key=lambda x: x["aciertos"])
+        if c["aciertos"] >= umbral:
+            label  = f"Últ. {rango}" if rango != "all" else "Todos"
+            nums_c = "  ".join(str(n).rjust(2) for n in c["combo"])
+            sufijo = " 🎉🎉🎉" if c["aciertos"] == pick else ""
+            tg_send(
+                f"🚨 <b>RESULTADO DESTACADO · {cap}</b>\n\n"
+                f"Rango <b>{label}</b>\n"
+                f"<code>{nums_c}</code>\n"
+                f"✅ <b>{c['aciertos']} de {pick} aciertos</b>{sufijo}"
+            )
 
 
 def main():
@@ -843,7 +860,8 @@ def main():
     _enviar_notificaciones(juego_key, data.get("ultimo_sorteo", {}),
                            eval_data, data["range_scores"])
 
-    # 5. Guardar pending para el próximo sorteo
+    # 5. Guardar pending para el próximo sorteo (las N_EVAL completas: se evalúan
+    #    todas para calcular el rendimiento del "mejor grupo").
     ultimo = int(pd.to_numeric(df["sorteo"], errors="coerce").max())
     _guardar_pending(pending_path, ultimo, data["suggestions"])
 
@@ -851,6 +869,12 @@ def main():
     _exportar_historial_json()
     _exportar_detalle_json()
     _exportar_historial_index()
+
+    # 7. Reducir las sugerencias del JSON de métricas a las N_DISPLAY mostradas
+    #    en la Home / páginas de juego (el pending ya conserva las N_EVAL).
+    data["suggestions"] = {
+        rango: combos[:N_DISPLAY] for rango, combos in data["suggestions"].items()
+    }
 
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)

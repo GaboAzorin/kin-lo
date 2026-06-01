@@ -92,8 +92,12 @@ GitHub Pages sirve docs/ → https://gaboazorin.github.io/kin-lo/
 ### Analytics (`src/analytics/`)
 
 - `metrics.py` lee los CSV y genera JSON en `docs/data/`.
-- `suggestions.py` (llamado desde metrics.py) genera 5 combinaciones de 14 números (Kino) o 6 (Loto)
-  usando scoring estadístico (frecuencia, gaps, suma, paridad, balance).
+- `suggestions.py` (llamado desde metrics.py) genera **500 combinaciones por rango** de 14 números
+  (Kino) o 6 (Loto) optimizando anti-reparto + diversidad. Las primeras 3 (diversidad MMR) son las
+  que se muestran en la Home / páginas de juego; las 500 se guardan en el `*_suggestions_pending.json`.
+- **Mejor grupo (★)**: tras el sorteo se evalúan las 500 por rango y el rango con mejor promedio de
+  aciertos se marca como "mejor grupo". La página `/sugerencias/` muestra las **3 con más aciertos**
+  por rango (top-3 a posteriori), no las 3 mostradas en la Home.
 - **Unicidad garantizada**: ninguna combinación sugerida ha salido antes en el historial.
 
 ## Estructura de CSVs

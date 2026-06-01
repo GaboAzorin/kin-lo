@@ -212,7 +212,8 @@ def _seleccionar_diversas(cands, n: int, pick: int, lam: float):
 def generar_sugerencias(df, metricas: dict, num_range: int = 41,
                         pick: int = 6, n_sugerencias: int = 5,
                         num_col_prefix: str = "LOTO",
-                        df_history=None, juego: str | None = None) -> list[dict]:
+                        df_history=None, juego: str | None = None,
+                        n_display: int | None = None) -> list[dict]:
     """
     Genera `n_sugerencias` combinaciones optimizadas por anti-reparto + diversidad.
 
@@ -225,6 +226,12 @@ def generar_sugerencias(df, metricas: dict, num_range: int = 41,
         num_col_prefix: Prefijo de columnas ("LOTO", "KINO", ...).
         df_history:     DataFrame completo para verificar unicidad. Si None, usa df.
         juego:          "loto" | "kino". Si None se infiere del num_range.
+        n_display:      Si se indica (< n_sugerencias), las primeras `n_display`
+                        combinaciones se eligen por diversidad MMR (lo que se
+                        muestra al usuario) y el resto hasta `n_sugerencias` se
+                        rellena por score descendente (set de evaluación masivo).
+                        Si es None, TODAS se eligen por MMR (comportamiento
+                        clásico, usado por el backtest).
 
     Returns:
         Lista de dicts ordenada por score:
@@ -259,9 +266,25 @@ def generar_sugerencias(df, metricas: dict, num_range: int = 41,
 
     candidatos.sort(key=lambda x: x[1], reverse=True)
 
-    elegidos = _seleccionar_diversas(
-        candidatos, n_sugerencias, pick, perfil["lam"]
-    )
+    if n_display is None or n_display >= n_sugerencias:
+        # Comportamiento clásico: todas por diversidad MMR.
+        elegidos = _seleccionar_diversas(
+            candidatos, n_sugerencias, pick, perfil["lam"]
+        )
+    else:
+        # Las primeras n_display por diversidad (lo que se muestra); el resto
+        # hasta n_sugerencias se rellena por score (set de evaluación masivo).
+        elegidos = _seleccionar_diversas(
+            candidatos, n_display, pick, perfil["lam"]
+        )
+        ya = {c[0] for c in elegidos}
+        for cand in candidatos:
+            if len(elegidos) >= n_sugerencias:
+                break
+            if cand[0] in ya:
+                continue
+            elegidos.append(cand)
+            ya.add(cand[0])
 
     return [
         {
