@@ -415,5 +415,32 @@
         25
       ]
     }
+  },
+  {
+    "fecha_jugada": "01-06-2026",
+    "juego": "kino",
+    "variantes": [
+      "kino",
+      "rekino"
+    ],
+    "sorteo": 3235,
+    "numeros": [
+      1,
+      2,
+      4,
+      6,
+      7,
+      9,
+      10,
+      12,
+      13,
+      17,
+      19,
+      20,
+      23,
+      25
+    ],
+    "rango_sugerencia": "250",
+    "aciertos": null
   }
 ]
