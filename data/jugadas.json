@@ -441,5 +441,24 @@
     ],
     "rango_sugerencia": "250",
     "aciertos": null
+  },
+  {
+    "fecha_jugada": "02-06-2026",
+    "juego": "loto",
+    "variantes": [
+      "loto",
+      "recargado"
+    ],
+    "sorteo": 5433,
+    "numeros": [
+      2,
+      14,
+      23,
+      32,
+      35,
+      37
+    ],
+    "rango_sugerencia": "500",
+    "aciertos": null
   }
 ]
