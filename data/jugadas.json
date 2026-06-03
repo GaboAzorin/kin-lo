@@ -481,5 +481,24 @@
         36
       ]
     }
+  },
+  {
+    "fecha_jugada": "03-06-2026",
+    "juego": "loto",
+    "variantes": [
+      "loto",
+      "recargado"
+    ],
+    "sorteo": 5434,
+    "numeros": [
+      7,
+      12,
+      22,
+      32,
+      35,
+      41
+    ],
+    "rango_sugerencia": "50",
+    "aciertos": null
   }
 ]
