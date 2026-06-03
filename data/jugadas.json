@@ -459,6 +459,27 @@
       37
     ],
     "rango_sugerencia": "500",
-    "aciertos": null
+    "aciertos": {
+      "loto": 0,
+      "recargado": 0
+    },
+    "resultado_sorteo": {
+      "loto": [
+        3,
+        11,
+        20,
+        27,
+        31,
+        40
+      ],
+      "recargado": [
+        5,
+        8,
+        10,
+        11,
+        15,
+        36
+      ]
+    }
   }
 ]
