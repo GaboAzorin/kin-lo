@@ -520,5 +520,31 @@
     ],
     "rango_sugerencia": "50",
     "aciertos": null
+  },
+  {
+    "fecha_jugada": "04-06-2026",
+    "juego": "kino",
+    "variantes": [
+      "kino"
+    ],
+    "sorteo": 3236,
+    "numeros": [
+      1,
+      4,
+      6,
+      7,
+      9,
+      10,
+      12,
+      13,
+      15,
+      16,
+      19,
+      20,
+      23,
+      25
+    ],
+    "rango_sugerencia": "250",
+    "aciertos": null
   }
 ]
