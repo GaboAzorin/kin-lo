@@ -440,7 +440,27 @@
       25
     ],
     "rango_sugerencia": "250",
-    "aciertos": null
+    "aciertos": {
+      "kino": 11
+    },
+    "resultado_sorteo": {
+      "kino": [
+        1,
+        2,
+        3,
+        4,
+        6,
+        7,
+        8,
+        12,
+        13,
+        14,
+        17,
+        19,
+        20,
+        25
+      ]
+    }
   },
   {
     "fecha_jugada": "02-06-2026",
