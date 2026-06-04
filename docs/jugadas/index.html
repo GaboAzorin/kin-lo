@@ -332,8 +332,13 @@ function renderRow(j, origIdx) {
     aciertosHTML = `<span class="${cls}">${j.aciertos}/${pick}</span>`;
   }
 
+  const ds = fechaSorteo(j);
+  const fechaCell = ds
+    ? fmtFecha(ds)
+    : `${j.fecha_jugada || '—'} <span class="manual-tag">(pendiente)</span>`;
+
   return `<tr>
-    <td class="fecha">${j.fecha_jugada||'—'}</td>
+    <td class="fecha">${fechaCell}</td>
     <td><span class="sorteo-num">#${j.sorteo}</span></td>
     <td><span class="${tagCls}">${LABEL[j.juego]||j.juego}</span>${extrasHTML}</td>
     <td><div class="nums">${numsHTML}</div></td>
@@ -341,6 +346,17 @@ function renderRow(j, origIdx) {
     <td>${aciertosHTML}</td>
     <td><button class="btn-edit" data-idx="${origIdx}" title="Editar">✏</button></td>
   </tr>`;
+}
+
+// Fecha real del sorteo (yyyy-mm-dd) desde el índice histórico; null si aún no salió.
+function fechaSorteo(j) {
+  const e = (historialIndex[j.juego] || {})[String(j.sorteo)];
+  return (e && e._fecha) || null;
+}
+// yyyy-mm-dd → dd-mm-yyyy
+function fmtFecha(iso) {
+  const [y, m, d] = iso.split('-');
+  return `${d}-${m}-${y}`;
 }
 
 function refreshTable() {
@@ -352,8 +368,15 @@ function refreshTable() {
   const sorted = [...allJugadas]
     .map((j, i) => ({ j, i }))
     .sort((a, b) => {
-      const fd = j => (j.fecha_jugada || '').split('-').reverse().join(''); // dd-mm-yyyy → yyyymmdd
-      return fd(b.j).localeCompare(fd(a.j)) || b.j.sorteo - a.j.sorteo;
+      // Pendientes (sin sorteo aún) arriba, ordenadas por fecha de registro;
+      // resueltas debajo, ordenadas por fecha de sorteo real. Todo desc.
+      const key = j => {
+        const ds = fechaSorteo(j);
+        if (ds) return { pend: 0, d: ds.replace(/-/g, '') };                  // yyyymmdd del sorteo
+        return { pend: 1, d: (j.fecha_jugada || '').split('-').reverse().join('') }; // dd-mm-yyyy → yyyymmdd
+      };
+      const ka = key(a.j), kb = key(b.j);
+      return (kb.pend - ka.pend) || kb.d.localeCompare(ka.d) || b.j.sorteo - a.j.sorteo;
     });
   renderStats(allJugadas);
   document.getElementById('tbody').innerHTML = sorted.map(({ j, i }) => renderRow(j, i)).join('');

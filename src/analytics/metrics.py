@@ -717,6 +717,10 @@ def _exportar_historial_index():
                 except Exception:
                     pass
             if entry:
+                # Fecha del sorteo normalizada a yyyy-mm-dd (loto trae timestamp, kino solo fecha).
+                fecha = str(row.get("fecha", "")).strip()[:10]
+                if fecha:
+                    entry["_fecha"] = fecha
                 idx[str(sorteo)] = entry
         result[juego] = idx
 
