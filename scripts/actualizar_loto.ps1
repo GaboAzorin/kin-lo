@@ -47,19 +47,40 @@ function Invoke-Pipeline {
 }
 
 # === 1/4  Sincronizar con el remoto ANTES de trabajar =======================
-# El árbol debe estar limpio aquí; así corremos con el código y datos más
-# recientes (incluye los commits del cron de Kino) y evitamos divergencias.
+# Bajamos lo más reciente del remoto (incluye los commits del cron de Kino)
+# antes de generar nada. Si hay cambios locales sin commitear, se guardan en un
+# stash temporal para poder hacer rebase, y se restauran después del pull.
 Write-Host "`n=== 1/4  Sincronizar con remoto ===" -ForegroundColor Cyan
 git fetch origin
+
+$huboStash = $false
 if (git status --porcelain) {
-    Write-Host "Hay cambios locales sin commitear. Commitéalos o descártalos antes de correr." -ForegroundColor Red
-    exit 1
+    Write-Host "Hay cambios locales sin commitear. Guardándolos en stash temporal..." -ForegroundColor Yellow
+    git stash push --include-untracked -m "actualizar_loto: auto-stash pre-sync"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "No se pudo crear el stash. Resuélvelo manualmente (git status)." -ForegroundColor Red
+        exit 1
+    }
+    $huboStash = $true
 }
+
 git pull --rebase origin main
 if ($LASTEXITCODE -ne 0) {
     Write-Host "El rebase contra origin/main falló. Resuélvelo manualmente (git status)." -ForegroundColor Red
     git rebase --abort 2>$null
+    if ($huboStash) {
+        Write-Host "Tus cambios locales siguen guardados; recupéralos con 'git stash pop'." -ForegroundColor Yellow
+    }
     exit 1
+}
+
+if ($huboStash) {
+    Write-Host "Restaurando cambios locales del stash..." -ForegroundColor Yellow
+    git stash pop
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Conflicto al restaurar el stash. Resuélvelo manualmente; tus cambios están en 'git stash list'." -ForegroundColor Red
+        exit 1
+    }
 }
 
 # === 2/4  Pipeline (scraper + métricas + pozos) =============================
