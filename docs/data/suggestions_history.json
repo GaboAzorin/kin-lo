@@ -2,39 +2,39 @@
   "loto": {
     "por_rango": {
       "50": {
-        "sorteos": 4,
-        "avg": 0.83,
+        "sorteos": 5,
+        "avg": 0.79,
         "max": 3,
         "pick": 6
       },
       "100": {
-        "sorteos": 4,
-        "avg": 0.67,
-        "max": 2,
+        "sorteos": 5,
+        "avg": 0.74,
+        "max": 3,
         "pick": 6
       },
       "250": {
-        "sorteos": 4,
-        "avg": 0.58,
-        "max": 2,
+        "sorteos": 5,
+        "avg": 0.82,
+        "max": 5,
         "pick": 6
       },
       "500": {
-        "sorteos": 4,
-        "avg": 1.0,
-        "max": 2,
+        "sorteos": 5,
+        "avg": 0.81,
+        "max": 4,
         "pick": 6
       },
       "1000": {
-        "sorteos": 4,
-        "avg": 1.0,
-        "max": 2,
+        "sorteos": 5,
+        "avg": 0.8,
+        "max": 4,
         "pick": 6
       },
       "all": {
-        "sorteos": 4,
-        "avg": 1.17,
-        "max": 2,
+        "sorteos": 5,
+        "avg": 0.81,
+        "max": 4,
         "pick": 6
       }
     },
@@ -156,6 +156,36 @@
           "all": {
             "max": 2,
             "avg": 1.33
+          }
+        }
+      },
+      {
+        "sorteo": 5434,
+        "fecha": "2026-06-04 21:00:00",
+        "rangos": {
+          "50": {
+            "max": 3,
+            "avg": 0.79
+          },
+          "100": {
+            "max": 3,
+            "avg": 0.74
+          },
+          "250": {
+            "max": 5,
+            "avg": 0.83
+          },
+          "500": {
+            "max": 4,
+            "avg": 0.8
+          },
+          "1000": {
+            "max": 4,
+            "avg": 0.79
+          },
+          "all": {
+            "max": 4,
+            "avg": 0.8
           }
         }
       }

@@ -519,7 +519,28 @@
       41
     ],
     "rango_sugerencia": "50",
-    "aciertos": null
+    "aciertos": {
+      "loto": 1,
+      "recargado": 0
+    },
+    "resultado_sorteo": {
+      "loto": [
+        1,
+        9,
+        10,
+        24,
+        28,
+        35
+      ],
+      "recargado": [
+        8,
+        10,
+        13,
+        18,
+        23,
+        33
+      ]
+    }
   },
   {
     "fecha_jugada": "04-06-2026",
