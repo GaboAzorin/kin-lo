@@ -685,5 +685,23 @@
     ],
     "rango_sugerencia": "500",
     "aciertos": null
+  },
+  {
+    "fecha_jugada": "08-06-2026",
+    "juego": "loto",
+    "variantes": [
+      "loto"
+    ],
+    "sorteo": 5436,
+    "numeros": [
+      1,
+      10,
+      25,
+      34,
+      38,
+      39
+    ],
+    "rango_sugerencia": "all",
+    "aciertos": null
   }
 ]
