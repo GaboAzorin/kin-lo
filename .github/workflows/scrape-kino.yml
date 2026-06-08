@@ -15,6 +15,8 @@ permissions:
 jobs:
   scrape-kino:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout repositorio
@@ -39,7 +41,8 @@ jobs:
 
       - name: Ejecutar scraper kinohistorico.cl (historial completo vía REST API)
         # Descarga sorteos nuevos que aún no estén en el CSV.
-        # kinohistorico.cl es una API pública sin restricciones de IP.
+        # continue-on-error: kinohistorico.cl bloquea IPs de GitHub Actions con 403.
+        continue-on-error: true
         run: python src/scrapers/scraper_kinohistorico.py
 
       - name: Calcular métricas y sugerencias (Kino)
