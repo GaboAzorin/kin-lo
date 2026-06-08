@@ -2,6 +2,267 @@
   "loto": {
     "sorteos": [
       {
+        "sorteo": 5435,
+        "fecha": "2026-06-07 21:00:00",
+        "resultado": [
+          14,
+          15,
+          20,
+          24,
+          31,
+          40
+        ],
+        "rank_resultado": 4127887,
+        "rangos": {
+          "50": [
+            {
+              "combo": [
+                4,
+                20,
+                24,
+                33,
+                37,
+                40
+              ],
+              "aciertos": 3,
+              "rank_combo": 2148812,
+              "diff_rank": 1979075
+            },
+            {
+              "combo": [
+                7,
+                15,
+                20,
+                35,
+                40,
+                41
+              ],
+              "aciertos": 3,
+              "rank_combo": 3079699,
+              "diff_rank": 1048188
+            },
+            {
+              "combo": [
+                2,
+                14,
+                15,
+                35,
+                37,
+                40
+              ],
+              "aciertos": 3,
+              "rank_combo": 1138058,
+              "diff_rank": 2989829
+            }
+          ],
+          "100": [
+            {
+              "combo": [
+                1,
+                14,
+                20,
+                33,
+                37,
+                40
+              ],
+              "aciertos": 3,
+              "rank_combo": 571230,
+              "diff_rank": 3556657
+            },
+            {
+              "combo": [
+                15,
+                24,
+                29,
+                32,
+                34,
+                40
+              ],
+              "aciertos": 3,
+              "rank_combo": 4259369,
+              "diff_rank": -131482
+            },
+            {
+              "combo": [
+                3,
+                15,
+                31,
+                33,
+                39,
+                40
+              ],
+              "aciertos": 3,
+              "rank_combo": 1669659,
+              "diff_rank": 2458228
+            }
+          ],
+          "250": [
+            {
+              "combo": [
+                1,
+                14,
+                20,
+                31,
+                37,
+                40
+              ],
+              "aciertos": 4,
+              "rank_combo": 571166,
+              "diff_rank": 3556721
+            },
+            {
+              "combo": [
+                1,
+                14,
+                31,
+                34,
+                38,
+                40
+              ],
+              "aciertos": 3,
+              "rank_combo": 577029,
+              "diff_rank": 3550858
+            },
+            {
+              "combo": [
+                8,
+                15,
+                31,
+                32,
+                35,
+                40
+              ],
+              "aciertos": 3,
+              "rank_combo": 3322730,
+              "diff_rank": 805157
+            }
+          ],
+          "500": [
+            {
+              "combo": [
+                1,
+                15,
+                24,
+                33,
+                35,
+                40
+              ],
+              "aciertos": 3,
+              "rank_combo": 589776,
+              "diff_rank": 3538111
+            },
+            {
+              "combo": [
+                14,
+                15,
+                19,
+                35,
+                39,
+                40
+              ],
+              "aciertos": 3,
+              "rank_combo": 4127261,
+              "diff_rank": 626
+            },
+            {
+              "combo": [
+                13,
+                20,
+                31,
+                33,
+                35,
+                40
+              ],
+              "aciertos": 3,
+              "rank_combo": 4099017,
+              "diff_rank": 28870
+            }
+          ],
+          "1000": [
+            {
+              "combo": [
+                1,
+                14,
+                20,
+                33,
+                40,
+                41
+              ],
+              "aciertos": 3,
+              "rank_combo": 571237,
+              "diff_rank": 3556650
+            },
+            {
+              "combo": [
+                11,
+                14,
+                15,
+                34,
+                35,
+                40
+              ],
+              "aciertos": 3,
+              "rank_combo": 3806882,
+              "diff_rank": 321005
+            },
+            {
+              "combo": [
+                4,
+                15,
+                31,
+                35,
+                36,
+                40
+              ],
+              "aciertos": 3,
+              "rank_combo": 2105583,
+              "diff_rank": 2022304
+            }
+          ],
+          "all": [
+            {
+              "combo": [
+                14,
+                15,
+                24,
+                35,
+                40,
+                41
+              ],
+              "aciertos": 4,
+              "rank_combo": 4132198,
+              "diff_rank": -4311
+            },
+            {
+              "combo": [
+                2,
+                14,
+                31,
+                33,
+                38,
+                40
+              ],
+              "aciertos": 3,
+              "rank_combo": 1152765,
+              "diff_rank": 2975122
+            },
+            {
+              "combo": [
+                15,
+                24,
+                27,
+                33,
+                39,
+                40
+              ],
+              "aciertos": 3,
+              "rank_combo": 4258911,
+              "diff_rank": -131024
+            }
+          ]
+        }
+      },
+      {
         "sorteo": 5434,
         "fecha": "2026-06-04 21:00:00",
         "resultado": [
