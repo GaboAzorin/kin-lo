@@ -408,6 +408,28 @@ def _sugerencias_por_rango(df_full: pd.DataFrame, prefix: str,
     total = len(df_full)
     rangos = [n for n in SUGGESTION_RANGES if n < total] + [None]  # None → "all"
 
+    # Calcular dist_params para Kino (num_range <= 25)
+    dist_params = None
+    if num_range <= 25:
+        kino_mask = df_full[cols].apply(pd.to_numeric, errors='coerce').notna().all(axis=1)
+        df_k = df_full[kino_mask][cols].apply(pd.to_numeric, errors='coerce')
+
+        def _row_gap_std(row):
+            ns = sorted(row.astype(int))
+            gaps = [ns[i + 1] - ns[i] for i in range(len(ns) - 1)]
+            m = sum(gaps) / len(gaps)
+            return (sum((g - m) ** 2 for g in gaps) / len(gaps)) ** 0.5
+
+        import numpy as _np
+        gstds = df_k.apply(_row_gap_std, axis=1).values
+        dist_params = {
+            "gap_std_p10": float(_np.percentile(gstds, 10)),
+            "gap_std_p90": float(_np.percentile(gstds, 90)),
+            "zone_p10": 2,
+            "zone_p90": 5,
+            "zones": [(1, 6), (7, 12), (13, 18), (19, 25)],
+        }
+
     result: dict = {}
     for n in rangos:
         label    = str(n) if n is not None else "all"
@@ -420,6 +442,7 @@ def _sugerencias_por_rango(df_full: pd.DataFrame, prefix: str,
             num_range=num_range, pick=pick,
             n_sugerencias=N_EVAL, num_col_prefix=prefix,
             df_history=df_full, n_display=N_DISPLAY,
+            dist_params=dist_params,
         )
     return result
 

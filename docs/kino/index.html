@@ -78,6 +78,7 @@
     .sug-num { font-size: 0.75rem; font-weight: 700; color: var(--muted); min-width: 22px; }
     .sug-meta { margin-left: auto; font-size: 0.78rem; color: var(--muted); }
     .sug-meta strong { color: var(--text); }
+    .sug-meta-dist { font-size: 0.75rem; color: var(--muted); }
     .sug-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 4px; }
     .sug-pill {
       padding: 3px 10px; border-radius: 999px; font-size: 0.67rem; font-weight: 700;
@@ -186,6 +187,29 @@
     </div>
   </div>
 
+  <!-- Sugerencias -->
+  <div class="section">
+    <div class="section-title" id="sugs-title">Combinaciones sugeridas para el próximo sorteo</div>
+    <p style="font-size:0.82rem; color:var(--muted); margin-bottom:16px">
+      14 números de 25 · Balanceadas estadísticamente · Nunca han salido como sorteo ganador
+      en los <span id="total-sorteos">—</span> sorteos registrados.
+    </p>
+    <div class="sugerencias" id="sugerencias"><span class="loading">cargando...</span></div>
+  </div>
+
+  <!-- Rendimiento histórico de sugerencias -->
+  <div class="section">
+    <div class="section-title">Rendimiento histórico de sugerencias</div>
+    <p style="font-size:0.82rem; color:var(--muted); margin-bottom:16px">
+      Comparación de las combinaciones sugeridas vs los resultados reales de cada sorteo.
+      <a href="../sugerencias/" style="color:var(--accent); margin-left:8px">Ver detalle por combinación →</a>
+    </p>
+    <div id="rdm-tabla"><span class="loading">cargando...</span></div>
+    <div id="rdm-chart-wrap" style="margin-top:24px; display:none">
+      <div class="card"><canvas id="rdm-chart" height="160"></canvas></div>
+    </div>
+  </div>
+
   <!-- Frecuencias heatmap -->
   <div class="section">
     <div class="section-title">Frecuencia histórica (1–25)</div>
@@ -223,29 +247,6 @@
     <div class="section-title">Distribución de sumas (Kino — 14 números sorteados)</div>
     <div class="card">
       <canvas id="sum-chart" height="120"></canvas>
-    </div>
-  </div>
-
-  <!-- Sugerencias -->
-  <div class="section">
-    <div class="section-title" id="sugs-title">Combinaciones sugeridas para el próximo sorteo</div>
-    <p style="font-size:0.82rem; color:var(--muted); margin-bottom:16px">
-      14 números de 25 · Balanceadas estadísticamente · Nunca han salido como sorteo ganador
-      en los <span id="total-sorteos">—</span> sorteos registrados.
-    </p>
-    <div class="sugerencias" id="sugerencias"><span class="loading">cargando...</span></div>
-  </div>
-
-  <!-- Rendimiento histórico de sugerencias -->
-  <div class="section">
-    <div class="section-title">Rendimiento histórico de sugerencias</div>
-    <p style="font-size:0.82rem; color:var(--muted); margin-bottom:16px">
-      Comparación de las combinaciones sugeridas vs los resultados reales de cada sorteo.
-      <a href="../sugerencias/" style="color:var(--accent); margin-left:8px">Ver detalle por combinación →</a>
-    </p>
-    <div id="rdm-tabla"><span class="loading">cargando...</span></div>
-    <div id="rdm-chart-wrap" style="margin-top:24px; display:none">
-      <div class="card"><canvas id="rdm-chart" height="160"></canvas></div>
     </div>
   </div>
 
@@ -443,6 +444,7 @@ function renderSugerencias() {
           <span class="sug-num">#${i+1}</span>
           ${s.combo.map(n => `<span class="sug-bola">${n}</span>`).join('')}
           ${(()=>{ const {color,title}=sumStyle(s.suma); return `<span class="sug-meta" title="${title}">Suma: <strong style="color:${color}">${s.suma}</strong> · Score: <strong>${s.score}</strong></span>`; })()}
+          ${s.mean_gap !== undefined ? `<span class="sug-meta sug-meta-dist">gap ∼${s.mean_gap} · σ ${s.gap_std}${s.zones && s.zones.length ? ' · zonas ' + s.zones.join('/') : ''}</span>` : ''}
           <button class="jugar-btn${yaReg?' ok':''}" ${yaReg?'disabled':''}
             data-sorteo="${sorteoProximo}" data-nums="${s.combo.join(',')}" data-rango="${key}">
             ${yaReg ? '✓ Registrada' : '🎟 Jugué esta'}

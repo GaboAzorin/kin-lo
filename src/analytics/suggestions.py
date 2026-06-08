@@ -101,6 +101,20 @@ def _max_run(nums_sorted: list[int]) -> int:
     return max_run
 
 
+def _gap_std(nums_sorted: list[int]) -> float:
+    """Desviación estándar de los gaps entre números consecutivos."""
+    if len(nums_sorted) < 2:
+        return 0.0
+    gaps = [nums_sorted[i + 1] - nums_sorted[i] for i in range(len(nums_sorted) - 1)]
+    mean = sum(gaps) / len(gaps)
+    return (sum((g - mean) ** 2 for g in gaps) / len(gaps)) ** 0.5
+
+
+def _zone_counts(nums_sorted: list[int], zones: list) -> list[int]:
+    """Cuenta cuántos números caen en cada zona definida por (lo, hi)."""
+    return [sum(1 for n in nums_sorted if lo <= n <= hi) for lo, hi in zones]
+
+
 def popularity_penalty(combo, num_range: int, pick: int) -> float:
     """
     Estima qué tan "popular" es una combinación entre apostadores humanos (0-1).
@@ -149,12 +163,17 @@ def popularity_penalty(combo, num_range: int, pick: int) -> float:
 
 
 def _shape_score(combo, sum_p10: int, sum_p90: int,
-                 num_range: int, pick: int) -> float:
+                 num_range: int, pick: int,
+                 dist_params: dict | None = None) -> float:
     """
     Qué tan "típica" se ve la combinación frente al historial (0-1). Cosmético:
     no mejora aciertos, solo evita combos extremos poco realistas.
+
+    Si dist_params no es None, incluye penalización por gap_std y distribución
+    de zonas fuera del rango histórico (p10-p90).
     """
-    s = sum(combo)
+    combo_sorted = sorted(combo)
+    s = sum(combo_sorted)
     rango = sum_p90 - sum_p10 if sum_p90 > sum_p10 else 1
     if sum_p10 <= s <= sum_p90:
         sc_sum = 1.0
@@ -163,14 +182,32 @@ def _shape_score(combo, sum_p10: int, sum_p90: int,
         sc_sum = max(0.0, 1.0 - dist / rango)
 
     mitad = pick // 2
-    pares = sum(1 for n in combo if n % 2 == 0)
+    pares = sum(1 for n in combo_sorted if n % 2 == 0)
     sc_par = 1.0 if abs(pares - mitad) <= 1 else 0.5
 
     umbral = num_range // 2
-    bajos = sum(1 for n in combo if n <= umbral)
+    bajos = sum(1 for n in combo_sorted if n <= umbral)
     sc_bal = 1.0 if abs(bajos - mitad) <= 2 else 0.5
 
-    return 0.5 * sc_sum + 0.25 * sc_par + 0.25 * sc_bal
+    if dist_params is None:
+        return 0.5 * sc_sum + 0.25 * sc_par + 0.25 * sc_bal
+
+    # Extendido: penalizar gap_std y distribución de zonas fuera del rango histórico
+    gs = _gap_std(combo_sorted)
+    gp10 = dist_params.get("gap_std_p10", 0.0)
+    gp90 = dist_params.get("gap_std_p90", float("inf"))
+    sc_gap = 1.0 if gp10 <= gs <= gp90 else max(0.0, 1.0 - min(abs(gs - gp10), abs(gs - gp90)))
+
+    zones = dist_params.get("zones", [])
+    zp10  = dist_params.get("zone_p10", 0)
+    zp90  = dist_params.get("zone_p90", pick)
+    if zones:
+        counts = _zone_counts(combo_sorted, zones)
+        sc_zones = sum(1 for c in counts if zp10 <= c <= zp90) / len(zones)
+    else:
+        sc_zones = 1.0
+
+    return 0.35 * sc_sum + 0.15 * sc_par + 0.15 * sc_bal + 0.20 * sc_gap + 0.15 * sc_zones
 
 
 def _seleccionar_diversas(cands, n: int, pick: int, lam: float):
@@ -213,7 +250,8 @@ def generar_sugerencias(df, metricas: dict, num_range: int = 41,
                         pick: int = 6, n_sugerencias: int = 5,
                         num_col_prefix: str = "LOTO",
                         df_history=None, juego: str | None = None,
-                        n_display: int | None = None) -> list[dict]:
+                        n_display: int | None = None,
+                        dist_params: dict | None = None) -> list[dict]:
     """
     Genera `n_sugerencias` combinaciones optimizadas por anti-reparto + diversidad.
 
@@ -232,10 +270,14 @@ def generar_sugerencias(df, metricas: dict, num_range: int = 41,
                         rellena por score descendente (set de evaluación masivo).
                         Si es None, TODAS se eligen por MMR (comportamiento
                         clásico, usado por el backtest).
+        dist_params:    Parámetros de distribución histórica para Kino:
+                        {"gap_std_p10", "gap_std_p90", "zone_p10", "zone_p90", "zones"}.
+                        Si None, no se aplica penalización por distribución.
 
     Returns:
         Lista de dicts ordenada por score:
-        [{"combo": [...], "suma": X, "score": Y, "popularidad": Z}, ...]
+        [{"combo": [...], "suma": X, "score": Y, "popularidad": Z,
+          "mean_gap": F, "gap_std": F, "zones": [...], "parity": [pares, impares]}, ...]
     """
     if juego is None:
         juego = "kino" if num_range <= 25 else "loto"
@@ -259,7 +301,7 @@ def generar_sugerencias(df, metricas: dict, num_range: int = 41,
         combo = tuple(sorted(random.sample(range(1, num_range + 1), pick)))
         if combo in history:
             continue
-        shape = _shape_score(combo, sum_p10, sum_p90, num_range, pick)
+        shape = _shape_score(combo, sum_p10, sum_p90, num_range, pick, dist_params)
         pop   = popularity_penalty(combo, num_range, pick)
         score = (1 - w_pop) * shape + w_pop * (1 - pop)
         candidatos.append((combo, score, pop))
@@ -286,12 +328,26 @@ def generar_sugerencias(df, metricas: dict, num_range: int = 41,
             elegidos.append(cand)
             ya.add(cand[0])
 
-    return [
-        {
-            "combo":       list(combo),
-            "suma":        sum(combo),
+    result = []
+    for combo, sc, pop in elegidos:
+        combo_sorted = sorted(combo)
+        n = len(combo_sorted)
+        mg = round((combo_sorted[-1] - combo_sorted[0]) / (n - 1), 2) if n > 1 else 0.0
+        gs = round(_gap_std(combo_sorted), 2)
+        pares   = sum(1 for x in combo_sorted if x % 2 == 0)
+        impares = n - pares
+        if dist_params and dist_params.get("zones"):
+            zc = _zone_counts(combo_sorted, dist_params["zones"])
+        else:
+            zc = []
+        result.append({
+            "combo":       combo_sorted,
+            "suma":        sum(combo_sorted),
             "score":       round(sc, 3),
             "popularidad": round(pop, 3),
-        }
-        for combo, sc, pop in elegidos
-    ]
+            "mean_gap":    mg,
+            "gap_std":     gs,
+            "zones":       zc,
+            "parity":      [pares, impares],
+        })
+    return result
