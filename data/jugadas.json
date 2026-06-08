@@ -659,5 +659,32 @@
     ],
     "rango_sugerencia": "all",
     "aciertos": null
+  },
+  {
+    "fecha_jugada": "08-06-2026",
+    "juego": "kino",
+    "variantes": [
+      "kino",
+      "rekino"
+    ],
+    "sorteo": 3238,
+    "numeros": [
+      1,
+      2,
+      4,
+      7,
+      9,
+      10,
+      12,
+      15,
+      16,
+      19,
+      20,
+      22,
+      23,
+      25
+    ],
+    "rango_sugerencia": "500",
+    "aciertos": null
   }
 ]
