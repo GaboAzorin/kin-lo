@@ -20,7 +20,7 @@
 | 6 | ✅ Media | scraper_polla.py | No escribe header si el CSV existe pero está vacío |
 | 7 | ✅ Media | metrics.py | Notificación Telegram puede mostrar el día de la semana de otro sorteo |
 | 8 | ✅ Media | metrics.py | `_evaluar_y_registrar`: firma `-> int` y docstring no coinciden con lo que retorna |
-| 9 | 🟡 Media | datos | Crecimiento sin límite de `suggestions_history.csv` y JSON derivados |
+| 9 | ✅ Media | datos | Crecimiento sin límite de `suggestions_history.csv` y JSON derivados |
 | 10 | ✅ Media | jugadas web + metrics.py | `computeAciertos` cliente deja jugadas sin `resultado_sorteo` y bloquea la re-evaluación del pipeline |
 | 11 | ✅ Media | requirements / CLAUDE.md | Dependencia `scrapling` sin uso; documentación del scraper Kino desactualizada |
 | 12 | ✅ Media | registrar_jugada.py | Entrada manual sin validación cuando no hay sugerencias (crash por `ValueError`) |
@@ -157,7 +157,7 @@ if not json_data or not json_data.get("results"):
 
 ---
 
-### 9. 🟡 Crecimiento sin límite de historial de sugerencias
+### 9. 🟡 Crecimiento sin límite de historial de sugerencias — ✅ Resuelto 2026-06-09
 
 **Ubicación:** `data/suggestions_history.csv` (ya 747 KB / 12.163 filas en ~3 semanas), `docs/data/suggestions_detail.json` (98 KB), `docs/data/historial_index.json` (543 KB).
 

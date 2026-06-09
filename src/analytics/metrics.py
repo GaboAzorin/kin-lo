@@ -35,7 +35,8 @@ DOCS_DATA.mkdir(parents=True, exist_ok=True)
 PENDING_LOTO = DATA_DIR / "loto_suggestions_pending.json"
 PENDING_KINO = DATA_DIR / "kino_suggestions_pending.json"
 HISTORY_PATH = DATA_DIR / "suggestions_history.csv"
-HISTORY_COLS = ["juego", "sorteo_predicho", "fecha_sorteo", "rango", "combo", "aciertos"]
+HISTORY_COLS = ["juego", "sorteo_predicho", "fecha_sorteo", "rango",
+                "n_combos", "aciertos_avg", "aciertos_max", "top_combos"]
 JUGADAS_PATH = DATA_DIR / "jugadas.json"
 
 VARIANTE_COLS = {
@@ -172,6 +173,31 @@ def _ultimo_sorteo(df: pd.DataFrame, cols: list[str], comodin_col: str | None) -
 # Tracking: pending → evaluación → historial
 # ---------------------------------------------------------------------------
 
+def _encode_top(combos: list[dict]) -> str:
+    """Codifica top-combos como 'n1-n2-...:aciertos;...' (combos ya ordenados)."""
+    partes = []
+    for c in combos:
+        nums = "-".join(str(n) for n in c["combo"])
+        partes.append(f"{nums}:{c['aciertos']}")
+    return ";".join(partes)
+
+
+def _decode_top(s: str) -> list[dict]:
+    """Inverso de _encode_top. Devuelve [{'combo': [int,...], 'aciertos': int}, ...]."""
+    out = []
+    for parte in str(s).split(";"):
+        parte = parte.strip()
+        if not parte or ":" not in parte:
+            continue
+        nums_s, ac_s = parte.rsplit(":", 1)
+        try:
+            combo = [int(x) for x in nums_s.split("-") if x != ""]
+            out.append({"combo": combo, "aciertos": int(ac_s)})
+        except ValueError:
+            continue
+    return out
+
+
 def _cargar_pending(path: Path) -> dict | None:
     """Lee el archivo de sugerencias pendientes. Devuelve None si no existe."""
     if not path.exists():
@@ -232,7 +258,6 @@ def _evaluar_y_registrar(df: pd.DataFrame, juego: str,
             return None
 
     resultado_set = set(resultado)
-    filas_nuevas  = []
     per_rango_raw: dict[str, list] = {}   # rango → lista de {combo, aciertos}
 
     for rango, combos in pending.get("sugerencias", {}).items():
@@ -240,15 +265,28 @@ def _evaluar_y_registrar(df: pd.DataFrame, juego: str,
         for s in combos:
             combo    = s["combo"]          # list[int]
             aciertos = len(set(combo) & resultado_set)
-            filas_nuevas.append({
-                "juego":           juego,
-                "sorteo_predicho": sorteo_n,
-                "fecha_sorteo":    fecha,
-                "rango":           rango,
-                "combo":           ",".join(str(n) for n in combo),
-                "aciertos":        aciertos,
-            })
             per_rango_raw[rango].append({"combo": combo, "aciertos": aciertos})
+
+    # Persistencia agregada: una fila por rango con avg/max/top-3 (no las 500 crudas).
+    filas_nuevas = []
+    for rango, cs in per_rango_raw.items():
+        if not cs:
+            continue
+        n      = len(cs)
+        avg    = round(sum(c["aciertos"] for c in cs) / n, 4)
+        mx     = max(c["aciertos"] for c in cs)
+        top    = sorted(cs, key=lambda x: x["aciertos"], reverse=True)[:N_DISPLAY]
+        top_sorted = [{"combo": sorted(c["combo"]), "aciertos": c["aciertos"]} for c in top]
+        filas_nuevas.append({
+            "juego":           juego,
+            "sorteo_predicho": sorteo_n,
+            "fecha_sorteo":    fecha,
+            "rango":           rango,
+            "n_combos":        n,
+            "aciertos_avg":    avg,
+            "aciertos_max":    mx,
+            "top_combos":      _encode_top(top_sorted),
+        })
 
     if not filas_nuevas:
         return None
@@ -365,10 +403,12 @@ def _range_scores(juego: str) -> dict:
 
     result = {}
     for rango, grp in df_h.groupby("rango"):
+        avg_pond = round(float((grp["aciertos_avg"] * grp["n_combos"]).sum()
+                               / grp["n_combos"].sum()), 2)
         result[str(rango)] = {
             "sorteos_evaluados": int(grp["sorteo_predicho"].nunique()),
-            "aciertos_avg":      round(float(grp["aciertos"].mean()), 2),
-            "aciertos_max":      int(grp["aciertos"].max()),
+            "aciertos_avg":      avg_pond,
+            "aciertos_max":      int(grp["aciertos_max"].max()),
         }
     return result
 
@@ -568,10 +608,12 @@ def _exportar_historial_json():
             dr = dj[dj["rango"] == r]
             if dr.empty:
                 continue
+            avg_pond = round(float((dr["aciertos_avg"] * dr["n_combos"]).sum()
+                                   / dr["n_combos"].sum()), 2)
             por_rango[r] = {
                 "sorteos": int(dr["sorteo_predicho"].nunique()),
-                "avg":     round(float(dr["aciertos"].mean()), 2),
-                "max":     int(dr["aciertos"].max()),
+                "avg":     avg_pond,
+                "max":     int(dr["aciertos_max"].max()),
                 "pick":    pick,
             }
 
@@ -585,8 +627,8 @@ def _exportar_historial_json():
                 if gr.empty:
                     continue
                 rangos[r] = {
-                    "max": int(gr["aciertos"].max()),
-                    "avg": round(float(gr["aciertos"].mean()), 2),
+                    "max": int(gr["aciertos_max"].iloc[0]),
+                    "avg": round(float(gr["aciertos_avg"].iloc[0]), 2),
                 }
             historial.append({"sorteo": int(sorteo_n), "fecha": fecha, "rangos": rangos})
 
@@ -664,30 +706,20 @@ def _exportar_detalle_json():
                         resultado = sorted(nums)
                         rank_res  = combo_rank(resultado, n, k)
 
-            # Agrupar las N_EVAL combos por rango y quedarnos con las top-N por
-            # aciertos (las que más acertaron en este sorteo). El rango léxico
-            # se calcula solo para esas, no para las 500.
-            por_rango_rows: dict[str, list] = {}
-            for _, row in grp.iterrows():
-                try:
-                    combo = [int(x) for x in str(row["combo"]).split(",")]
-                except Exception:
-                    continue
-                if len(combo) != k:
-                    continue
-                por_rango_rows.setdefault(str(row["rango"]), []).append(
-                    (sorted(combo), int(row["aciertos"]))
-                )
-
+            # Cada (sorteo, rango) es UNA fila cuyo `top_combos` ya contiene las
+            # top-N por aciertos. El rango léxico se calcula solo para esas.
             rangos: dict[str, list] = {}
-            for r, combos in por_rango_rows.items():
-                combos.sort(key=lambda x: x[1], reverse=True)
-                for combo_s, aciertos in combos[:N_DISPLAY]:
+            for _, row in grp.iterrows():
+                r = str(row["rango"])
+                for item in _decode_top(row["top_combos"]):
+                    combo_s = sorted(item["combo"])
+                    if len(combo_s) != k:
+                        continue
                     rank_c = combo_rank(combo_s, n, k)
                     diff   = (rank_res - rank_c) if rank_res is not None else None
                     rangos.setdefault(r, []).append({
                         "combo":      combo_s,
-                        "aciertos":   aciertos,
+                        "aciertos":   item["aciertos"],
                         "rank_combo": rank_c,
                         "diff_rank":  diff,
                     })
