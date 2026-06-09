@@ -123,3 +123,28 @@ GitHub Pages sirve docs/ → https://gaboazorin.github.io/kin-lo/
 - Combinaciones posibles Loto: C(41,6) = 4.496.388
 - Combinaciones posibles Kino: C(25,14) = 4.457.400
 
+## Seguridad y privacidad
+
+**StatiCrypt protege solo los HTML, no los datos.** Qué queda público en el repo
+y en GitHub Pages, sin contraseña:
+
+- Todos los `docs/data/*.json` (métricas, historial completo, sugerencias,
+  rendimiento, pozos) — se sirven directo desde Pages.
+- `data/jugadas.json` (tus jugadas: fechas, números, aciertos) — legible vía el
+  repo público y vía `api.github.com/repos/GaboAzorin/kin-lo/contents/data/jugadas.json`;
+  el propio frontend lo lee así, incluso sin token.
+- `docs/js/gh-api.js` y los `docs_src/*.html` — el código del cliente es público
+  (la contraseña de StatiCrypt no es un secreto del código: solo cifra el HTML
+  servido).
+
+Si la privacidad de las jugadas importa de verdad, hay que sacar `jugadas.json`
+del repo público (Gist secreto / backend con auth) o mover el sitio a un hosting
+con autenticación real (Cloudflare Access, Netlify password). Mientras tanto:
+
+- **Token de escritura (PAT):** usar siempre un **PAT fine-grained** limitado a
+  **este único repo** con permiso **Contents: Read and write** y **expiración
+  corta**. Se guarda en `localStorage` (`kl_gh_token`) solo ofuscado en base64,
+  así que asume que es extraíble desde el navegador; un PAT acotado minimiza el
+  daño de una filtración. Configurarlo visitando `#setup=BASE64_DEL_TOKEN`.
+- No reutilizar tokens classic ni con alcance amplio para este sitio.
+

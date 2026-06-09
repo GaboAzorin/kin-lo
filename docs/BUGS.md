@@ -14,7 +14,7 @@
 |---|-----------|------------|-----|
 | 1 | ✅ Alta | jugadas (3 escritores) | Formato de `fecha_jugada` inconsistente: ISO vs dd-mm-yyyy |
 | 2 | ✅ Alta | scraper_polla.py | Un sorteo puede perderse permanentemente ante respuesta vacía transitoria |
-| 3 | 🔴 Alta | Privacidad | Los JSON de datos y `data/jugadas.json` son públicos pese a StatiCrypt; PAT en localStorage |
+| 3 | ✅ Alta | Privacidad | Los JSON de datos y `data/jugadas.json` son públicos pese a StatiCrypt; PAT en localStorage |
 | 4 | ✅ Alta | scrape-kino.yml | Re-encriptación StatiCrypt en cada cron: commits ruidosos y pérdida de datos si falta el secret |
 | 5 | ✅ Alta | actualizar_loto.ps1 | `git reset --hard` en reintentos destruye cambios locales ajenos al pipeline |
 | 6 | ✅ Media | scraper_polla.py | No escribe header si el CSV existe pero está vacío |
@@ -82,7 +82,14 @@ if not json_data or not json_data.get("results"):
 
 ---
 
-### 3. 🔴 Los datos quedan públicos pese a StatiCrypt + PAT en localStorage
+### 3. 🔴 Los datos quedan públicos pese a StatiCrypt + PAT en localStorage — ✅ Mitigado/documentado 2026-06-09
+
+> **Resolución aplicada (decisión: endurecer PAT + documentar):** se agregó la sección
+> "Seguridad y privacidad" a `CLAUDE.md` dejando constancia de qué es público y la
+> recomendación de usar un PAT *fine-grained* (solo este repo, Contents: Read and write,
+> expiración corta). El prompt del token en el frontend ahora lo indica. La exposición de
+> los datos sigue siendo por diseño (repo público); migrar a privacidad real (Gist secreto
+> o hosting con auth) queda como decisión futura documentada abajo.
 
 **Ubicación:** arquitectura general (`docs/data/*.json`, `data/jugadas.json`, `getToken()` en las 4 páginas).
 

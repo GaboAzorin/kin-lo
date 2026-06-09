@@ -583,7 +583,7 @@ loadData();
 
 async function handleJugar(btn, juego, sorteo, numeros, rango) {
   if (!getToken()) {
-    const b64 = prompt('Token no configurado.\nPega aquí el resultado de:\n  btoa("github_pat_TU_TOKEN")');
+    const b64 = prompt('Token no configurado.\nUsa un PAT fine-grained (solo este repo, permiso Contents: Read and write, expiración corta).\nPega aquí el resultado de:\n  btoa("github_pat_TU_TOKEN")');
     if (!b64) return;
     localStorage.setItem('kl_gh_token', b64.trim());
     if (!getToken()) { alert('Token inválido. Debe ser el resultado exacto de btoa().'); return; }
