@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detalle de Sugerencias · kino-loto</title>
+  <style>
+    :root {
+      --bg: #0f1117; --card: #1a1d27; --border: #2a2d3e;
+      --text: #e2e8f0; --muted: #8892a4;
+      --accent: #f59e0b; --green: #22c55e; --red: #ef4444;
+      --blue: #3b82f6;
+      --radius: 12px; --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); }
+
+    header {
+      padding: 16px 24px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    header a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+    header a:hover { color: var(--text); }
+    header h1 { font-size: 1.2rem; font-weight: 700; }
+    .header-nav { margin-left: auto; display: flex; gap: 16px; font-size: 0.85rem; }
+    .header-nav a { color: var(--muted); }
+    .header-nav a:hover { color: var(--accent); }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+    .tab-bar { display: flex; gap: 8px; margin-bottom: 28px; }
+    .tab {
+      padding: 7px 18px; border-radius: 6px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600;
+      border: 1px solid var(--border); color: var(--muted);
+      background: transparent; transition: all 0.15s; font-family: var(--font);
+    }
+    .tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+    .sorteo-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-bottom: 16px; overflow: hidden;
+    }
+    .sorteo-header {
+      padding: 18px 22px;
+      display: flex; flex-wrap: wrap; align-items: center; gap: 16px;
+      cursor: pointer; user-select: none;
+    }
+    .sorteo-header:hover { background: rgba(255,255,255,0.02); }
+    .sorteo-card.open .sorteo-header { border-bottom: 1px solid var(--border); }
+    .sorteo-body { display: none; }
+    .sorteo-card.open .sorteo-body { display: block; }
+    .chevron {
+      margin-left: auto; color: var(--muted); font-size: 1rem;
+      transition: transform 0.2s; line-height: 1;
+    }
+    .sorteo-card.open .chevron { transform: rotate(180deg); }
+    .sorteo-title { font-size: 1.05rem; font-weight: 700; }
+    .sorteo-fecha { font-size: 0.82rem; color: var(--muted); }
+    .resultado-wrap { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .resultado-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--muted); }
+    .bola {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 0.78rem; font-weight: 700;
+      background: rgba(245,158,11,0.15); color: var(--accent);
+      border: 1px solid rgba(245,158,11,0.35);
+    }
+    .bola-resultado {
+      background: rgba(34,197,94,0.15); color: var(--green);
+      border: 1px solid rgba(34,197,94,0.35);
+    }
+    .rank-badge {
+      text-align: right;
+      font-size: 0.78rem; color: var(--muted); line-height: 1.5;
+    }
+    .rank-badge strong { color: var(--text); font-size: 0.88rem; }
+
+    /* Rango section inside card */
+    .rango-section { border-top: 1px solid var(--border); }
+    .rango-header {
+      padding: 10px 22px; background: rgba(255,255,255,0.02);
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted);
+    }
+
+    /* Table */
+    .combos-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .combos-table th {
+      padding: 8px 12px; text-align: left; font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);
+      border-bottom: 1px solid var(--border); background: transparent;
+    }
+    .combos-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .combos-table tr:last-child td { border-bottom: none; }
+    .combos-table tbody tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .combo-nums { display: flex; flex-wrap: wrap; gap: 4px; }
+    .bola-sm {
+      width: 26px; height: 26px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 700;
+      background: rgba(245,158,11,0.12); color: var(--accent);
+      border: 1px solid rgba(245,158,11,0.28);
+    }
+    .bola-sm.hit {
+      background: rgba(34,197,94,0.2); color: var(--green);
+      border-color: rgba(34,197,94,0.45);
+    }
+
+    .aciertos-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 700;
+      background: rgba(255,255,255,0.07); color: var(--text);
+    }
+
+    .diff-pos { color: var(--green); }
+    .diff-neg { color: var(--red); }
+    .diff-zero { color: var(--accent); }
+
+    .rank-num { font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+    .disclaimer {
+      background: rgba(59,130,246,0.07); border: 1px solid rgba(59,130,246,0.3);
+      border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px;
+      font-size: 0.82rem; line-height: 1.55; color: var(--text);
+    }
+    .disclaimer strong { color: var(--blue); }
+    .disclaimer ul { margin: 8px 0 0; padding-left: 20px; }
+    .disclaimer li { margin-bottom: 4px; color: var(--muted); }
+    .disclaimer li b { color: var(--text); }
+
+    .backtest-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 22px; margin-bottom: 28px;
+    }
+    .backtest-card h2 {
+      font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--muted); margin-bottom: 14px;
+    }
+    .bt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .bt-metric {
+      background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 14px;
+    }
+    .bt-metric .label {
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--muted); margin-bottom: 6px;
+    }
+    .bt-metric .vals { display: flex; gap: 14px; font-size: 0.82rem; align-items: baseline; }
+    .bt-metric .vals .smart { color: var(--green); font-weight: 700; font-size: 1.05rem; }
+    .bt-metric .vals .rand  { color: var(--muted); }
+    .bt-metric .note { font-size: 0.72rem; color: var(--muted); margin-top: 6px; }
+    .bt-metric .win { color: var(--green); font-weight: 700; }
+    .bt-metric .tie { color: var(--accent); font-weight: 700; }
+    @media (max-width: 640px) { .bt-grid { grid-template-columns: 1fr; } }
+
+    .empty-state {
+      text-align: center; color: var(--muted); font-size: 0.88rem;
+      font-style: italic; padding: 60px 24px;
+    }
+    .loading { color: var(--muted); font-style: italic; padding: 40px 0; display: block; text-align: center; }
+
+    @media (max-width: 640px) {
+      .combos-table th:nth-child(4),
+      .combos-table td:nth-child(4) { display: none; }
+      .bola { width: 28px; height: 28px; font-size: 0.7rem; }
+      .bola-sm { width: 22px; height: 22px; font-size: 0.62rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="../">← kino-loto</a>
+  <span style="color:var(--border)">|</span>
+  <h1>Historial de sugerencias</h1>
+  <nav class="header-nav">
+    <a href="../loto/">Loto</a>
+    <a href="../kino/">Kino</a>
+  </nav>
+</header>
+
+<main>
+  <p style="font-size:0.82rem; color:var(--muted); margin-bottom:16px">
+    Cada rango genera 500 combinaciones; aquí se muestran las 3 con más aciertos vs el resultado real · ID lexicográfico de cada combinación entre todas las posibles.
+  </p>
+
+  <div class="disclaimer">
+    <strong>Cómo leer esto (honestamente).</strong>
+    La lotería es justa: todas las combinaciones son igual de probables y cada sorteo es
+    independiente. <b>Ninguna estrategia mejora tu probabilidad de ganar</b> — lo verificamos
+    con un backtest sobre todo el historial. Lo que sí optimiza el motor son las dos únicas
+    palancas con valor real:
+    <ul>
+      <li><b>Anti-reparto:</b> evita patrones que juega mucha gente (fechas, secuencias,
+        múltiplos). Si ganas, repartes el premio con menos personas → premio esperado mayor.</li>
+      <li><b>Diversidad:</b> las combinaciones se pisan poco entre sí, cubriendo más números
+        si juegas varios cartones.</li>
+    </ul>
+  </div>
+
+  <div id="backtest"></div>
+
+  <div class="tab-bar">
+    <button class="tab active" onclick="showGame('loto', this)">🎱 Loto</button>
+    <button class="tab" onclick="showGame('kino', this)">🟦 Kino</button>
+  </div>
+
+  <div id="content"><span class="loading">cargando...</span></div>
+</main>
+
+<script>
+let detailData = null;
+let backtestData = null;
+let activeGame = 'loto';
+
+const RANGE_LABELS = {
+  '50':'Últ. 50', '100':'Últ. 100', '250':'Últ. 250',
+  '500':'Últ. 500', '1000':'Últ. 1000', 'all':'Todos los sorteos'
+};
+const RANGO_ORDER = ['50','100','250','500','1000','all'];
+
+async function loadData() {
+  // Backtest (opcional): no bloquea el render principal.
+  fetch('../data/backtest.json')
+    .then(r => r.ok ? r.json() : null)
+    .then(d => { backtestData = d; renderBacktest(); })
+    .catch(() => {});
+
+  try {
+    const r = await fetch('../data/suggestions_detail.json');
+    if (!r.ok) throw new Error('no data');
+    detailData = await r.json();
+    render();
+  } catch(e) {
+    document.getElementById('content').innerHTML =
+      '<p style="color:#f87171;padding:40px">Error cargando datos. Ejecuta metrics.py para generar suggestions_detail.json.</p>';
+  }
+}
+
+function showGame(game, btn) {
+  activeGame = game;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+  renderBacktest();
+}
+
+function renderBacktest() {
+  const el = document.getElementById('backtest');
+  if (!el) return;
+  const bt = backtestData && backtestData[activeGame];
+  if (!bt) { el.innerHTML = ''; return; }
+
+  const ac = bt.aciertos, pop = bt.popularidad, ol = bt.solapamiento;
+  const acTie = !bt.aciertos_test.significativo;
+  const popWin = pop.smart < pop.random;
+  const olWin  = ol.smart < ol.random;
+
+  el.innerHTML = `
+    <div class="backtest-card">
+      <h2>Backtest: motor vs azar puro (${bt.n_sorteos} sorteos del historial)</h2>
+      <div class="bt-grid">
+        <div class="bt-metric">
+          <div class="label">Aciertos promedio</div>
+          <div class="vals">
+            <span class="smart">${ac.smart.toFixed(3)}</span>
+            <span class="rand">azar ${ac.random.toFixed(3)}</span>
+          </div>
+          <div class="note">${acTie
+            ? '<span class="tie">Empate</span> — ningún método predice mejor (lotería justa).'
+            : 'diferencia dentro de lo medible.'}</div>
+        </div>
+        <div class="bt-metric">
+          <div class="label">Popularidad (anti-reparto)</div>
+          <div class="vals">
+            <span class="smart">${pop.smart.toFixed(3)}</span>
+            <span class="rand">azar ${pop.random.toFixed(3)}</span>
+          </div>
+          <div class="note">${popWin
+            ? `<span class="win">−${Math.abs(pop.reduccion_pct).toFixed(0)}%</span> menos popular → menos reparto del premio.`
+            : 'sin ventaja.'}</div>
+        </div>
+        <div class="bt-metric">
+          <div class="label">Solapamiento entre combos</div>
+          <div class="vals">
+            <span class="smart">${ol.smart.toFixed(2)}</span>
+            <span class="rand">azar ${ol.random.toFixed(2)}</span>
+          </div>
+          <div class="note">${olWin
+            ? '<span class="win">más diverso</span> que el azar → mejor cobertura.'
+            : 'similar al azar.'}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function fmt(n) {
+  return n == null ? '—' : n.toLocaleString('es-CL');
+}
+
+function fmtDiff(d) {
+  if (d == null) return '<span style="color:var(--muted)">—</span>';
+  const sign = d > 0 ? '+' : d < 0 ? '' : '';
+  const cls  = d > 0 ? 'diff-pos' : d < 0 ? 'diff-neg' : 'diff-zero';
+  return `<span class="${cls} rank-num">${sign}${d.toLocaleString('es-CL')}</span>`;
+}
+
+function render() {
+  const el = document.getElementById('content');
+  if (!detailData) return;
+
+  const gd = detailData[activeGame];
+  if (!gd || !gd.sorteos || gd.sorteos.length === 0) {
+    el.innerHTML = '<div class="empty-state">Aún no hay sorteos evaluados para este juego.</div>';
+    return;
+  }
+
+  const totalCombos = gd.total_combos;
+  const k = gd.k;
+
+  const cards = gd.sorteos.map((s, idx) => {
+    const resultadoBolas = (s.resultado || []).map(n =>
+      `<span class="bola bola-resultado">${n}</span>`
+    ).join('');
+
+    const rankResHtml = s.rank_resultado != null
+      ? `<strong class="rank-num">${fmt(s.rank_resultado)}</strong><br>de ${fmt(totalCombos)} combinaciones`
+      : '—';
+
+    const rangoSections = RANGO_ORDER.filter(r => s.rangos[r])
+      .map(r => {
+        const combos = s.rangos[r] || [];
+        const resultadoSet = new Set(s.resultado || []);
+
+        const rows = combos.map(c => {
+          const bolas = c.combo.map(n => {
+            const cls = resultadoSet.has(n) ? 'bola-sm hit' : 'bola-sm';
+            return `<span class="${cls}">${n}</span>`;
+          }).join('');
+
+          return `<tr>
+            <td><div class="combo-nums">${bolas}</div></td>
+            <td style="text-align:center">
+              <span class="aciertos-badge">${c.aciertos} / ${k}</span>
+            </td>
+            <td class="rank-num" style="text-align:right">${fmt(c.rank_combo)}</td>
+            <td style="text-align:right">${fmtDiff(c.diff_rank)}</td>
+          </tr>`;
+        }).join('');
+
+        return `
+          <div class="rango-section">
+            <div class="rango-header">${RANGE_LABELS[r] || r}</div>
+            <table class="combos-table">
+              <thead><tr>
+                <th>Combinación <span style="font-weight:400;color:var(--green)">(verde = acierto)</span></th>
+                <th style="text-align:center">Aciertos</th>
+                <th style="text-align:right">ID sugerida</th>
+                <th style="text-align:right">Dif. de ID</th>
+              </tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>`;
+      }).join('');
+
+    const fechaStr = (s.fecha || '').split(' ')[0];
+    const openClass = idx === 0 ? ' open' : '';
+
+    return `
+      <div class="sorteo-card${openClass}">
+        <div class="sorteo-header" onclick="this.closest('.sorteo-card').classList.toggle('open')">
+          <div>
+            <div class="sorteo-title">Sorteo #${s.sorteo}</div>
+            <div class="sorteo-fecha">${fechaStr}</div>
+          </div>
+          <div class="resultado-wrap">
+            <span class="resultado-label">Resultado</span>
+            ${resultadoBolas || '<span style="color:var(--muted)">—</span>'}
+          </div>
+          <div class="rank-badge">
+            ID resultado<br>${rankResHtml}
+          </div>
+          <span class="chevron">▾</span>
+        </div>
+        <div class="sorteo-body">${rangoSections}</div>
+      </div>`;
+  }).join('');
+
+  el.innerHTML = cards;
+}
+
+loadData();
+</script>
+</body>
+</html>

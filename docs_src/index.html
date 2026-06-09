@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>kino-loto · Análisis de Resultados</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --card: #1a1d27;
+      --card2: #12151e;
+      --border: #2a2d3e;
+      --text: #e2e8f0;
+      --muted: #8892a4;
+      --loto: #f59e0b;
+      --kino: #3b82f6;
+      --green: #22c55e;
+      --radius: 12px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+
+    header {
+      padding: 20px 32px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+    }
+    header h1 { font-size: 1.4rem; font-weight: 700; }
+    header span { font-size: 0.82rem; color: var(--muted); margin-left: auto; }
+
+    main { max-width: 960px; margin: 0 auto; padding: 36px 24px; }
+    h2 { font-size: 1rem; color: var(--muted); margin-bottom: 28px; font-weight: 400; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+
+    /* ── Card principal ── */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px;
+      display: flex; flex-direction: column; gap: 18px;
+    }
+
+    .card-header { display: flex; align-items: center; gap: 10px; }
+    .badge {
+      padding: 3px 10px; border-radius: 20px; font-size: 0.72rem;
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .badge-loto { background: rgba(245,158,11,0.15); color: var(--loto); }
+    .badge-kino { background: rgba(59,130,246,0.15); color: var(--kino); }
+
+    .card-title { font-size: 1.25rem; font-weight: 700; }
+
+    /* ── Último sorteo ── */
+    .ultimo-section {}
+    .section-label {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted); margin-bottom: 10px;
+    }
+    .meta { font-size: 0.82rem; color: var(--muted); margin-bottom: 10px; }
+    .meta strong { color: var(--text); }
+
+    .nums { display: flex; flex-wrap: wrap; gap: 7px; }
+    .bola {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.82rem; font-weight: 700;
+    }
+    .bola-loto { background: rgba(245,158,11,0.18); color: var(--loto); border: 1px solid rgba(245,158,11,0.35); }
+    .bola-kino { background: rgba(59,130,246,0.18); color: var(--kino); border: 1px solid rgba(59,130,246,0.35); }
+
+    /* ── Divisor ── */
+    .divider { height: 1px; background: var(--border); }
+
+    /* ── Sugerencias ── */
+    .sugs-list { display: flex; flex-direction: column; gap: 8px; }
+    .sug-row {
+      background: var(--card2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 9px 12px;
+      display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+    }
+    .sug-idx { font-size: 0.68rem; color: var(--muted); min-width: 18px; font-weight: 600; }
+    .sug-bola {
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.73rem; font-weight: 700;
+    }
+    .sug-bola-loto { background: rgba(245,158,11,0.13); color: var(--loto); border: 1px solid rgba(245,158,11,0.25); }
+    .sug-bola-kino { background: rgba(59,130,246,0.13); color: var(--kino); border: 1px solid rgba(59,130,246,0.25); }
+    .sug-sum { margin-left: auto; font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+    .sug-sum strong { color: var(--text); }
+
+    /* ── Pills de rango ── */
+    .sug-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+    .sug-pill {
+      padding: 3px 10px; border-radius: 999px; font-size: 0.67rem; font-weight: 700;
+      cursor: pointer; border: 1px solid var(--border); background: transparent;
+      color: var(--muted); letter-spacing: 0.03em; transition: all 0.15s;
+      font-family: var(--font);
+    }
+    .sug-pill:hover { border-color: var(--text); color: var(--text); }
+    .sug-pill-loto-active { background: rgba(245,158,11,0.15); color: var(--loto); border-color: rgba(245,158,11,0.4); }
+    .sug-pill-kino-active { background: rgba(59,130,246,0.15); color: var(--kino); border-color: rgba(59,130,246,0.4); }
+    .sug-pill-best { border-color: rgba(34,197,94,0.45); color: var(--green); }
+    .sug-pill-best:hover { border-color: var(--green); }
+
+    /* ── Aviso "ya jugaste" ── */
+    .ya-jugaste {
+      font-size: 0.78rem; color: var(--green);
+      background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25);
+      border-radius: 8px; padding: 7px 12px; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .ya-jugaste a { color: var(--green); text-decoration: underline; }
+
+    /* ── Stat + botón ── */
+    .card-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .stat-mini { font-size: 0.78rem; color: var(--muted); }
+    .stat-mini strong { color: var(--text); font-size: 1rem; }
+
+    .btn {
+      display: inline-block; padding: 9px 18px; border-radius: 8px;
+      font-size: 0.83rem; font-weight: 600; text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-loto { background: var(--loto); color: #000; }
+    .btn-kino  { background: var(--kino); color: #fff; }
+
+    footer {
+      text-align: center; padding: 28px;
+      font-size: 0.78rem; color: var(--muted);
+      border-top: 1px solid var(--border); margin-top: 56px;
+    }
+    footer a { color: var(--muted); text-decoration: underline; }
+
+    /* ── Pozos ── */
+    .pozos-section {}
+    .pozo-row {
+      display: flex; align-items: baseline; justify-content: space-between;
+      padding: 5px 0; border-bottom: 1px solid var(--border);
+      font-size: 0.88rem;
+    }
+    .pozo-row:last-child { border-bottom: none; }
+    .pozo-nombre { color: var(--muted); }
+    .pozo-monto  { font-weight: 700; font-size: 1rem; }
+    .pozo-monto.grande { font-size: 1.2rem; }
+    .pozo-unit   { font-size: 0.72rem; color: var(--muted); margin-left: 3px; }
+    .pozo-total  {
+      margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);
+      font-size: 0.78rem; color: var(--muted); text-align: right;
+    }
+    .pozo-total strong { color: var(--text); }
+
+    .loading { color: var(--muted); font-style: italic; font-size: 0.85rem; }
+    .error   { color: #f87171; font-size: 0.85rem; }
+
+    /* ── Jugadas ── */
+    .jugar-btn {
+      padding: 4px 10px; border-radius: 6px; font-size: 0.68rem; font-weight: 700;
+      cursor: pointer; border: 1px solid var(--border);
+      background: transparent; color: var(--muted);
+      transition: all 0.15s; white-space: nowrap; flex-shrink: 0;
+      font-family: var(--font);
+    }
+    .jugar-btn:hover:not(:disabled) { border-color: var(--text); color: var(--text); }
+    .jugar-btn.ok  { background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.4); color: var(--green); cursor: default; }
+    .jugar-btn.err { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.4); color: #f87171; }
+    .jugar-btn:disabled { opacity: 0.7; cursor: default; }
+
+    /* ── Countdown ── */
+    .countdown-bar {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+      margin-bottom: 32px;
+    }
+    @media (max-width: 500px) { .countdown-bar { grid-template-columns: 1fr; } }
+
+    .cd-card {
+      border-radius: var(--radius); padding: 18px 20px;
+      border: 1px solid var(--border); background: var(--card);
+      display: flex; flex-direction: column; gap: 8px;
+      transition: border-color 0.3s;
+    }
+    .cd-card.next { border-color: var(--accent-cd); box-shadow: 0 0 0 1px var(--accent-cd); }
+
+    .cd-header {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .cd-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    .cd-title { font-size: 1rem; font-weight: 600; }
+
+    .cd-digits {
+      display: flex; gap: 6px; align-items: flex-end;
+    }
+    .cd-unit { text-align: center; }
+    .cd-num {
+      font-size: 1.9rem; font-weight: 800; line-height: 1;
+      font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+    }
+    .cd-label { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .cd-sep { font-size: 1.5rem; font-weight: 300; color: var(--border); padding-bottom: 4px; }
+
+    .cd-date { font-size: 0.78rem; color: var(--muted); }
+    .cd-date strong { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+    <circle cx="14" cy="14" r="13" stroke="#f59e0b" stroke-width="2"/>
+    <circle cx="14" cy="14" r="5" fill="#f59e0b"/>
+  </svg>
+  <h1>kino-loto</h1>
+  <span id="last-update">cargando...</span>
+  <a href="jugadas/" style="margin-left:auto;color:var(--muted);text-decoration:none;font-size:0.85rem;white-space:nowrap">🎟 Mis jugadas</a>
+</header>
+
+<main>
+  <h2>Análisis estadístico de la Lotería de Chile</h2>
+
+  <!-- ══ CONTADORES ══ -->
+  <div class="countdown-bar">
+    <div class="cd-card" id="cd-loto" style="--accent-cd: var(--loto)">
+      <div class="cd-header">
+        <div class="cd-dot" style="background:var(--loto)"></div>
+        <span style="color:var(--loto)">Polla.cl</span>
+      </div>
+      <div class="cd-title">Próximo Loto</div>
+      <div class="cd-digits">
+        <div class="cd-unit"><div class="cd-num" id="loto-dd">--</div><div class="cd-label">días</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-num" id="loto-hh">--</div><div class="cd-label">horas</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-num" id="loto-mm">--</div><div class="cd-label">min</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-num" id="loto-ss">--</div><div class="cd-label">seg</div></div>
+      </div>
+      <div class="cd-date" id="loto-draw-date">—</div>
+    </div>
+
+    <div class="cd-card" id="cd-kino" style="--accent-cd: var(--kino)">
+      <div class="cd-header">
+        <div class="cd-dot" style="background:var(--kino)"></div>
+        <span style="color:var(--kino)">Lotería.cl</span>
+      </div>
+      <div class="cd-title">Próximo Kino</div>
+      <div class="cd-digits">
+        <div class="cd-unit"><div class="cd-num" id="kino-dd">--</div><div class="cd-label">días</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-num" id="kino-hh">--</div><div class="cd-label">horas</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-num" id="kino-mm">--</div><div class="cd-label">min</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-num" id="kino-ss">--</div><div class="cd-label">seg</div></div>
+      </div>
+      <div class="cd-date" id="kino-draw-date">—</div>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- ══ LOTO ══ -->
+    <div class="card">
+      <div class="card-header">
+        <span class="badge badge-loto">Polla.cl</span>
+        <span class="card-title">Loto</span>
+      </div>
+
+      <div class="pozos-section">
+        <div class="section-label">Pozo estimado próximo sorteo</div>
+        <div id="loto-pozos"><span class="loading">cargando...</span></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="ultimo-section">
+        <div class="section-label">Último sorteo</div>
+        <p class="meta" id="loto-fecha"><span class="loading">cargando...</span></p>
+        <div class="nums" id="loto-nums"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div>
+        <div class="section-label" id="loto-sugs-label">Combinaciones sugeridas</div>
+        <div class="sugs-list" id="loto-sugs"><span class="loading">cargando...</span></div>
+      </div>
+
+      <div class="card-footer">
+        <div class="stat-mini"><strong id="loto-total">—</strong> sorteos registrados</div>
+        <a href="loto/" class="btn btn-loto">Análisis completo →</a>
+      </div>
+    </div>
+
+    <!-- ══ KINO ══ -->
+    <div class="card">
+      <div class="card-header">
+        <span class="badge badge-kino">Loteria.cl</span>
+        <span class="card-title">Kino</span>
+      </div>
+
+      <div class="pozos-section">
+        <div class="section-label">Pozo estimado próximo sorteo</div>
+        <div id="kino-pozos"><span class="loading">cargando...</span></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="ultimo-section">
+        <div class="section-label">Último sorteo (14 números)</div>
+        <p class="meta" id="kino-fecha"><span class="loading">cargando...</span></p>
+        <div class="nums" id="kino-nums"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div>
+        <div class="section-label" id="kino-sugs-label">Combinaciones sugeridas</div>
+        <div class="sugs-list" id="kino-sugs"><span class="loading">cargando...</span></div>
+      </div>
+
+      <div class="card-footer">
+        <div class="stat-mini"><strong id="kino-total">—</strong> sorteos registrados</div>
+        <a href="kino/" class="btn btn-kino">Análisis completo →</a>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  Datos de <a href="https://www.polla.cl" target="_blank">polla.cl</a>
+  y <a href="https://www.loteria.cl" target="_blank">loteria.cl</a>.
+  Actualización automática con GitHub Actions.
+</footer>
+
+<script>
+// ─────────────────────────────────────────────
+// COUNTDOWN
+// Calcula el próximo sorteo en hora de Santiago (America/Santiago),
+// manejando correctamente CLT (UTC-4) y CLST (UTC-3).
+// ─────────────────────────────────────────────
+const TZ = 'America/Santiago';
+const DAYS_ES = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const WDAY_SHORT = {Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
+
+// Loto: mar(2), jue(4), dom(0) a las 21:00
+// Kino: mié(3), vie(5), dom(0) a las 22:30
+const DRAWS = {
+  loto: { days:[0,2,4], hour:21, min:0,  ids:['loto-dd','loto-hh','loto-mm','loto-ss'], dateId:'loto-draw-date', cardId:'cd-loto' },
+  kino: { days:[0,3,5], hour:22, min:30, ids:['kino-dd','kino-hh','kino-mm','kino-ss'], dateId:'kino-draw-date', cardId:'cd-kino' },
+};
+
+function getNextDrawUTC(drawDays, drawHourCL, drawMinCL) {
+  const now = new Date();
+  for (let daysAhead = 0; daysAhead <= 7; daysAhead++) {
+    const probe = new Date(now.getTime() + daysAhead * 86400000);
+
+    // ¿Qué día es en Santiago?
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: TZ,
+      year:'numeric', month:'2-digit', day:'2-digit', weekday:'short'
+    }).formatToParts(probe).reduce((a,p) => ({...a,[p.type]:p.value}),{});
+
+    if (!drawDays.includes(WDAY_SHORT[parts.weekday])) continue;
+
+    // Encontrar el UTC offset de Santiago ese día usando una referencia de mediodía
+    const noonUTC = new Date(`${parts.year}-${parts.month}-${parts.day}T12:00:00Z`);
+    const sanStr  = new Intl.DateTimeFormat('en-US', {
+      timeZone: TZ, hour:'2-digit', minute:'2-digit', hour12:false
+    }).format(noonUTC);
+    const [sanH, sanM] = sanStr.split(':').map(Number);
+    const offsetMin = 12*60 - (sanH*60 + sanM); // minutos que Santiago está detrás del UTC
+
+    // Hora del sorteo en UTC
+    const drawUTC = new Date(`${parts.year}-${parts.month}-${parts.day}T${String(drawHourCL).padStart(2,'0')}:${String(drawMinCL).padStart(2,'0')}:00Z`);
+    drawUTC.setTime(drawUTC.getTime() + offsetMin * 60000);
+
+    if (drawUTC > now) return drawUTC;
+  }
+  return null;
+}
+
+function pad(n) { return String(n).padStart(2,'0'); }
+
+function tickCountdowns() {
+  const now = Date.now();
+  let nextMs = Infinity, nextCard = null;
+
+  for (const [key, cfg] of Object.entries(DRAWS)) {
+    const drawDate = getNextDrawUTC(cfg.days, cfg.hour, cfg.min);
+    if (!drawDate) continue;
+
+    const diff = drawDate - now;
+    const [ddId, hhId, mmId, ssId] = cfg.ids;
+
+    if (diff <= 0) {
+      document.getElementById(ddId).textContent = '00';
+      document.getElementById(hhId).textContent = '00';
+      document.getElementById(mmId).textContent = '00';
+      document.getElementById(ssId).textContent = '00';
+      continue;
+    }
+
+    const totalSec = Math.floor(diff / 1000);
+    const days  = Math.floor(totalSec / 86400);
+    const hours = Math.floor((totalSec % 86400) / 3600);
+    const mins  = Math.floor((totalSec % 3600) / 60);
+    const secs  = totalSec % 60;
+
+    document.getElementById(ddId).textContent = pad(days);
+    document.getElementById(hhId).textContent = pad(hours);
+    document.getElementById(mmId).textContent = pad(mins);
+    document.getElementById(ssId).textContent = pad(secs);
+
+    // Fecha legible en hora de Santiago
+    const dateLabel = drawDate.toLocaleDateString('es-CL', {
+      timeZone: TZ, weekday:'long', day:'numeric', month:'long'
+    });
+    const timeLabel = drawDate.toLocaleTimeString('es-CL', {
+      timeZone: TZ, hour:'2-digit', minute:'2-digit'
+    });
+    document.getElementById(cfg.dateId).innerHTML =
+      `<strong>${dateLabel}</strong> a las ${timeLabel} CLT`;
+
+    if (diff < nextMs) { nextMs = diff; nextCard = cfg.cardId; }
+  }
+
+  // Resaltar el más próximo
+  document.querySelectorAll('.cd-card').forEach(c => c.classList.remove('next'));
+  if (nextCard) document.getElementById(nextCard).classList.add('next');
+}
+
+tickCountdowns();
+setInterval(tickCountdowns, 1000);
+
+// ─────────────────────────────────────────────
+async function loadJSON(path) {
+  try {
+    const r = await fetch(path);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return await r.json();
+  } catch(e) { return null; }
+}
+
+function bola(n, cls) {
+  return `<span class="bola ${cls}">${n}</span>`;
+}
+
+function sugBola(n, cls) {
+  return `<span class="sug-bola ${cls}">${n}</span>`;
+}
+
+function fecha(str) {
+  return str ? str.split(' ')[0] : '—';
+}
+
+const RANGE_LABELS = {
+  '50': 'Últ. 50', '100': 'Últ. 100', '250': 'Últ. 250',
+  '500': 'Últ. 500', '1000': 'Últ. 1000', 'all': 'Todos'
+};
+
+function sumStyle(suma, ss) {
+  if (!ss) return { color: 'var(--muted)', title: '' };
+  if (suma >= ss.p25 && suma <= ss.p75)
+    return { color: 'var(--green)',  title: `Zona central (${ss.p25}–${ss.p75}, 50% de los sorteos)` };
+  if (suma >= ss.p10 && suma <= ss.p90)
+    return { color: 'var(--loto)',   title: `Zona moderada (${ss.p10}–${ss.p90}, 80% de los sorteos)` };
+  return   { color: '#f87171',       title: `Fuera del rango habitual (p10=${ss.p10}, p90=${ss.p90})` };
+}
+
+function renderSugs(sugs, containerId, bolaCls, juego, sorteoProximo, rangeScores, sumStats) {
+  const el = document.getElementById(containerId);
+  if (!sugs) { el.innerHTML = '<span class="error">Sin datos aún</span>'; return; }
+
+  const isKino     = bolaCls.includes('kino');
+  const pillActive = isKino ? 'sug-pill-kino-active' : 'sug-pill-loto-active';
+  const keys       = Object.keys(sugs);
+  if (!keys.length) { el.innerHTML = '<span class="error">Sin datos aún</span>'; return; }
+
+  // Determinar el rango con mejor promedio de aciertos (mínimo 2 sorteos evaluados)
+  let bestKey = null;
+  if (rangeScores) {
+    let bestAvg = -1;
+    for (const [k, v] of Object.entries(rangeScores)) {
+      if ((v.sorteos_evaluados || 0) >= 2 && (v.aciertos_avg || 0) > bestAvg) {
+        bestAvg = v.aciertos_avg;
+        bestKey = k;
+      }
+    }
+  }
+
+  let activeKey = keys.includes('all') ? 'all' : keys[keys.length - 1];
+
+  function combosHTML(key) {
+    const list = sugs[key] || [];
+    if (!list.length) return '<span class="error">Sin datos para este rango</span>';
+    return list.map((s, i) => {
+      const numsKey = [...s.combo].sort((a,b)=>a-b).join(',');
+      const yaReg   = existingJugadas.some(j =>
+        j.juego === juego && j.sorteo === sorteoProximo &&
+        [...j.numeros].sort((a,b)=>a-b).join(',') === numsKey
+      );
+      return `
+        <div class="sug-row">
+          <span class="sug-idx">#${i+1}</span>
+          ${s.combo.map(n => sugBola(n, bolaCls)).join('')}
+          ${(()=>{ const {color,title}=sumStyle(s.suma,sumStats); return `<span class="sug-sum" title="${title}" style="color:${color}">Σ <strong>${s.suma}</strong></span>`; })()}
+          <button class="jugar-btn${yaReg?' ok':''}" ${yaReg?'disabled':''}
+            data-juego="${juego}" data-sorteo="${sorteoProximo}"
+            data-nums="${s.combo.join(',')}" data-rango="${key}">
+            ${yaReg ? '✓' : '🎟'}
+          </button>
+        </div>`;
+    }).join('');
+  }
+
+  // Jugadas ya registradas para este sorteo
+  const jugadasSorteo = existingJugadas.filter(j => j.juego === juego && j.sorteo === sorteoProximo);
+
+  function render() {
+    const pills = keys.map(k => {
+      const isBest   = k === bestKey;
+      const isActive = k === activeKey;
+      let cls = 'sug-pill';
+      if (isActive) cls += ' ' + pillActive;
+      else if (isBest) cls += ' sug-pill-best';
+      const label = (RANGE_LABELS[k] || k) + (isBest ? ' ★' : '');
+      const title = isBest && rangeScores?.[k]
+        ? `Mejor historial: ${rangeScores[k].aciertos_avg} aciertos promedio (${rangeScores[k].sorteos_evaluados} sorteos)`
+        : '';
+      return `<button class="${cls}" data-key="${k}"${title ? ` title="${title}"` : ''}>${label}</button>`;
+    }).join('');
+    const aviso = jugadasSorteo.length
+      ? `<div class="ya-jugaste">✓ Tienes ${jugadasSorteo.length} jugada${jugadasSorteo.length > 1 ? 's' : ''} registrada${jugadasSorteo.length > 1 ? 's' : ''} para este sorteo — <a href="jugadas/">ver en Mis jugadas</a></div>`
+      : '';
+    el.innerHTML = `${aviso}<div class="sug-pills">${pills}</div><div class="sug-combos" id="${containerId}-combos">${combosHTML(activeKey)}</div>`;
+    el.querySelectorAll('.sug-pill').forEach(btn =>
+      btn.addEventListener('click', () => { activeKey = btn.dataset.key; render(); })
+    );
+    document.getElementById(`${containerId}-combos`).addEventListener('click', e => {
+      const btn = e.target.closest('.jugar-btn');
+      if (!btn || btn.disabled) return;
+      handleJugar(btn, btn.dataset.juego, +btn.dataset.sorteo,
+        btn.dataset.nums.split(',').map(Number), btn.dataset.rango);
+    });
+  }
+
+  render();
+}
+
+function fmtMillones(m) {
+  return m >= 1000
+    ? `${(m/1000).toFixed(m % 1000 === 0 ? 0 : 1)}<span class="pozo-unit">MIL MM</span>`
+    : `${m}<span class="pozo-unit">MM</span>`;
+}
+
+function renderPozos(variantes, containerId, accentVar, total) {
+  const el = document.getElementById(containerId);
+  if (!variantes || !variantes.length) {
+    el.innerHTML = '<span class="error">Sin datos</span>';
+    return;
+  }
+  const maxMM = Math.max(...variantes.map(v => v.millones));
+  const rows = variantes.map(v => {
+    const grande = v.millones === maxMM && v.millones >= 500 ? ' grande' : '';
+    return `<div class="pozo-row">
+      <span class="pozo-nombre">${v.nombre}</span>
+      <span class="pozo-monto${grande}" style="color:var(${accentVar})">${fmtMillones(v.millones)}</span>
+    </div>`;
+  }).join('');
+  const totalRow = total
+    ? `<div class="pozo-total">Total estimado: <strong>$${total.toLocaleString('es-CL')} MM</strong></div>`
+    : '';
+  el.innerHTML = rows + totalRow;
+}
+
+let existingJugadas = [];
+
+async function init() {
+  const [loto, kino, pozos] = await Promise.all([
+    loadJSON('data/loto_metrics.json'),
+    loadJSON('data/kino_metrics.json'),
+    loadJSON('data/pozos.json'),
+  ]);
+  try {
+    const ghH = { Accept: 'application/vnd.github+json' };
+    const tok = getToken(); if (tok) ghH.Authorization = `Bearer ${tok}`;
+    const r = await fetch('https://api.github.com/repos/GaboAzorin/kin-lo/contents/data/jugadas.json', { headers: ghH, cache: 'no-store' });
+    if (r.ok) { const d = await r.json(); existingJugadas = JSON.parse(atob(d.content.replace(/\n/g, ''))); }
+  } catch {}
+
+  // ── Pozos ──
+  if (pozos?.loto) {
+    renderPozos(pozos.loto.variantes, 'loto-pozos', '--loto', pozos.loto.total_millones);
+  }
+  if (pozos?.kino) {
+    const proximo = pozos.kino.proximo_sorteo ? ` · ${pozos.kino.proximo_sorteo}` : '';
+    document.getElementById('kino-pozos').insertAdjacentHTML('beforebegin',
+      `<p class="meta" style="margin-bottom:6px">Próximo: <strong>${proximo.replace(' · ','')}</strong></p>`);
+    renderPozos(pozos.kino.variantes, 'kino-pozos', '--kino', null);
+  }
+
+  // ── Loto ──
+  if (loto) {
+    const ult = loto.ultimo_sorteo || {};
+    document.getElementById('loto-fecha').innerHTML =
+      `Sorteo <strong>#${ult.sorteo || '—'}</strong> · ${fecha(ult.fecha)} · ${ult.dia || ''}`;
+    document.getElementById('loto-total').textContent = loto.total_sorteos ?? '—';
+    if (ult.numeros?.length) {
+      document.getElementById('loto-nums').innerHTML =
+        ult.numeros.map(n => bola(n, 'bola-loto')).join('');
+    }
+    if (ult.sorteo) document.getElementById('loto-sugs-label').textContent =
+      `Combinaciones sugeridas para sorteo #${ult.sorteo + 1}`;
+    renderSugs(loto.suggestions, 'loto-sugs', 'sug-bola-loto', 'loto', (ult.sorteo || 0) + 1, loto.range_scores, loto.sum_stats);
+  } else {
+    document.getElementById('loto-fecha').innerHTML = '<span class="error">Datos no disponibles</span>';
+    document.getElementById('loto-sugs').innerHTML  = '<span class="error">Sin datos</span>';
+  }
+
+  // ── Kino ──
+  if (kino) {
+    const ult = kino.ultimo_sorteo || {};
+    document.getElementById('kino-fecha').innerHTML =
+      `Sorteo <strong>#${ult.sorteo || '—'}</strong> · ${fecha(ult.fecha)} · ${ult.dia || ''}`;
+    document.getElementById('kino-total').textContent = kino.total_sorteos ?? '—';
+    if (ult.numeros?.length) {
+      document.getElementById('kino-nums').innerHTML =
+        ult.numeros.map(n => bola(n, 'bola-kino')).join('');
+    }
+    if (ult.sorteo) document.getElementById('kino-sugs-label').textContent =
+      `Combinaciones sugeridas para sorteo #${ult.sorteo + 1}`;
+    renderSugs(kino.suggestions, 'kino-sugs', 'sug-bola-kino', 'kino', (ult.sorteo || 0) + 1, kino.range_scores, kino.sum_stats);
+  } else {
+    document.getElementById('kino-fecha').innerHTML = '<span class="error">Datos no disponibles</span>';
+    document.getElementById('kino-sugs').innerHTML  = '<span class="error">Sin datos</span>';
+  }
+
+  // Fecha más reciente en los datos (último sorteo entre loto y kino)
+  const fechas = [loto?.ultimo_sorteo?.fecha, kino?.ultimo_sorteo?.fecha]
+    .filter(Boolean).map(f => f.split(' ')[0]).sort();
+  const dataFecha = fechas.length
+    ? fechas[fechas.length - 1].split('-').reverse().join('-') : '—';
+  const _now = new Date();
+  const pageStamp = `${_now.toLocaleDateString('es-CL')} ${_now.toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit'})}`;
+  document.getElementById('last-update').innerHTML =
+    `<span style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:0.76rem;line-height:1.4">
+      <span>Datos: <strong style="color:var(--text)">${dataFecha}</strong></span>
+      <span>Cargado: <strong style="color:var(--text)">${pageStamp}</strong></span>
+    </span>`;
+}
+
+init();
+
+// ── GitHub API ────────────────────────────────────────
+const GH_OWNER = 'GaboAzorin', GH_REPO = 'kin-lo', GH_FILE = 'data/jugadas.json';
+
+// Token guardado en localStorage. Configurar visitando: #setup=BASE64_DEL_TOKEN
+function getToken() {
+  const hash = location.hash;
+  if (hash.startsWith('#setup=')) {
+    localStorage.setItem('kl_gh_token', hash.slice(7).trim());
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+  const stored = localStorage.getItem('kl_gh_token');
+  if (!stored) return '';
+  try {
+    const b64 = stored.trim().replace(/-/g, '+').replace(/_/g, '/');
+    const padded = b64 + '==='.slice(0, (4 - b64.length % 4) % 4);
+    return atob(padded);
+  } catch { return ''; }
+}
+
+async function ghGetFile() {
+  const token = getToken();
+  if (!token) throw new Error('Token no configurado');
+  const r = await fetch(
+    `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
+    { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } }
+  );
+  if (r.status === 404) return { content: [], sha: null };
+  if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.message || `GitHub ${r.status}`); }
+  const d = await r.json();
+  return { content: JSON.parse(atob(d.content.replace(/\n/g, ''))), sha: d.sha };
+}
+
+async function ghPutFile(content, sha, msg) {
+  const body = { message: msg, content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))) };
+  if (sha) body.sha = sha;
+  const r = await fetch(
+    `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
+    {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${getToken()}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }
+  );
+  if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.message || `GitHub ${r.status}`); }
+}
+
+async function handleJugar(btn, juego, sorteo, numeros, rango) {
+  if (!getToken()) {
+    const b64 = prompt('Token no configurado.\nPega aquí el resultado de:\n  btoa("github_pat_TU_TOKEN")');
+    if (!b64) return;
+    localStorage.setItem('kl_gh_token', b64.trim());
+    if (!getToken()) { alert('Token inválido. Debe ser el resultado exacto de btoa().'); return; }
+  }
+  const variantes = [juego];
+  if (juego === 'loto') {
+    if (confirm('¿Jugaste también Recargado?')) {
+      variantes.push('recargado');
+      if (confirm('¿Jugaste también Revancha?')) variantes.push('revancha');
+    }
+  } else if (juego === 'kino') {
+    if (confirm('¿Jugaste también ReKino?')) {
+      variantes.push('rekino');
+      if (confirm('¿Jugaste también RequeteKino?')) variantes.push('requetekino');
+    }
+  }
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    const { content, sha } = await ghGetFile();
+    const key = [...numeros].sort((a,b)=>a-b).join(',');
+    if (!content.some(j => j.juego === juego && j.sorteo === sorteo &&
+        [...j.numeros].sort((a,b)=>a-b).join(',') === key)) {
+      content.push({ fecha_jugada: new Date().toLocaleDateString('es-CL'),
+        juego, variantes, sorteo, numeros, rango_sugerencia: rango, aciertos: null });
+      await ghPutFile(content, sha, `jugada: ${juego} #${sorteo}`);
+      existingJugadas.push({ juego, sorteo, numeros, rango_sugerencia: rango });
+    }
+    btn.classList.add('ok');
+    btn.textContent = '✓';
+  } catch(e) {
+    btn.disabled = false;
+    btn.classList.add('err');
+    btn.textContent = '⚠';
+    btn.title = e.message;
+    setTimeout(() => { btn.classList.remove('err'); btn.textContent = '🎟'; btn.title = ''; }, 5000);
+  }
+}
+</script>
+
+</body>
+</html>

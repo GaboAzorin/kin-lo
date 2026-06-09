@@ -28,6 +28,9 @@ historial.csv
 .env
 .env.*
 
+# StatiCrypt config (salt hardcodeado en scripts)
+.staticrypt.json
+
 # OS
 .DS_Store
 Thumbs.db
