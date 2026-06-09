@@ -25,4 +25,8 @@ while IFS= read -r line || [ -n "$line" ]; do
   esac
 done < "$CONF"
 
+mkdir -p "$DIR/docs/js"
+cp "$DIR/docs_src/js/gh-api.js" "$DIR/docs/js/gh-api.js"
+echo "  copiado js/gh-api.js -> docs/js/"
+
 echo "Encriptación completa."

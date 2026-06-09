@@ -41,5 +41,9 @@ foreach ($page in $pages) {
     }
 }
 
+New-Item -ItemType Directory -Force -Path "docs/js" | Out-Null
+Copy-Item "docs_src/js/gh-api.js" "docs/js/gh-api.js" -Force
+Write-Host "  copiado js/gh-api.js -> docs/js/" -ForegroundColor Gray
+
 Write-Host "`nEncriptación completa. Archivos listos en docs/." -ForegroundColor Green
 Write-Host "Para commitear: git add docs/*.html docs/*/index.html && git commit -m 'chore: actualizar HTML encriptado'" -ForegroundColor Yellow

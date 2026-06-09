@@ -26,7 +26,7 @@
 | 12 | ✅ Media | registrar_jugada.py | Entrada manual sin validación cuando no hay sugerencias (crash por `ValueError`) |
 | 13 | ✅ Media | scraper_kinohistorico.py | Crash al final si el CSV no existe y no se descargó nada |
 | 14 | ✅ Media | metrics.py | `historial_index.json` admite variantes con números incompletos |
-| 15 | 🟡 Media | frontend | Código GitHub-API duplicado en 4 páginas con divergencias entre copias |
+| 15 | ✅ Media | frontend | Código GitHub-API duplicado en 4 páginas con divergencias entre copias |
 | 16 | ✅ Baja | docs / frontend | Hora del sorteo Loto inconsistente: countdown 21:00 vs documentación 22:15 |
 | 17 | ✅ Baja | scrape-kino.yml | Comentario de timezone ignora el horario de verano chileno (UTC-3) |
 | 18 | ✅ Baja | encrypt_html.ps1 / workflow | Salt y lista de páginas StatiCrypt duplicados en dos lugares |
@@ -220,7 +220,7 @@ if not json_data or not json_data.get("results"):
 
 ---
 
-### 15. 🟡 Código GitHub-API cuadruplicado y divergente
+### 15. 🟡 Código GitHub-API cuadruplicado y divergente — ✅ Resuelto 2026-06-09
 
 **Ubicación:** `docs_src/index.html:661-747`, `docs_src/loto/index.html:580-658`, `docs_src/kino/index.html` (equivalente), `docs_src/jugadas/index.html:238-282`
 
