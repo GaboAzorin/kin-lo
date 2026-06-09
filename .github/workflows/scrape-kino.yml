@@ -2,7 +2,9 @@ name: Scrape Kino (loteria.cl)
 
 # Horario de sorteos: miércoles, viernes y domingos a las 22:30 CLT.
 # Resultados seguros desde las 23:59 CLT.
-# CLT = UTC-4 (invierno) → 23:59 CLT = 03:59 UTC del día siguiente.
+# Chile usa UTC-4 en invierno (CLT) y UTC-3 en verano (CLST). Por eso
+# `59 3 * * 4,6,1` UTC = 23:59 CLT (invierno) ó 00:59 CLST (verano) del día
+# siguiente al sorteo; en ambos casos el job corre después del sorteo.
 # Días del job (día siguiente al sorteo): jueves=4, sábado=6, lunes=1.
 on:
   schedule:
@@ -57,21 +59,26 @@ jobs:
         continue-on-error: true
         run: python src/scrapers/fetch_pozos.py
 
-      - name: Encriptar páginas HTML con StatiCrypt
+      - name: Encriptar páginas HTML con StatiCrypt (solo si cambió docs_src)
+        continue-on-error: true
         env:
           STATICRYPT_PASSWORD: ${{ secrets.STATICRYPT_PASSWORD }}
         run: |
-          SALT="c7f8a2e9d34b1056789abc3d4e5f6a7b"
-          npx --yes staticrypt docs_src/index.html --password "$STATICRYPT_PASSWORD" --salt "$SALT" --short -d docs/
-          npx --yes staticrypt docs_src/kino/index.html --password "$STATICRYPT_PASSWORD" --salt "$SALT" --short -d docs/kino/
-          npx --yes staticrypt docs_src/loto/index.html --password "$STATICRYPT_PASSWORD" --salt "$SALT" --short -d docs/loto/
-          npx --yes staticrypt docs_src/sugerencias/index.html --password "$STATICRYPT_PASSWORD" --salt "$SALT" --short -d docs/sugerencias/
-          npx --yes staticrypt docs_src/jugadas/index.html --password "$STATICRYPT_PASSWORD" --salt "$SALT" --short -d docs/jugadas/
+          if [ -z "$STATICRYPT_PASSWORD" ]; then
+            echo "::warning::STATICRYPT_PASSWORD vacío — omito encriptación"; exit 0
+          fi
+          CUR=$(git rev-parse "HEAD:docs_src")
+          PREV=$(cat docs/.staticrypt-src-hash 2>/dev/null || echo "")
+          if [ "$CUR" = "$PREV" ]; then
+            echo "docs_src sin cambios (tree $CUR) — omito encriptación"; exit 0
+          fi
+          bash scripts/encrypt_html.sh
+          echo "$CUR" > docs/.staticrypt-src-hash
 
       - name: Commit y push de datos actualizados
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "data(kino): actualizar historial [${{ github.run_id }}]"
-          file_pattern: "data/loteria_historial.csv docs/data/kino_metrics.json docs/data/pozos.json data/kino_suggestions_pending.json data/suggestions_history.csv docs/data/suggestions_history.json docs/data/suggestions_detail.json data/jugadas.json docs/data/historial_index.json docs/index.html docs/kino/index.html docs/loto/index.html docs/sugerencias/index.html docs/jugadas/index.html"
+          file_pattern: "data/loteria_historial.csv docs/data/kino_metrics.json docs/data/pozos.json data/kino_suggestions_pending.json data/suggestions_history.csv docs/data/suggestions_history.json docs/data/suggestions_detail.json data/jugadas.json docs/data/historial_index.json docs/index.html docs/kino/index.html docs/loto/index.html docs/sugerencias/index.html docs/jugadas/index.html docs/.staticrypt-src-hash"
           commit_user_name: "github-actions[bot]"
           commit_user_email: "github-actions[bot]@users.noreply.github.com"

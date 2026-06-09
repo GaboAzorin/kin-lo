@@ -16,16 +16,19 @@ if (-not $env:STATICRYPT_PASSWORD) {
     exit 1
 }
 
-$SALT = "c7f8a2e9d34b1056789abc3d4e5f6a7b"
 $PASS = $env:STATICRYPT_PASSWORD
 
-$pages = @(
-    @{ src = "docs_src/index.html";              out = "docs/" },
-    @{ src = "docs_src/kino/index.html";         out = "docs/kino/" },
-    @{ src = "docs_src/loto/index.html";         out = "docs/loto/" },
-    @{ src = "docs_src/sugerencias/index.html";  out = "docs/sugerencias/" },
-    @{ src = "docs_src/jugadas/index.html";      out = "docs/jugadas/" }
-)
+# Config compartida con encrypt_html.sh (salt + lista de páginas).
+$conf  = Join-Path $PSScriptRoot "staticrypt-pages.txt"
+$SALT  = ""
+$pages = @()
+foreach ($line in Get-Content $conf) {
+    $t = $line.Trim()
+    if ($t -eq "" -or $t.StartsWith("#")) { continue }
+    if ($t.StartsWith("SALT=")) { $SALT = $t.Substring(5); continue }
+    $parts = $t.Split("|")
+    $pages += [pscustomobject]@{ src = $parts[0]; out = $parts[1] }
+}
 
 Write-Host "`n--- Encriptando HTML con StatiCrypt ---" -ForegroundColor Cyan
 

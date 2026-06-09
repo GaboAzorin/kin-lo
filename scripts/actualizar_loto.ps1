@@ -5,7 +5,8 @@
 # Uso: desde la raíz del proyecto
 #   .\scripts\actualizar_loto.ps1
 #
-# Correr después de cada sorteo (mar/jue/dom, ~22:15 CLT).
+# Correr después de cada sorteo (mar/jue/dom). El sorteo es ~21:00 CLT;
+# los resultados quedan publicados ~22:15 CLT — corre el script a esa hora o después.
 #
 # Blindaje anti-conflicto con GitHub:
 #   El cron de Kino (GitHub Actions) empuja commits al mismo `main` y escribe
@@ -30,6 +31,17 @@ $archivos = @(
     "data/jugadas.json",
     "docs/data/historial_index.json"
 )
+
+# Devuelve las rutas con cambios (tracked o untracked) que NO pertenecen al pipeline.
+function Get-DirtyFueraDePipeline {
+    param([string[]]$archivos)
+    $norm = $archivos | ForEach-Object { $_.Replace('\','/') }
+    git status --porcelain | ForEach-Object {
+        $p = $_.Substring(3).Trim().Replace('\','/')
+        if ($p -match ' -> ') { $p = ($p -split ' -> ')[-1] }
+        $p
+    } | Where-Object { $norm -notcontains $_ }
+}
 
 # Corre scraper + métricas + pozos. Idempotente: re-ejecutarlo sobre un CSV ya
 # actualizado no duplica sorteos y simplemente regenera los JSON.
@@ -94,13 +106,16 @@ try {
 
 # === 3/4  Commit ============================================================
 Write-Host "`n=== 3/4  Commit ===" -ForegroundColor Cyan
-git add $archivos
-if (-not (git status --porcelain)) {
+$existentes = $archivos | Where-Object { Test-Path $_ }
+git add -- $existentes
+if ($LASTEXITCODE -ne 0) { Write-Host "git add falló (exit $LASTEXITCODE)" -ForegroundColor Red; exit 1 }
+if (-not (git status --porcelain -- $archivos)) {
     Write-Host "Sin cambios que commitear." -ForegroundColor Yellow
     exit 0
 }
 $fecha = Get-Date -Format "yyyy-MM-dd"
 git commit -m "data(loto): actualizar historial $fecha"
+if ($LASTEXITCODE -ne 0) { Write-Host "git commit falló (exit $LASTEXITCODE)" -ForegroundColor Red; exit 1 }
 
 # === 4/4  Push con reintentos ===============================================
 Write-Host "`n=== 4/4  Push (con reintentos anti-conflicto) ===" -ForegroundColor Cyan
@@ -116,6 +131,12 @@ for ($i = 1; $i -le $maxIntentos; $i++) {
     git fetch origin
     # El remoto manda: descartamos nuestros JSON regenerados y volvemos a generar
     # sobre la última versión. El scraper re-agrega el/los sorteo(s) que falten.
+    $fuera = Get-DirtyFueraDePipeline $archivos
+    if ($fuera) {
+        Write-Host "Hay cambios locales fuera del pipeline; abortando para no perderlos con reset --hard:" -ForegroundColor Red
+        $fuera | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+        exit 1
+    }
     git reset --hard origin/main
     try {
         Invoke-Pipeline
@@ -123,12 +144,15 @@ for ($i = 1; $i -le $maxIntentos; $i++) {
         Write-Host "ERROR al regenerar: $_" -ForegroundColor Red
         exit 1
     }
-    git add $archivos
-    if (-not (git status --porcelain)) {
+    $existentes = $archivos | Where-Object { Test-Path $_ }
+    git add -- $existentes
+    if ($LASTEXITCODE -ne 0) { Write-Host "git add falló (exit $LASTEXITCODE)" -ForegroundColor Red; exit 1 }
+    if (-not (git status --porcelain -- $archivos)) {
         Write-Host "`nEl remoto ya contenía todo. Nada que pushear." -ForegroundColor Green
         exit 0
     }
     git commit -m "data(loto): actualizar historial $fecha"
+    if ($LASTEXITCODE -ne 0) { Write-Host "git commit falló (exit $LASTEXITCODE)" -ForegroundColor Red; exit 1 }
 }
 
 Write-Host "`nNo se pudo pushear tras $maxIntentos intentos. Revisa manualmente (git status)." -ForegroundColor Red

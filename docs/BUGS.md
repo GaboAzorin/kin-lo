@@ -13,27 +13,27 @@
 | # | Severidad | Componente | Bug |
 |---|-----------|------------|-----|
 | 1 | ✅ Alta | jugadas (3 escritores) | Formato de `fecha_jugada` inconsistente: ISO vs dd-mm-yyyy |
-| 2 | 🔴 Alta | scraper_polla.py | Un sorteo puede perderse permanentemente ante respuesta vacía transitoria |
+| 2 | ✅ Alta | scraper_polla.py | Un sorteo puede perderse permanentemente ante respuesta vacía transitoria |
 | 3 | 🔴 Alta | Privacidad | Los JSON de datos y `data/jugadas.json` son públicos pese a StatiCrypt; PAT en localStorage |
-| 4 | 🔴 Alta | scrape-kino.yml | Re-encriptación StatiCrypt en cada cron: commits ruidosos y pérdida de datos si falta el secret |
-| 5 | 🔴 Alta | actualizar_loto.ps1 | `git reset --hard` en reintentos destruye cambios locales ajenos al pipeline |
-| 6 | 🟡 Media | scraper_polla.py | No escribe header si el CSV existe pero está vacío |
-| 7 | 🟡 Media | metrics.py | Notificación Telegram puede mostrar el día de la semana de otro sorteo |
-| 8 | 🟡 Media | metrics.py | `_evaluar_y_registrar`: firma `-> int` y docstring no coinciden con lo que retorna |
+| 4 | ✅ Alta | scrape-kino.yml | Re-encriptación StatiCrypt en cada cron: commits ruidosos y pérdida de datos si falta el secret |
+| 5 | ✅ Alta | actualizar_loto.ps1 | `git reset --hard` en reintentos destruye cambios locales ajenos al pipeline |
+| 6 | ✅ Media | scraper_polla.py | No escribe header si el CSV existe pero está vacío |
+| 7 | ✅ Media | metrics.py | Notificación Telegram puede mostrar el día de la semana de otro sorteo |
+| 8 | ✅ Media | metrics.py | `_evaluar_y_registrar`: firma `-> int` y docstring no coinciden con lo que retorna |
 | 9 | 🟡 Media | datos | Crecimiento sin límite de `suggestions_history.csv` y JSON derivados |
-| 10 | 🟡 Media | jugadas web + metrics.py | `computeAciertos` cliente deja jugadas sin `resultado_sorteo` y bloquea la re-evaluación del pipeline |
-| 11 | 🟡 Media | requirements / CLAUDE.md | Dependencia `scrapling` sin uso; documentación del scraper Kino desactualizada |
-| 12 | 🟡 Media | registrar_jugada.py | Entrada manual sin validación cuando no hay sugerencias (crash por `ValueError`) |
-| 13 | 🟡 Media | scraper_kinohistorico.py | Crash al final si el CSV no existe y no se descargó nada |
-| 14 | 🟡 Media | metrics.py | `historial_index.json` admite variantes con números incompletos |
+| 10 | ✅ Media | jugadas web + metrics.py | `computeAciertos` cliente deja jugadas sin `resultado_sorteo` y bloquea la re-evaluación del pipeline |
+| 11 | ✅ Media | requirements / CLAUDE.md | Dependencia `scrapling` sin uso; documentación del scraper Kino desactualizada |
+| 12 | ✅ Media | registrar_jugada.py | Entrada manual sin validación cuando no hay sugerencias (crash por `ValueError`) |
+| 13 | ✅ Media | scraper_kinohistorico.py | Crash al final si el CSV no existe y no se descargó nada |
+| 14 | ✅ Media | metrics.py | `historial_index.json` admite variantes con números incompletos |
 | 15 | 🟡 Media | frontend | Código GitHub-API duplicado en 4 páginas con divergencias entre copias |
-| 16 | 🟢 Baja | docs / frontend | Hora del sorteo Loto inconsistente: countdown 21:00 vs documentación 22:15 |
-| 17 | 🟢 Baja | scrape-kino.yml | Comentario de timezone ignora el horario de verano chileno (UTC-3) |
-| 18 | 🟢 Baja | encrypt_html.ps1 / workflow | Salt y lista de páginas StatiCrypt duplicados en dos lugares |
-| 19 | 🟢 Baja | jugadas web | El chequeo de duplicados ignora `variantes` |
-| 20 | 🟢 Baja | suggestions.py | Shortlist MMR fijo en 400 limita `n_sugerencias > 400` en modo clásico |
-| 21 | 🟢 Baja | loto_parser_v3.py | `fromtimestamp` sin timezone: la fecha depende del reloj de la máquina |
-| 22 | 🟢 Baja | docs_src/index.html | Doble `margin-left:auto` en el header rompe la alineación del timestamp |
+| 16 | ✅ Baja | docs / frontend | Hora del sorteo Loto inconsistente: countdown 21:00 vs documentación 22:15 |
+| 17 | ✅ Baja | scrape-kino.yml | Comentario de timezone ignora el horario de verano chileno (UTC-3) |
+| 18 | ✅ Baja | encrypt_html.ps1 / workflow | Salt y lista de páginas StatiCrypt duplicados en dos lugares |
+| 19 | ✅ Baja | jugadas web | El chequeo de duplicados ignora `variantes` |
+| 20 | ✅ Baja | suggestions.py | Shortlist MMR fijo en 400 limita `n_sugerencias > 400` en modo clásico |
+| 21 | ✅ Baja | loto_parser_v3.py | `fromtimestamp` sin timezone: la fecha depende del reloj de la máquina |
+| 22 | ✅ Baja | docs_src/index.html | Doble `margin-left:auto` en el header rompe la alineación del timestamp |
 
 ---
 
@@ -60,7 +60,7 @@ Hoy `data/jugadas.json` solo tiene fechas dd-mm-yyyy porque las últimas jugadas
 
 ---
 
-### 2. 🔴 scraper_polla.py puede perder un sorteo permanentemente
+### 2. 🔴 scraper_polla.py puede perder un sorteo permanentemente — ✅ Resuelto 2026-06-09
 
 **Ubicación:** `src/scrapers/scraper_polla.py:282-289`
 
@@ -98,7 +98,7 @@ if not json_data or not json_data.get("results"):
 
 ---
 
-### 4. 🔴 scrape-kino.yml: re-encriptación StatiCrypt en cada cron
+### 4. 🔴 scrape-kino.yml: re-encriptación StatiCrypt en cada cron — ✅ Resuelto 2026-06-09
 
 **Ubicación:** `.github/workflows/scrape-kino.yml:60-69`
 
@@ -112,7 +112,7 @@ if not json_data or not json_data.get("results"):
 
 ---
 
-### 5. 🔴 actualizar_loto.ps1: `git reset --hard` destruye trabajo local
+### 5. 🔴 actualizar_loto.ps1: `git reset --hard` destruye trabajo local — ✅ Resuelto 2026-06-09
 
 **Ubicación:** `scripts/actualizar_loto.ps1:119`
 
@@ -127,7 +127,7 @@ if not json_data or not json_data.get("results"):
 
 ---
 
-### 6. 🟡 scraper_polla.py no escribe header sobre CSV vacío
+### 6. 🟡 scraper_polla.py no escribe header sobre CSV vacío — ✅ Resuelto 2026-06-09
 
 **Ubicación:** `src/scrapers/scraper_polla.py:135`
 
@@ -137,7 +137,7 @@ if not json_data or not json_data.get("results"):
 
 ---
 
-### 7. 🟡 Telegram: día de la semana de un sorteo distinto al notificado
+### 7. 🟡 Telegram: día de la semana de un sorteo distinto al notificado — ✅ Resuelto 2026-06-09
 
 **Ubicación:** `src/analytics/metrics.py:775` (`_enviar_notificaciones`)
 
@@ -147,7 +147,7 @@ if not json_data or not json_data.get("results"):
 
 ---
 
-### 8. 🟡 `_evaluar_y_registrar`: contrato de retorno incoherente
+### 8. 🟡 `_evaluar_y_registrar`: contrato de retorno incoherente — ✅ Resuelto 2026-06-09
 
 **Ubicación:** `src/analytics/metrics.py:191-275`
 
@@ -170,7 +170,7 @@ if not json_data or not json_data.get("results"):
 
 ---
 
-### 10. 🟡 `computeAciertos` cliente bloquea la evaluación canónica del pipeline
+### 10. 🟡 `computeAciertos` cliente bloquea la evaluación canónica del pipeline — ✅ Resuelto 2026-06-09
 
 **Ubicación:** `docs_src/jugadas/index.html:473-484` + `src/analytics/metrics.py:303`
 
@@ -180,7 +180,7 @@ if not json_data or not json_data.get("results"):
 
 ---
 
-### 11. 🟡 Dependencia `scrapling` muerta y documentación desactualizada
+### 11. 🟡 Dependencia `scrapling` muerta y documentación desactualizada — ✅ Resuelto 2026-06-09
 
 **Ubicación:** `requirements.txt:6`, `CLAUDE.md` (sección "Scraper loteria.cl")
 
@@ -190,7 +190,7 @@ if not json_data or not json_data.get("results"):
 
 ---
 
-### 12. 🟡 registrar_jugada.py: entrada manual sin validación
+### 12. 🟡 registrar_jugada.py: entrada manual sin validación — ✅ Resuelto 2026-06-09
 
 **Ubicación:** `src/registrar_jugada.py:148-154`
 
@@ -200,7 +200,7 @@ if not json_data or not json_data.get("results"):
 
 ---
 
-### 13. 🟡 scraper_kinohistorico.py: crash con CSV inexistente y cero descargas
+### 13. 🟡 scraper_kinohistorico.py: crash con CSV inexistente y cero descargas — ✅ Resuelto 2026-06-09
 
 **Ubicación:** `src/scrapers/scraper_kinohistorico.py:238-239`
 
@@ -210,7 +210,7 @@ if not json_data or not json_data.get("results"):
 
 ---
 
-### 14. 🟡 `historial_index.json` admite variantes con números incompletos
+### 14. 🟡 `historial_index.json` admite variantes con números incompletos — ✅ Resuelto 2026-06-09
 
 **Ubicación:** `src/analytics/metrics.py:737-739` (`_exportar_historial_index`)
 
@@ -230,7 +230,7 @@ if not json_data or not json_data.get("results"):
 
 ---
 
-### 16. 🟢 Hora del sorteo Loto inconsistente (21:00 vs 22:15)
+### 16. 🟢 Hora del sorteo Loto inconsistente (21:00 vs 22:15) — ✅ Resuelto 2026-06-09
 
 **Ubicación:** `docs_src/index.html:352-355` (countdown a las 21:00), `CLAUDE.md` y `scripts/actualizar_loto.ps1:8` ("~22:15 CLT")
 
@@ -240,7 +240,7 @@ if not json_data or not json_data.get("results"):
 
 ---
 
-### 17. 🟢 Comentario de timezone del cron Kino ignora el horario de verano
+### 17. 🟢 Comentario de timezone del cron Kino ignora el horario de verano — ✅ Resuelto 2026-06-09
 
 **Ubicación:** `.github/workflows/scrape-kino.yml:3-6`
 
@@ -250,7 +250,7 @@ if not json_data or not json_data.get("results"):
 
 ---
 
-### 18. 🟢 Configuración StatiCrypt duplicada
+### 18. 🟢 Configuración StatiCrypt duplicada — ✅ Resuelto 2026-06-09
 
 **Ubicación:** `scripts/encrypt_html.ps1:19-28` y `.github/workflows/scrape-kino.yml:64-69`
 
@@ -260,7 +260,7 @@ if not json_data or not json_data.get("results"):
 
 ---
 
-### 19. 🟢 Chequeo de duplicados de jugadas ignora variantes
+### 19. 🟢 Chequeo de duplicados de jugadas ignora variantes — ✅ Resuelto 2026-06-09
 
 **Ubicación:** `docs_src/jugadas/index.html:589-592`, `docs_src/index.html:731`, `src/...` (mismo criterio)
 
@@ -270,7 +270,7 @@ if not json_data or not json_data.get("results"):
 
 ---
 
-### 20. 🟢 Shortlist MMR fijo en 400 limita pedidos grandes
+### 20. 🟢 Shortlist MMR fijo en 400 limita pedidos grandes — ✅ Resuelto 2026-06-09
 
 **Ubicación:** `src/analytics/suggestions.py:225` (`shortlist = cands[:400]`)
 
@@ -280,7 +280,7 @@ if not json_data or not json_data.get("results"):
 
 ---
 
-### 21. 🟢 `fromtimestamp` sin timezone en el parser de Loto
+### 21. 🟢 `fromtimestamp` sin timezone en el parser de Loto — ✅ Resuelto 2026-06-09
 
 **Ubicación:** `src/parsers/loto_parser_v3.py:32` (también `scraper_polla.py:284`)
 
@@ -290,7 +290,7 @@ if not json_data or not json_data.get("results"):
 
 ---
 
-### 22. 🟢 Doble `margin-left:auto` en el header de la home
+### 22. 🟢 Doble `margin-left:auto` en el header de la home — ✅ Resuelto 2026-06-09
 
 **Ubicación:** `docs_src/index.html:30` (CSS de `header span`) y `:220` (link "Mis jugadas" con `margin-left:auto` inline)
 

@@ -18,7 +18,7 @@ Los datos de **Kino se actualizan automáticamente** con GitHub Actions. Los dat
 pip install -r requirements.txt
 playwright install chromium --with-deps
 
-# Actualizar Loto (correr localmente después de cada sorteo mar/jue/dom ~22:15 CLT)
+# Actualizar Loto (correr localmente después de cada sorteo mar/jue/dom; sorteo ~21:00 CLT, resultados publicados ~22:15 CLT)
 .\scripts\actualizar_loto.ps1        # scraper + métricas + pozos + commit + push
 
 # Pasos individuales Loto
@@ -74,10 +74,10 @@ GitHub Pages sirve docs/ → https://gaboazorin.github.io/kin-lo/
 
 ### Scraper loteria.cl (`src/scrapers/scraper_loteria.py`)
 
-- Usa **Scrapling** (`Fetcher` o `DynamicFetcher` si el HTML es JS-rendered).
-- URL: `https://www.loteria.cl/resultados/resultado-completo/?id=kino&sorteo=N`.
-- Solo devuelve los últimos ~26 sorteos.
-- Parser: `src/parsers/loteria_parser.py`.
+- Usa la **API REST** `https://rckino.loteria.cl/api/sorteos` consumida con `urllib` (stdlib).
+- Sin parámetros → últimos ~26 sorteos; `?sorteo=N` → sorteo N si está dentro de esa ventana.
+- La ventana solo expone los últimos ~26 sorteos; el scraper acumula los nuevos en el CSV.
+- Parser inline (`_parse_bolitas` dentro del propio scraper); sin Scrapling ni parser HTML externo.
 
 ### Scraper histórico Kino (`src/scrapers/scraper_kinohistorico.py`)
 
@@ -113,7 +113,7 @@ GitHub Pages sirve docs/ → https://gaboazorin.github.io/kin-lo/
 
 | Juego | Método | Cuándo |
 |---|---|---|
-| **Loto** | `.\scripts\actualizar_loto.ps1` (local) | Después de cada sorteo: mar/jue/dom ~22:15 CLT |
+| **Loto** | `.\scripts\actualizar_loto.ps1` (local) | Después de cada sorteo (sorteo ~21:00 CLT; resultados ~22:15 CLT): mar/jue/dom |
 | **Kino** | GitHub Actions cron automático | `scrape-kino.yml`: `59 3 * * 4,6,1` (UTC) = mié/vie/dom 23:59 CLT |
 
 ## Rangos de Números

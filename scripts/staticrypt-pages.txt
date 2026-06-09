@@ -1,0 +1,8 @@
+# Config compartida de StatiCrypt (consumida por encrypt_html.sh y encrypt_html.ps1).
+# Formato: línea SALT=<hex> y líneas "src|out". Las líneas con # o vacías se ignoran.
+SALT=c7f8a2e9d34b1056789abc3d4e5f6a7b
+docs_src/index.html|docs/
+docs_src/kino/index.html|docs/kino/
+docs_src/loto/index.html|docs/loto/
+docs_src/sugerencias/index.html|docs/sugerencias/
+docs_src/jugadas/index.html|docs/jugadas/

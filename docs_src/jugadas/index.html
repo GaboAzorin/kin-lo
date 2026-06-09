@@ -593,11 +593,15 @@ async function submitJugada() {
         j.juego === juego && j.sorteo === sorteo &&
         [...(j.numeros||[])].sort((a,b)=>a-b).join(',') === key
       );
-      if (!dup) {
-        const aciertosNew = computeAciertos(juego, sorteo, variantes, numeros);
-        content.push({ fecha_jugada: fecha, juego, variantes, sorteo, numeros, rango_sugerencia: null, aciertos: aciertosNew });
-        await ghPutFile(content, sha, `jugada manual: ${juego} #${sorteo}`);
+      if (dup) {
+        alert('Ya existe una jugada con ese mismo juego, sorteo y números.');
+        btn.disabled = false;
+        btn.textContent = 'Registrar';
+        return;
       }
+      const aciertosNew = computeAciertos(juego, sorteo, variantes, numeros);
+      content.push({ fecha_jugada: fecha, juego, variantes, sorteo, numeros, rango_sugerencia: null, aciertos: aciertosNew });
+      await ghPutFile(content, sha, `jugada manual: ${juego} #${sorteo}`);
     }
 
     allJugadas = content;
