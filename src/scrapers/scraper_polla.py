@@ -24,7 +24,10 @@ import uuid
 from datetime import datetime, timedelta
 from http.cookies import SimpleCookie
 from pathlib import Path
+from zoneinfo import ZoneInfo
 from playwright.async_api import async_playwright
+
+CL_TZ = ZoneInfo("America/Santiago")
 
 # ==============================================================================
 # RUTAS
@@ -132,7 +135,7 @@ def get_start_id() -> int:
 
 def guardar_fila(raw_row: dict):
     """Filtra a COLUMNS_POLLA y escribe al CSV (append)."""
-    file_exists = CSV_OUT.exists()
+    file_exists = CSV_OUT.exists() and CSV_OUT.stat().st_size > 10
     row = {col: raw_row.get(col, "") for col in COLUMNS_POLLA}
     with open(CSV_OUT, "a", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=COLUMNS_POLLA)
@@ -281,10 +284,9 @@ async def scrape_polla(proxy_config: dict | None = None) -> bool:
 
                 if not json_data or not json_data.get("results"):
                     ts = json_data.get("drawDate") if json_data else None
-                    if ts and datetime.fromtimestamp(ts / 1000) > datetime.now():
+                    if ts and datetime.fromtimestamp(ts / 1000, tz=CL_TZ) > datetime.now(CL_TZ):
                         logger.info(f"Sorteo #{current_id} es futuro. Fin de descarga.")
                         break
-                    current_id += 1
                     consec_errors += 1
                     continue
 

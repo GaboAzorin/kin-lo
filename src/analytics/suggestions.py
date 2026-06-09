@@ -222,7 +222,7 @@ def _seleccionar_diversas(cands, n: int, pick: int, lam: float):
     """
     if not cands:
         return []
-    shortlist = cands[:400]              # todos de score alto / popularidad baja
+    shortlist = cands[:max(400, n * 2)]  # score alto / pop baja; dimensionado según lo pedido
     elegidos = [shortlist[0]]
     elegidos_set = {shortlist[0][0]}
 

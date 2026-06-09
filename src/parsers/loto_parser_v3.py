@@ -3,6 +3,7 @@ import os
 import re
 import unicodedata
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 def normalize_name(name):
     if not name: return "UNKNOWN"
@@ -29,7 +30,7 @@ def parse_loto_rich(data_source):
     
     ts = data.get('drawDate')
     if ts:
-        dt = datetime.fromtimestamp(ts / 1000)
+        dt = datetime.fromtimestamp(ts / 1000, tz=ZoneInfo("America/Santiago"))
         row['fecha'] = dt.strftime('%Y-%m-%d %H:%M:%S')
         row['anio'] = dt.year
         row['mes'] = dt.month

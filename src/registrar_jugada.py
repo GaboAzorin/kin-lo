@@ -67,6 +67,28 @@ def _mostrar_sugerencias(sugerencias: dict, juego: str):
     print()
 
 
+def _leer_numeros(pick: int, num_range: int) -> list[int]:
+    """Pide y valida una lista de `pick` números en rango 1..num_range, sin duplicados."""
+    print(f"Ingresa {pick} números del 1 al {num_range} separados por espacio:")
+    while True:
+        nums_str = input("  > ").strip().split()
+        try:
+            nums = sorted([int(x) for x in nums_str])
+        except ValueError:
+            print("  ERROR: solo se aceptan números enteros.")
+            continue
+        if len(nums) != pick:
+            print(f"  ERROR: necesitas exactamente {pick} números.")
+            continue
+        if any(n < 1 or n > num_range for n in nums):
+            print(f"  ERROR: los números deben estar entre 1 y {num_range}.")
+            continue
+        if len(set(nums)) != pick:
+            print("  ERROR: no se permiten números repetidos.")
+            continue
+        return nums
+
+
 def _elegir_combo(sugerencias: dict, juego: str) -> tuple[list[int], str | None]:
     pick      = 14 if juego == "kino" else 6
     num_range = 25 if juego == "kino" else 41
@@ -76,20 +98,7 @@ def _elegir_combo(sugerencias: dict, juego: str) -> tuple[list[int], str | None]
         resp = input("  > ").strip().lower()
 
         if resp == "manual":
-            print(f"Ingresa {pick} números del 1 al {num_range} separados por espacio:")
-            nums_str = input("  > ").strip().split()
-            try:
-                nums = sorted([int(x) for x in nums_str])
-            except ValueError:
-                print("  ERROR: solo se aceptan números enteros.")
-                continue
-            if len(nums) != pick:
-                print(f"  ERROR: necesitas exactamente {pick} números.")
-                continue
-            if any(n < 1 or n > num_range for n in nums):
-                print(f"  ERROR: los números deben estar entre 1 y {num_range}.")
-                continue
-            return nums, None
+            return _leer_numeros(pick, num_range), None
 
         # Formato rango-indice (ej: "100-1")
         parts = resp.split("-")
@@ -137,7 +146,12 @@ def main():
                 pass
     else:
         print("\nIngresa el número de sorteo:")
-        sorteo = int(input("  > ").strip())
+        while True:
+            try:
+                sorteo = int(input("  > ").strip())
+                break
+            except ValueError:
+                print("  ERROR: el sorteo debe ser un número entero.")
 
     # Mostrar sugerencias y elegir
     sugerencias = _cargar_sugerencias(juego)
@@ -148,10 +162,8 @@ def main():
         print(f"\nNo se encontraron sugerencias. Ingresa números manualmente.")
         pick      = 14 if juego == "kino" else 6
         num_range = 25 if juego == "kino" else 41
-        print(f"Ingresa {pick} números del 1 al {num_range} separados por espacio:")
-        nums_str = input("  > ").strip().split()
-        numeros  = sorted([int(x) for x in nums_str])
-        rango    = None
+        numeros   = _leer_numeros(pick, num_range)
+        rango     = None
 
     # Confirmar
     nums_fmt = "  ".join(str(n).rjust(2) for n in numeros)

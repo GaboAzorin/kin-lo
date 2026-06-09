@@ -235,8 +235,11 @@ def main():
     print(f"\nFIN.")
     print(f"  Nuevos sorteos guardados: {total_new}")
     print(f"  Sorteos ya existentes (saltados): {skip_count}")
-    print(f"  CSV final: {len(df)} filas | "
-          f"sorteos {int(df['sorteo'].min())}–{int(df['sorteo'].max())}")
+    if len(df):
+        print(f"  CSV final: {len(df)} filas | "
+              f"sorteos {int(df['sorteo'].min())}–{int(df['sorteo'].max())}")
+    else:
+        print("  CSV final: vacío (sin filas).")
 
 
 if __name__ == "__main__":

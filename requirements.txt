@@ -2,11 +2,9 @@
 playwright>=1.43.0
 requests>=2.31.0        # usado en modo Scrape.do (proxy nube)
 
-# Scraping loteria.cl
-scrapling[fetchers]>=0.4.0
-
 # Analytics
 pandas>=2.0.0
 
 # Utilidades
 python-dotenv>=1.0.0
+tzdata>=2024.1          # zoneinfo en Windows (IANA tz db)

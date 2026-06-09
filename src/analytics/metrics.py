@@ -189,11 +189,13 @@ def _guardar_pending(path: Path, tras_sorteo: int, sugerencias: dict):
 
 
 def _evaluar_y_registrar(df: pd.DataFrame, juego: str,
-                          num_cols: list[str], pending: dict) -> int:
+                          num_cols: list[str], pending: dict) -> dict | None:
     """
     Compara las sugerencias pendientes contra el primer resultado real
     posterior al sorteo en que fueron generadas.
-    Appends filas a suggestions_history.csv y retorna cuántas se agregaron.
+    Appends filas a suggestions_history.csv y retorna el dict de evaluación
+    (`sorteo_n`, `fecha`, `resultado`, `per_rango`, `pick`) o None si no hubo
+    nada que evaluar.
     """
     tras_sorteo = pending.get("generado_tras_sorteo")
     if tras_sorteo is None:
@@ -300,7 +302,7 @@ def _evaluar_jugadas(df: pd.DataFrame, juego: str, num_cols: list[str]) -> list[
             continue
         # Saltar solo si ya está evaluado en el nuevo formato (dict).
         # Entradas con aciertos numérico (formato viejo) se re-evalúan.
-        if isinstance(j.get("aciertos"), dict):
+        if isinstance(j.get("aciertos"), dict) and j.get("resultado_sorteo"):
             continue
         sorteo_n = j.get("sorteo")
         if sorteo_n not in sorteos_disponibles:
@@ -735,7 +737,7 @@ def _exportar_historial_index():
             for variante, cols in vcols.items():
                 try:
                     nums = sorted(int(row[c]) for c in cols if pd.notna(row.get(c)))
-                    if nums:
+                    if len(nums) == len(cols):
                         entry[variante] = nums
                 except Exception:
                     pass
@@ -772,7 +774,8 @@ def _enviar_notificaciones(juego: str, ultimo: dict,
     fecha     = eval_data["fecha"]
 
     # ── 1. Nuevo sorteo ──────────────────────────────────────────────────
-    dia     = _DIA_ES.get(ultimo.get("dia", ""), ultimo.get("dia", ""))
+    _fdt    = pd.to_datetime(eval_data["fecha"][:10], errors="coerce")
+    dia     = _DIA_ES.get(_fdt.strftime("%A"), "") if pd.notna(_fdt) else ""
     nums_s  = "  ".join(str(n).rjust(2) for n in resultado)
     tg_send(
         f"{emoji} <b>{cap} · Sorteo #{sorteo_n}</b>\n"
