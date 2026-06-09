@@ -335,7 +335,7 @@ function renderRow(j, origIdx) {
   const ds = fechaSorteo(j);
   const fechaCell = ds
     ? fmtFecha(ds)
-    : `${j.fecha_jugada || '—'} <span class="manual-tag">(pendiente)</span>`;
+    : `${j.fecha_jugada ? fmtFecha(fechaJugadaISO(j.fecha_jugada)) : '—'} <span class="manual-tag">(pendiente)</span>`;
 
   return `<tr>
     <td class="fecha">${fechaCell}</td>
@@ -358,6 +358,11 @@ function fmtFecha(iso) {
   const [y, m, d] = iso.split('-');
   return `${d}-${m}-${y}`;
 }
+// Normaliza fecha_jugada a yyyy-mm-dd (acepta el formato legado dd-mm-yyyy).
+function fechaJugadaISO(f) {
+  if (!f) return '';
+  return /^\d{4}-/.test(f) ? f.slice(0, 10) : f.split('-').reverse().join('-');
+}
 
 function refreshTable() {
   if (!allJugadas.length) {
@@ -373,7 +378,7 @@ function refreshTable() {
       const key = j => {
         const ds = fechaSorteo(j);
         if (ds) return { pend: 0, d: ds.replace(/-/g, '') };                  // yyyymmdd del sorteo
-        return { pend: 1, d: (j.fecha_jugada || '').split('-').reverse().join('') }; // dd-mm-yyyy → yyyymmdd
+        return { pend: 1, d: fechaJugadaISO(j.fecha_jugada).replace(/-/g, '') }; // yyyymmdd
       };
       const ka = key(a.j), kb = key(b.j);
       return (kb.pend - ka.pend) || kb.d.localeCompare(ka.d) || b.j.sorteo - a.j.sorteo;
@@ -523,10 +528,9 @@ function openFormEdit(j, idx) {
   // sorteo
   document.getElementById('f-sorteo').value = j.sorteo;
 
-  // fecha (stored as dd-mm-yyyy, input needs yyyy-mm-dd)
+  // fecha (almacenada en ISO; tolera el formato legado dd-mm-yyyy)
   if (j.fecha_jugada) {
-    const [d, m, y] = j.fecha_jugada.split('-');
-    document.getElementById('f-fecha').value = `${y}-${m}-${d}`;
+    document.getElementById('f-fecha').value = fechaJugadaISO(j.fecha_jugada);
   }
 
   // variantes
@@ -551,8 +555,7 @@ function closeForm() {
 async function submitJugada() {
   const juego   = getJuego();
   const sorteo  = parseInt(document.getElementById('f-sorteo').value, 10);
-  const [y, m, d] = document.getElementById('f-fecha').value.split('-');
-  const fecha   = `${d}-${m}-${y}`;
+  const fecha   = document.getElementById('f-fecha').value; // yyyy-mm-dd
   const numeros = parseNums();
   const variantes = getVariantes();
 

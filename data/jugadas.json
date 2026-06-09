@@ -1,6 +1,6 @@
 [
   {
-    "fecha_jugada": "28-05-2026",
+    "fecha_jugada": "2026-05-28",
     "juego": "loto",
     "sorteo": 5431,
     "numeros": [
@@ -40,7 +40,7 @@
     }
   },
   {
-    "fecha_jugada": "28-05-2026",
+    "fecha_jugada": "2026-05-28",
     "juego": "kino",
     "sorteo": 3233,
     "numeros": [
@@ -83,7 +83,7 @@
     }
   },
   {
-    "fecha_jugada": "25-05-2026",
+    "fecha_jugada": "2026-05-25",
     "juego": "kino",
     "variantes": [
       "kino",
@@ -147,7 +147,7 @@
     }
   },
   {
-    "fecha_jugada": "23-05-2026",
+    "fecha_jugada": "2026-05-23",
     "juego": "kino",
     "variantes": [
       "kino",
@@ -229,7 +229,7 @@
     }
   },
   {
-    "fecha_jugada": "21-05-2026",
+    "fecha_jugada": "2026-05-21",
     "juego": "kino",
     "variantes": [
       "kino",
@@ -311,7 +311,7 @@
     }
   },
   {
-    "fecha_jugada": "30-04-2026",
+    "fecha_jugada": "2026-04-30",
     "juego": "loto",
     "variantes": [
       "loto"
@@ -331,7 +331,7 @@
     }
   },
   {
-    "fecha_jugada": "03-05-2026",
+    "fecha_jugada": "2026-05-03",
     "juego": "loto",
     "variantes": [
       "loto"
@@ -351,7 +351,7 @@
     }
   },
   {
-    "fecha_jugada": "28-04-2026",
+    "fecha_jugada": "2026-04-28",
     "juego": "loto",
     "variantes": [
       "loto"
@@ -371,7 +371,7 @@
     }
   },
   {
-    "fecha_jugada": "30-05-2026",
+    "fecha_jugada": "2026-05-30",
     "juego": "kino",
     "variantes": [
       "kino"
@@ -417,7 +417,7 @@
     }
   },
   {
-    "fecha_jugada": "01-06-2026",
+    "fecha_jugada": "2026-06-01",
     "juego": "kino",
     "variantes": [
       "kino"
@@ -463,7 +463,7 @@
     }
   },
   {
-    "fecha_jugada": "02-06-2026",
+    "fecha_jugada": "2026-06-02",
     "juego": "loto",
     "variantes": [
       "loto",
@@ -503,7 +503,7 @@
     }
   },
   {
-    "fecha_jugada": "03-06-2026",
+    "fecha_jugada": "2026-06-03",
     "juego": "loto",
     "variantes": [
       "loto",
@@ -543,7 +543,7 @@
     }
   },
   {
-    "fecha_jugada": "04-06-2026",
+    "fecha_jugada": "2026-06-04",
     "juego": "kino",
     "variantes": [
       "kino"
@@ -589,7 +589,7 @@
     }
   },
   {
-    "fecha_jugada": "08-06-2026",
+    "fecha_jugada": "2026-06-08",
     "juego": "kino",
     "variantes": [
       "kino"
@@ -635,7 +635,7 @@
     }
   },
   {
-    "fecha_jugada": "08-06-2026",
+    "fecha_jugada": "2026-06-08",
     "juego": "kino",
     "variantes": [
       "kino"
@@ -661,7 +661,7 @@
     "aciertos": null
   },
   {
-    "fecha_jugada": "08-06-2026",
+    "fecha_jugada": "2026-06-08",
     "juego": "kino",
     "variantes": [
       "kino"
@@ -687,7 +687,7 @@
     "aciertos": null
   },
   {
-    "fecha_jugada": "08-06-2026",
+    "fecha_jugada": "2026-06-08",
     "juego": "loto",
     "variantes": [
       "loto"

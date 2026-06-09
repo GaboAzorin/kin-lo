@@ -661,6 +661,13 @@ init();
 // ── GitHub API ────────────────────────────────────────
 const GH_OWNER = 'GaboAzorin', GH_REPO = 'kin-lo', GH_FILE = 'data/jugadas.json';
 
+// Fecha local de hoy en ISO. No usar toISOString(): es UTC y en Chile
+// desplaza el día después de las ~20:00.
+function hoyISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
 // Token guardado en localStorage. Configurar visitando: #setup=BASE64_DEL_TOKEN
 function getToken() {
   const hash = location.hash;
@@ -730,7 +737,7 @@ async function handleJugar(btn, juego, sorteo, numeros, rango) {
     const key = [...numeros].sort((a,b)=>a-b).join(',');
     if (!content.some(j => j.juego === juego && j.sorteo === sorteo &&
         [...j.numeros].sort((a,b)=>a-b).join(',') === key)) {
-      content.push({ fecha_jugada: new Date().toLocaleDateString('es-CL'),
+      content.push({ fecha_jugada: hoyISO(),
         juego, variantes, sorteo, numeros, rango_sugerencia: rango, aciertos: null });
       await ghPutFile(content, sha, `jugada: ${juego} #${sorteo}`);
       existingJugadas.push({ juego, sorteo, numeros, rango_sugerencia: rango });

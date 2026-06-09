@@ -12,7 +12,7 @@
 
 | # | Severidad | Componente | Bug |
 |---|-----------|------------|-----|
-| 1 | 🔴 Alta | jugadas (3 escritores) | Formato de `fecha_jugada` inconsistente: ISO vs dd-mm-yyyy |
+| 1 | ✅ Alta | jugadas (3 escritores) | Formato de `fecha_jugada` inconsistente: ISO vs dd-mm-yyyy |
 | 2 | 🔴 Alta | scraper_polla.py | Un sorteo puede perderse permanentemente ante respuesta vacía transitoria |
 | 3 | 🔴 Alta | Privacidad | Los JSON de datos y `data/jugadas.json` son públicos pese a StatiCrypt; PAT en localStorage |
 | 4 | 🔴 Alta | scrape-kino.yml | Re-encriptación StatiCrypt en cada cron: commits ruidosos y pérdida de datos si falta el secret |
@@ -39,7 +39,7 @@
 
 ## Detalle y resolución
 
-### 1. 🔴 Formato de `fecha_jugada` inconsistente entre los tres escritores
+### 1. 🔴 Formato de `fecha_jugada` inconsistente entre los tres escritores — ✅ Resuelto 2026-06-09
 
 **Ubicación:**
 - `src/registrar_jugada.py:171` → escribe ISO: `date.today().isoformat()` → `"2026-06-09"`
