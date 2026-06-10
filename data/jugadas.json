@@ -328,6 +328,16 @@
     "rango_sugerencia": null,
     "aciertos": {
       "loto": 1
+    },
+    "resultado_sorteo": {
+      "loto": [
+        8,
+        21,
+        23,
+        25,
+        26,
+        39
+      ]
     }
   },
   {
@@ -348,6 +358,16 @@
     "rango_sugerencia": null,
     "aciertos": {
       "loto": 2
+    },
+    "resultado_sorteo": {
+      "loto": [
+        7,
+        20,
+        26,
+        27,
+        29,
+        36
+      ]
     }
   },
   {
@@ -368,6 +388,16 @@
     "rango_sugerencia": null,
     "aciertos": {
       "loto": 0
+    },
+    "resultado_sorteo": {
+      "loto": [
+        3,
+        6,
+        13,
+        32,
+        35,
+        39
+      ]
     }
   },
   {
@@ -702,6 +732,18 @@
       39
     ],
     "rango_sugerencia": "all",
-    "aciertos": null
+    "aciertos": {
+      "loto": 0
+    },
+    "resultado_sorteo": {
+      "loto": [
+        4,
+        11,
+        15,
+        17,
+        35,
+        41
+      ]
+    }
   }
 ]
