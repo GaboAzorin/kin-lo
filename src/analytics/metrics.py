@@ -10,7 +10,6 @@ Uso:
 """
 
 import argparse
-import csv
 import json
 import sys
 from itertools import combinations as iter_combinations
@@ -36,7 +35,13 @@ PENDING_LOTO = DATA_DIR / "loto_suggestions_pending.json"
 PENDING_KINO = DATA_DIR / "kino_suggestions_pending.json"
 HISTORY_PATH = DATA_DIR / "suggestions_history.csv"
 HISTORY_COLS = ["juego", "sorteo_predicho", "fecha_sorteo", "rango",
-                "n_combos", "aciertos_avg", "aciertos_max", "top_combos"]
+                "n_combos", "aciertos_avg", "aciertos_max", "top_combos",
+                "suggested_combos", "decile_avg"]
+# top_combos        → las N_DISPLAY con más aciertos (top-3 a posteriori).
+# suggested_combos  → las N_DISPLAY mostradas en la Home (índices de generación 1-3,
+#                     elegidas por diversidad MMR), con sus aciertos reales.
+# decile_avg        → 10 floats: promedio de aciertos por decil del orden de generación
+#                     (índices 1-50, 51-100, … 451-500). Para ver correlación índice↔aciertos.
 JUGADAS_PATH = DATA_DIR / "jugadas.json"
 
 VARIANTE_COLS = {
@@ -198,6 +203,46 @@ def _decode_top(s: str) -> list[dict]:
     return out
 
 
+def _encode_deciles(vals: list[float]) -> str:
+    """Codifica los 10 promedios de decil como 'v1;v2;...;v10'."""
+    return ";".join(f"{v:.4f}" for v in vals)
+
+
+def _decode_deciles(s) -> list[float]:
+    """Inverso de _encode_deciles. [] si el valor está vacío o es inválido."""
+    out = []
+    for p in str(s).split(";"):
+        p = p.strip()
+        if not p:
+            continue
+        try:
+            out.append(float(p))
+        except ValueError:
+            continue
+    return out
+
+
+def _deciles_de(cs: list[dict]) -> list[float]:
+    """
+    Promedio de aciertos por decil del ORDEN DE GENERACIÓN.
+    cs viene en el orden en que se generaron las combinaciones (índice 1..n).
+    Divide en 10 buckets contiguos y promedia los aciertos de cada uno.
+    """
+    n = len(cs)
+    if n == 0:
+        return []
+    out = []
+    for d in range(10):
+        lo = d * n // 10
+        hi = (d + 1) * n // 10
+        bucket = cs[lo:hi]
+        if bucket:
+            out.append(round(sum(c["aciertos"] for c in bucket) / len(bucket), 4))
+        else:
+            out.append(0.0)
+    return out
+
+
 def _cargar_pending(path: Path) -> dict | None:
     """Lee el archivo de sugerencias pendientes. Devuelve None si no existe."""
     if not path.exists():
@@ -267,7 +312,9 @@ def _evaluar_y_registrar(df: pd.DataFrame, juego: str,
             aciertos = len(set(combo) & resultado_set)
             per_rango_raw[rango].append({"combo": combo, "aciertos": aciertos})
 
-    # Persistencia agregada: una fila por rango con avg/max/top-3 (no las 500 crudas).
+    # Persistencia agregada: una fila por rango con avg/max/top-3/sugeridas/deciles.
+    # `cs` viene en ORDEN DE GENERACIÓN (índices 1..n); los 3 primeros son las
+    # sugeridas (diversidad MMR mostradas en la Home).
     filas_nuevas = []
     for rango, cs in per_rango_raw.items():
         if not cs:
@@ -277,26 +324,33 @@ def _evaluar_y_registrar(df: pd.DataFrame, juego: str,
         mx     = max(c["aciertos"] for c in cs)
         top    = sorted(cs, key=lambda x: x["aciertos"], reverse=True)[:N_DISPLAY]
         top_sorted = [{"combo": sorted(c["combo"]), "aciertos": c["aciertos"]} for c in top]
+        sugeridas  = [{"combo": sorted(c["combo"]), "aciertos": c["aciertos"]}
+                      for c in cs[:N_DISPLAY]]
         filas_nuevas.append({
-            "juego":           juego,
-            "sorteo_predicho": sorteo_n,
-            "fecha_sorteo":    fecha,
-            "rango":           rango,
-            "n_combos":        n,
-            "aciertos_avg":    avg,
-            "aciertos_max":    mx,
-            "top_combos":      _encode_top(top_sorted),
+            "juego":            juego,
+            "sorteo_predicho":  sorteo_n,
+            "fecha_sorteo":     fecha,
+            "rango":            rango,
+            "n_combos":         n,
+            "aciertos_avg":     avg,
+            "aciertos_max":     mx,
+            "top_combos":       _encode_top(top_sorted),
+            "suggested_combos": _encode_top(sugeridas),
+            "decile_avg":       _encode_deciles(_deciles_de(cs)),
         })
 
     if not filas_nuevas:
         return None
 
-    file_exists = HISTORY_PATH.exists() and HISTORY_PATH.stat().st_size > 10
-    with open(HISTORY_PATH, "a", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=HISTORY_COLS)
-        if not file_exists:
-            writer.writeheader()
-        writer.writerows(filas_nuevas)
+    # Reescritura completa (en vez de append) para migrar el header cuando se
+    # añaden columnas nuevas: las filas viejas quedan con celdas vacías.
+    df_nuevas = pd.DataFrame(filas_nuevas, columns=HISTORY_COLS)
+    if HISTORY_PATH.exists() and HISTORY_PATH.stat().st_size > 10:
+        df_old = pd.read_csv(HISTORY_PATH).reindex(columns=HISTORY_COLS)
+        df_out = pd.concat([df_old, df_nuevas], ignore_index=True)
+    else:
+        df_out = df_nuevas
+    df_out.to_csv(HISTORY_PATH, index=False, encoding="utf-8")
 
     print(f"  Evaluado sorteo #{sorteo_n} ({fecha}) | resultado: {sorted(resultado_set)}")
     per_rango: dict[str, dict] = {}
@@ -610,11 +664,38 @@ def _exportar_historial_json():
                 continue
             avg_pond = round(float((dr["aciertos_avg"] * dr["n_combos"]).sum()
                                    / dr["n_combos"].sum()), 2)
+
+            # Histograma histórico: cuántos sorteos alcanzaron cada nivel de
+            # mejor acierto (cuántos 6/6, 5/6, 4/6, …) para este conjunto.
+            dist_max = {int(k_): int(v_)
+                        for k_, v_ in dr["aciertos_max"].value_counts().items()}
+
+            # Deciles del orden de generación, promediados entre sorteos.
+            decile_acc = [0.0] * 10
+            decile_cnt = [0] * 10
+            for val in dr.get("decile_avg", pd.Series(dtype=str)):
+                ds = _decode_deciles(val)
+                for i, x in enumerate(ds[:10]):
+                    decile_acc[i] += x
+                    decile_cnt[i] += 1
+            deciles = [round(decile_acc[i] / decile_cnt[i], 3) if decile_cnt[i] else None
+                       for i in range(10)]
+
+            # Sugeridas (índices 1-3) vs resto: promedio de aciertos de las 3
+            # mostradas en la Home, comparado con el promedio global del conjunto.
+            sug_vals = []
+            for val in dr.get("suggested_combos", pd.Series(dtype=str)):
+                sug_vals += [c["aciertos"] for c in _decode_top(val)]
+            sug_avg = round(sum(sug_vals) / len(sug_vals), 3) if sug_vals else None
+
             por_rango[r] = {
-                "sorteos": int(dr["sorteo_predicho"].nunique()),
-                "avg":     avg_pond,
-                "max":     int(dr["aciertos_max"].max()),
-                "pick":    pick,
+                "sorteos":       int(dr["sorteo_predicho"].nunique()),
+                "avg":           avg_pond,
+                "max":           int(dr["aciertos_max"].max()),
+                "pick":          pick,
+                "dist_max":      dist_max,
+                "deciles":       deciles if any(d is not None for d in deciles) else None,
+                "sugeridas_avg": sug_avg,
             }
 
         # Historial por sorteo (para el gráfico de evolución)
@@ -706,29 +787,46 @@ def _exportar_detalle_json():
                         resultado = sorted(nums)
                         rank_res  = combo_rank(resultado, n, k)
 
-            # Cada (sorteo, rango) es UNA fila cuyo `top_combos` ya contiene las
-            # top-N por aciertos. El rango léxico se calcula solo para esas.
-            rangos: dict[str, list] = {}
-            for _, row in grp.iterrows():
-                r = str(row["rango"])
-                for item in _decode_top(row["top_combos"]):
+            # Cada (sorteo, rango) es UNA fila con `top_combos` (top-N por aciertos)
+            # y `suggested_combos` (las 3 de la Home). El rango léxico se calcula
+            # solo para esas pocas.
+            def _combo_entries(encoded: str) -> list[dict]:
+                out = []
+                for item in _decode_top(encoded):
                     combo_s = sorted(item["combo"])
                     if len(combo_s) != k:
                         continue
                     rank_c = combo_rank(combo_s, n, k)
-                    diff   = (rank_res - rank_c) if rank_res is not None else None
-                    rangos.setdefault(r, []).append({
+                    out.append({
                         "combo":      combo_s,
                         "aciertos":   item["aciertos"],
                         "rank_combo": rank_c,
-                        "diff_rank":  diff,
+                        "diff_rank":  (rank_res - rank_c) if rank_res is not None else None,
                     })
+                return out
+
+            rangos: dict[str, dict] = {}
+            best_aciertos, best_rango = None, None
+            for _, row in grp.iterrows():
+                r = str(row["rango"])
+                rangos[r] = {
+                    "top":       _combo_entries(row["top_combos"]),
+                    "suggested": _combo_entries(row.get("suggested_combos", "")),
+                }
+                try:
+                    mx = int(row["aciertos_max"])
+                except (TypeError, ValueError):
+                    mx = None
+                if mx is not None and (best_aciertos is None or mx > best_aciertos):
+                    best_aciertos, best_rango = mx, r
 
             sorteos.append({
                 "sorteo":         sorteo_n,
                 "fecha":          fecha,
                 "resultado":      resultado,
                 "rank_resultado": rank_res,
+                "best":           ({"aciertos": best_aciertos, "rango": best_rango}
+                                   if best_aciertos is not None else None),
                 "rangos":         {r: rangos[r] for r in _RANGOS_ORDEN if r in rangos},
             })
 

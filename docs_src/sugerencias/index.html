@@ -162,6 +162,27 @@
     }
     .loading { color: var(--muted); font-style: italic; padding: 40px 0; display: block; text-align: center; }
 
+    .combos-block { margin: 6px 0 14px; }
+    .combos-block-title {
+      font-size: 0.8rem; font-weight: 600; color: var(--muted);
+      padding: 6px 0 4px;
+    }
+    .combos-empty {
+      font-size: 0.78rem; color: var(--muted); font-style: italic;
+      margin: 2px 0 8px;
+    }
+    .dist-pill {
+      display: inline-block; font-size: 0.74rem; padding: 2px 7px; margin: 2px 4px 2px 0;
+      border: 1px solid var(--border); border-radius: 10px; color: var(--muted);
+    }
+    .dist-pill b { color: var(--text); }
+    .spark { display: inline-flex; align-items: flex-end; gap: 2px; height: 24px; }
+    .spark-bar {
+      width: 5px; background: var(--green); border-radius: 1px; display: inline-block;
+      opacity: 0.85;
+    }
+    .conjuntos-table td, .conjuntos-table th { vertical-align: middle; }
+
     @media (max-width: 640px) {
       .combos-table th:nth-child(4),
       .combos-table td:nth-child(4) { display: none; }
@@ -184,7 +205,7 @@
 
 <main>
   <p style="font-size:0.82rem; color:var(--muted); margin-bottom:16px">
-    Cada rango genera 500 combinaciones; aquí se muestran las 3 con más aciertos vs el resultado real · ID lexicográfico de cada combinación entre todas las posibles.
+    Cada rango genera 500 combinaciones. Aquí se muestran <b>tus 3 sugeridas</b> (las que viste en la Home, elegidas por diversidad) y las <b>3 con más aciertos</b> del grupo a posteriori, frente al resultado real · ID lexicográfico de cada combinación entre todas las posibles.
   </p>
 
   <div class="disclaimer">
@@ -208,12 +229,15 @@
     <button class="tab" onclick="showGame('kino', this)">🟦 Kino</button>
   </div>
 
+  <div id="conjuntos"></div>
+
   <div id="content"><span class="loading">cargando...</span></div>
 </main>
 
 <script>
 let detailData = null;
 let backtestData = null;
+let histData = null;
 let activeGame = 'loto';
 
 const RANGE_LABELS = {
@@ -227,6 +251,12 @@ async function loadData() {
   fetch('../data/backtest.json')
     .then(r => r.ok ? r.json() : null)
     .then(d => { backtestData = d; renderBacktest(); })
+    .catch(() => {});
+
+  // Histórico por conjunto (opcional): no bloquea el render principal.
+  fetch('../data/suggestions_history.json')
+    .then(r => r.ok ? r.json() : null)
+    .then(d => { histData = d; renderConjuntos(); })
     .catch(() => {});
 
   try {
@@ -246,6 +276,7 @@ function showGame(game, btn) {
   btn.classList.add('active');
   render();
   renderBacktest();
+  renderConjuntos();
 }
 
 function renderBacktest() {
@@ -297,6 +328,79 @@ function renderBacktest() {
     </div>`;
 }
 
+function renderConjuntos() {
+  const el = document.getElementById('conjuntos');
+  if (!el) return;
+  const gd = histData && histData[activeGame];
+  if (!gd || !gd.por_rango || Object.keys(gd.por_rango).length === 0) {
+    el.innerHTML = '';
+    return;
+  }
+  const pick = gd.pick || (activeGame === 'kino' ? 14 : 6);
+
+  const filas = RANGO_ORDER.filter(r => gd.por_rango[r]).map(r => {
+    const d = gd.por_rango[r];
+
+    // Distribución histórica del MEJOR acierto por sorteo (cuántos 6/6, 5/6, …).
+    let pills = '';
+    for (let lvl = pick; lvl >= 0; lvl--) {
+      const c = d.dist_max && d.dist_max[lvl];
+      if (c) pills += `<span class="dist-pill">${lvl}/${pick}<b>×${c}</b></span>`;
+    }
+    if (!pills) pills = '<span style="color:var(--muted)">—</span>';
+
+    // Sugeridas (índices 1-3) vs promedio global del conjunto.
+    let sug = '<span style="color:var(--muted)">—</span>';
+    if (d.sugeridas_avg != null) {
+      const cls = d.sugeridas_avg < d.avg ? 'diff-neg' : d.sugeridas_avg > d.avg ? 'diff-pos' : 'diff-zero';
+      sug = `<span class="${cls}">${d.sugeridas_avg.toFixed(2)}</span> <span style="color:var(--muted)">vs ${d.avg.toFixed(2)}</span>`;
+    }
+
+    // Tendencia por decil del orden de generación (sparkline).
+    let spark = '<span style="color:var(--muted)">—</span>';
+    if (d.deciles && d.deciles.some(x => x != null)) {
+      const vals = d.deciles.map(x => x == null ? 0 : x);
+      const mx = Math.max(...vals, 0.0001);
+      spark = '<span class="spark">' + vals.map((v, i) =>
+        `<span class="spark-bar" style="height:${Math.max(2, Math.round(v / mx * 22))}px" title="decil ${i + 1}: ${v.toFixed(2)}"></span>`
+      ).join('') + '</span>';
+    }
+
+    return `<tr>
+      <td><b>${RANGE_LABELS[r] || r}</b></td>
+      <td style="text-align:center">${d.sorteos}</td>
+      <td style="text-align:center"><span class="aciertos-badge">${d.max}/${pick}</span></td>
+      <td>${pills}</td>
+      <td style="text-align:center">${sug}</td>
+      <td style="text-align:center">${spark}</td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="backtest-card">
+      <h2>Desempeño histórico por conjunto</h2>
+      <p style="font-size:0.8rem;color:var(--muted);margin:0 0 12px">
+        Para cada conjunto, cuántos sorteos alcanzaron cada nivel de mejor acierto a lo
+        largo del historial. <b>Sugeridas vs promedio</b> compara las 3 mostradas en la Home
+        (índices de generación 1-3) contra el promedio de las 500. <b>Tendencia por decil</b>
+        muestra el acierto promedio según la posición de generación (índices 1-50 … 451-500):
+        si la lotería es justa, debería verse plana. Estas dos últimas columnas se acumulan
+        desde los próximos sorteos.
+      </p>
+      <table class="combos-table conjuntos-table">
+        <thead><tr>
+          <th>Conjunto</th>
+          <th style="text-align:center">Sorteos</th>
+          <th style="text-align:center">Mejor</th>
+          <th>Distribución del mejor acierto</th>
+          <th style="text-align:center">Sugeridas vs prom.</th>
+          <th style="text-align:center">Tendencia decil</th>
+        </tr></thead>
+        <tbody>${filas}</tbody>
+      </table>
+    </div>`;
+}
+
 function fmt(n) {
   return n == null ? '—' : n.toLocaleString('es-CL');
 }
@@ -318,7 +422,6 @@ function render() {
     return;
   }
 
-  const totalCombos = gd.total_combos;
   const k = gd.k;
 
   const cards = gd.sorteos.map((s, idx) => {
@@ -326,22 +429,25 @@ function render() {
       `<span class="bola bola-resultado">${n}</span>`
     ).join('');
 
-    const rankResHtml = s.rank_resultado != null
-      ? `<strong class="rank-num">${fmt(s.rank_resultado)}</strong><br>de ${fmt(totalCombos)} combinaciones`
+    const bestHtml = s.best
+      ? `<strong class="rank-num">${s.best.aciertos}/${k}</strong><br>en ${RANGE_LABELS[s.best.rango] || s.best.rango}`
       : '—';
 
-    const rangoSections = RANGO_ORDER.filter(r => s.rangos[r])
-      .map(r => {
-        const combos = s.rangos[r] || [];
-        const resultadoSet = new Set(s.resultado || []);
+    const resultadoSet = new Set(s.resultado || []);
 
-        const rows = combos.map(c => {
-          const bolas = c.combo.map(n => {
-            const cls = resultadoSet.has(n) ? 'bola-sm hit' : 'bola-sm';
-            return `<span class="${cls}">${n}</span>`;
-          }).join('');
-
-          return `<tr>
+    const comboTable = (combos, titulo) => {
+      if (!combos || combos.length === 0) {
+        return `<div class="combos-block">
+            <div class="combos-block-title">${titulo}</div>
+            <p class="combos-empty">Se registra desde los próximos sorteos.</p>
+          </div>`;
+      }
+      const rows = combos.map(c => {
+        const bolas = c.combo.map(n => {
+          const cls = resultadoSet.has(n) ? 'bola-sm hit' : 'bola-sm';
+          return `<span class="${cls}">${n}</span>`;
+        }).join('');
+        return `<tr>
             <td><div class="combo-nums">${bolas}</div></td>
             <td style="text-align:center">
               <span class="aciertos-badge">${c.aciertos} / ${k}</span>
@@ -349,20 +455,29 @@ function render() {
             <td class="rank-num" style="text-align:right">${fmt(c.rank_combo)}</td>
             <td style="text-align:right">${fmtDiff(c.diff_rank)}</td>
           </tr>`;
-        }).join('');
+      }).join('');
+      return `<div class="combos-block">
+          <div class="combos-block-title">${titulo}</div>
+          <table class="combos-table">
+            <thead><tr>
+              <th>Combinación <span style="font-weight:400;color:var(--green)">(verde = acierto)</span></th>
+              <th style="text-align:center">Aciertos</th>
+              <th style="text-align:right">ID sugerida</th>
+              <th style="text-align:right">Dif. de ID</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+    };
 
+    const rangoSections = RANGO_ORDER.filter(r => s.rangos[r])
+      .map(r => {
+        const data = s.rangos[r] || {};
         return `
           <div class="rango-section">
             <div class="rango-header">${RANGE_LABELS[r] || r}</div>
-            <table class="combos-table">
-              <thead><tr>
-                <th>Combinación <span style="font-weight:400;color:var(--green)">(verde = acierto)</span></th>
-                <th style="text-align:center">Aciertos</th>
-                <th style="text-align:right">ID sugerida</th>
-                <th style="text-align:right">Dif. de ID</th>
-              </tr></thead>
-              <tbody>${rows}</tbody>
-            </table>
+            ${comboTable(data.suggested, '🏠 Tus 3 sugeridas (las que viste en la Home)')}
+            ${comboTable(data.top, '🏆 Top 3 por aciertos (mejor del grupo, a posteriori)')}
           </div>`;
       }).join('');
 
@@ -381,7 +496,7 @@ function render() {
             ${resultadoBolas || '<span style="color:var(--muted)">—</span>'}
           </div>
           <div class="rank-badge">
-            ID resultado<br>${rankResHtml}
+            Mejor del sorteo<br>${bestHtml}
           </div>
           <span class="chevron">▾</span>
         </div>
