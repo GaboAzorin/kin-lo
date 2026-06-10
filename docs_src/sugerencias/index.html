@@ -93,6 +93,8 @@
       border-bottom: 1px solid var(--border); background: transparent;
     }
     .combos-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .combos-table th:first-child, .combos-table td:first-child { padding-left: 0; }
+    .combos-table th:last-child, .combos-table td:last-child { padding-right: 0; }
     .combos-table tr:last-child td { border-bottom: none; }
     .combos-table tbody tr:hover td { background: rgba(255,255,255,0.02); }
 
@@ -162,7 +164,7 @@
     }
     .loading { color: var(--muted); font-style: italic; padding: 40px 0; display: block; text-align: center; }
 
-    .combos-block { margin: 6px 0 14px; }
+    .combos-block { margin: 6px 0 14px; padding: 0 22px; }
     .combos-block-title {
       font-size: 0.8rem; font-weight: 600; color: var(--muted);
       padding: 6px 0 4px;
