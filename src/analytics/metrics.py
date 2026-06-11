@@ -11,6 +11,7 @@ Uso:
 
 import argparse
 import json
+import math
 import sys
 from itertools import combinations as iter_combinations
 from pathlib import Path
@@ -216,7 +217,9 @@ def _decode_deciles(s) -> list[float]:
         if not p:
             continue
         try:
-            out.append(float(p))
+            v = float(p)
+            if math.isfinite(v):
+                out.append(v)
         except ValueError:
             continue
     return out
