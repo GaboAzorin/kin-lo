@@ -785,5 +785,24 @@
         41
       ]
     }
+  },
+  {
+    "fecha_jugada": "2026-06-11",
+    "juego": "loto",
+    "variantes": [
+      "loto",
+      "recargado"
+    ],
+    "sorteo": 5437,
+    "numeros": [
+      5,
+      13,
+      14,
+      33,
+      34,
+      39
+    ],
+    "rango_sugerencia": "250",
+    "aciertos": null
   }
 ]
