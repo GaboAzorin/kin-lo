@@ -688,7 +688,27 @@
       25
     ],
     "rango_sugerencia": "all",
-    "aciertos": null
+    "aciertos": {
+      "kino": 9
+    },
+    "resultado_sorteo": {
+      "kino": [
+        1,
+        2,
+        5,
+        6,
+        13,
+        14,
+        16,
+        18,
+        19,
+        20,
+        22,
+        23,
+        24,
+        25
+      ]
+    }
   },
   {
     "fecha_jugada": "2026-06-08",
@@ -714,7 +734,27 @@
       25
     ],
     "rango_sugerencia": "500",
-    "aciertos": null
+    "aciertos": {
+      "kino": 8
+    },
+    "resultado_sorteo": {
+      "kino": [
+        1,
+        2,
+        5,
+        6,
+        13,
+        14,
+        16,
+        18,
+        19,
+        20,
+        22,
+        23,
+        24,
+        25
+      ]
+    }
   },
   {
     "fecha_jugada": "2026-06-08",

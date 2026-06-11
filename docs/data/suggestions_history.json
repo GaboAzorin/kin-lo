@@ -13,7 +13,18 @@
           "2": 1,
           "4": 1
         },
-        "deciles": null,
+        "deciles": [
+          NaN,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
         "sugeridas_avg": null
       },
       "100": {
@@ -28,7 +39,18 @@
           "2": 1,
           "4": 1
         },
-        "deciles": null,
+        "deciles": [
+          NaN,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
         "sugeridas_avg": null
       },
       "250": {
@@ -42,7 +64,18 @@
           "2": 1,
           "5": 1
         },
-        "deciles": null,
+        "deciles": [
+          NaN,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
         "sugeridas_avg": null
       },
       "500": {
@@ -57,7 +90,18 @@
           "3": 1,
           "5": 1
         },
-        "deciles": null,
+        "deciles": [
+          NaN,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
         "sugeridas_avg": null
       },
       "1000": {
@@ -71,7 +115,18 @@
           "2": 1,
           "4": 1
         },
-        "deciles": null,
+        "deciles": [
+          NaN,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
         "sugeridas_avg": null
       },
       "all": {
@@ -83,7 +138,18 @@
           "2": 4,
           "4": 3
         },
-        "deciles": null,
+        "deciles": [
+          NaN,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
         "sugeridas_avg": null
       }
     },
@@ -304,87 +370,153 @@
   "kino": {
     "por_rango": {
       "50": {
-        "sorteos": 7,
+        "sorteos": 8,
         "avg": 7.89,
         "max": 12,
         "pick": 14,
         "dist_max": {
           "9": 3,
           "8": 2,
-          "12": 1,
-          "11": 1
+          "11": 2,
+          "12": 1
         },
-        "deciles": null,
-        "sugeridas_avg": null
+        "deciles": [
+          NaN,
+          8.0,
+          7.52,
+          7.74,
+          7.94,
+          7.82,
+          8.08,
+          7.96,
+          7.84,
+          7.74
+        ],
+        "sugeridas_avg": 8.0
       },
       "100": {
-        "sorteos": 7,
-        "avg": 7.84,
+        "sorteos": 8,
+        "avg": 7.83,
         "max": 12,
         "pick": 14,
         "dist_max": {
           "9": 3,
+          "12": 2,
           "8": 1,
           "10": 1,
-          "12": 1,
           "11": 1
         },
-        "deciles": null,
-        "sugeridas_avg": null
+        "deciles": [
+          NaN,
+          7.92,
+          7.66,
+          7.78,
+          7.66,
+          7.8,
+          8.1,
+          7.78,
+          7.6,
+          7.76
+        ],
+        "sugeridas_avg": 7.667
       },
       "250": {
-        "sorteos": 7,
-        "avg": 7.8,
+        "sorteos": 8,
+        "avg": 7.81,
         "max": 12,
         "pick": 14,
         "dist_max": {
           "9": 4,
-          "12": 2,
-          "11": 1
+          "11": 2,
+          "12": 2
         },
-        "deciles": null,
-        "sugeridas_avg": null
+        "deciles": [
+          NaN,
+          7.86,
+          7.7,
+          8.02,
+          7.64,
+          7.74,
+          7.76,
+          7.96,
+          7.68,
+          7.96
+        ],
+        "sugeridas_avg": 8.667
       },
       "500": {
-        "sorteos": 7,
-        "avg": 7.9,
+        "sorteos": 8,
+        "avg": 7.89,
         "max": 11,
         "pick": 14,
         "dist_max": {
+          "11": 3,
           "9": 2,
           "8": 2,
-          "11": 2,
           "10": 1
         },
-        "deciles": null,
-        "sugeridas_avg": null
+        "deciles": [
+          NaN,
+          7.94,
+          8.0,
+          7.88,
+          7.62,
+          7.82,
+          7.74,
+          7.94,
+          7.82,
+          7.96
+        ],
+        "sugeridas_avg": 8.667
       },
       "1000": {
-        "sorteos": 7,
-        "avg": 7.84,
+        "sorteos": 8,
+        "avg": 7.86,
         "max": 11,
         "pick": 14,
         "dist_max": {
           "9": 3,
-          "8": 2,
-          "11": 2
+          "11": 3,
+          "8": 2
         },
-        "deciles": null,
-        "sugeridas_avg": null
+        "deciles": [
+          NaN,
+          7.58,
+          8.0,
+          7.72,
+          8.06,
+          7.76,
+          7.96,
+          8.22,
+          7.76,
+          7.74
+        ],
+        "sugeridas_avg": 8.333
       },
       "all": {
-        "sorteos": 7,
+        "sorteos": 8,
         "avg": 7.88,
         "max": 12,
         "pick": 14,
         "dist_max": {
           "9": 3,
-          "11": 2,
+          "11": 3,
           "8": 1,
           "12": 1
         },
-        "deciles": null,
-        "sugeridas_avg": null
+        "deciles": [
+          NaN,
+          7.68,
+          8.06,
+          8.0,
+          7.96,
+          7.88,
+          8.1,
+          7.62,
+          7.82,
+          7.84
+        ],
+        "sugeridas_avg": 8.0
       }
     },
     "historial": [
@@ -595,6 +727,36 @@
           "all": {
             "max": 12,
             "avg": 7.82
+          }
+        }
+      },
+      {
+        "sorteo": 3238,
+        "fecha": "2026-06-10",
+        "rangos": {
+          "50": {
+            "max": 11,
+            "avg": 7.88
+          },
+          "100": {
+            "max": 12,
+            "avg": 7.82
+          },
+          "250": {
+            "max": 11,
+            "avg": 7.85
+          },
+          "500": {
+            "max": 11,
+            "avg": 7.87
+          },
+          "1000": {
+            "max": 11,
+            "avg": 7.89
+          },
+          "all": {
+            "max": 11,
+            "avg": 7.89
           }
         }
       }
