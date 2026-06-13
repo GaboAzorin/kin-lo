@@ -803,7 +803,28 @@
       39
     ],
     "rango_sugerencia": "250",
-    "aciertos": null
+    "aciertos": {
+      "loto": 0,
+      "recargado": 0
+    },
+    "resultado_sorteo": {
+      "loto": [
+        3,
+        8,
+        11,
+        16,
+        20,
+        37
+      ],
+      "recargado": [
+        2,
+        11,
+        16,
+        32,
+        38,
+        40
+      ]
+    }
   },
   {
     "fecha_jugada": "2026-06-11",
