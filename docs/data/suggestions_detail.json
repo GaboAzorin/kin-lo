@@ -2,6 +2,529 @@
   "loto": {
     "sorteos": [
       {
+        "sorteo": 5438,
+        "fecha": "2026-06-14 21:00:00",
+        "resultado": [
+          5,
+          10,
+          14,
+          23,
+          38,
+          41
+        ],
+        "rank_resultado": 2360316,
+        "best": {
+          "aciertos": 4,
+          "rango": "50"
+        },
+        "rangos": {
+          "50": {
+            "top": [
+              {
+                "combo": [
+                  5,
+                  12,
+                  23,
+                  32,
+                  38,
+                  41
+                ],
+                "aciertos": 4,
+                "rank_combo": 2426694,
+                "diff_rank": -66378
+              },
+              {
+                "combo": [
+                  10,
+                  11,
+                  23,
+                  38,
+                  40,
+                  41
+                ],
+                "aciertos": 4,
+                "rank_combo": 3614540,
+                "diff_rank": -1254224
+              },
+              {
+                "combo": [
+                  5,
+                  20,
+                  23,
+                  24,
+                  38,
+                  41
+                ],
+                "aciertos": 4,
+                "rank_combo": 2524504,
+                "diff_rank": -164188
+              }
+            ],
+            "suggested": [
+              {
+                "combo": [
+                  1,
+                  17,
+                  26,
+                  32,
+                  36,
+                  40
+                ],
+                "aciertos": 0,
+                "rank_combo": 614044,
+                "diff_rank": 1746272
+              },
+              {
+                "combo": [
+                  3,
+                  13,
+                  24,
+                  33,
+                  34,
+                  37
+                ],
+                "aciertos": 0,
+                "rank_combo": 1634966,
+                "diff_rank": 725350
+              },
+              {
+                "combo": [
+                  5,
+                  8,
+                  22,
+                  35,
+                  38,
+                  41
+                ],
+                "aciertos": 3,
+                "rank_combo": 2307361,
+                "diff_rank": 52955
+              }
+            ]
+          },
+          "100": {
+            "top": [
+              {
+                "combo": [
+                  5,
+                  6,
+                  14,
+                  32,
+                  38,
+                  41
+                ],
+                "aciertos": 4,
+                "rank_combo": 2206327,
+                "diff_rank": 153989
+              },
+              {
+                "combo": [
+                  5,
+                  14,
+                  30,
+                  35,
+                  38,
+                  41
+                ],
+                "aciertos": 4,
+                "rank_combo": 2467513,
+                "diff_rank": -107197
+              },
+              {
+                "combo": [
+                  5,
+                  10,
+                  27,
+                  32,
+                  33,
+                  41
+                ],
+                "aciertos": 3,
+                "rank_combo": 2377572,
+                "diff_rank": -17256
+              }
+            ],
+            "suggested": [
+              {
+                "combo": [
+                  7,
+                  12,
+                  21,
+                  35,
+                  36,
+                  41
+                ],
+                "aciertos": 1,
+                "rank_combo": 3027854,
+                "diff_rank": -667538
+              },
+              {
+                "combo": [
+                  2,
+                  9,
+                  10,
+                  37,
+                  38,
+                  40
+                ],
+                "aciertos": 2,
+                "rank_combo": 1000916,
+                "diff_rank": 1359400
+              },
+              {
+                "combo": [
+                  13,
+                  16,
+                  20,
+                  32,
+                  33,
+                  39
+                ],
+                "aciertos": 0,
+                "rank_combo": 4060419,
+                "diff_rank": -1700103
+              }
+            ]
+          },
+          "250": {
+            "top": [
+              {
+                "combo": [
+                  5,
+                  14,
+                  27,
+                  38,
+                  40,
+                  41
+                ],
+                "aciertos": 4,
+                "rank_combo": 2466864,
+                "diff_rank": -106548
+              },
+              {
+                "combo": [
+                  14,
+                  21,
+                  23,
+                  36,
+                  38,
+                  41
+                ],
+                "aciertos": 4,
+                "rank_combo": 4181801,
+                "diff_rank": -1821485
+              },
+              {
+                "combo": [
+                  10,
+                  14,
+                  19,
+                  32,
+                  33,
+                  38
+                ],
+                "aciertos": 3,
+                "rank_combo": 3671947,
+                "diff_rank": -1311631
+              }
+            ],
+            "suggested": [
+              {
+                "combo": [
+                  6,
+                  9,
+                  18,
+                  32,
+                  34,
+                  39
+                ],
+                "aciertos": 0,
+                "rank_combo": 2662890,
+                "diff_rank": -302574
+              },
+              {
+                "combo": [
+                  3,
+                  8,
+                  26,
+                  33,
+                  36,
+                  37
+                ],
+                "aciertos": 0,
+                "rank_combo": 1496936,
+                "diff_rank": 863380
+              },
+              {
+                "combo": [
+                  1,
+                  15,
+                  24,
+                  35,
+                  40,
+                  41
+                ],
+                "aciertos": 1,
+                "rank_combo": 589828,
+                "diff_rank": 1770488
+              }
+            ]
+          },
+          "500": {
+            "top": [
+              {
+                "combo": [
+                  1,
+                  14,
+                  23,
+                  36,
+                  40,
+                  41
+                ],
+                "aciertos": 3,
+                "rank_combo": 574208,
+                "diff_rank": 1786108
+              },
+              {
+                "combo": [
+                  5,
+                  10,
+                  28,
+                  36,
+                  38,
+                  39
+                ],
+                "aciertos": 3,
+                "rank_combo": 2377955,
+                "diff_rank": -17639
+              },
+              {
+                "combo": [
+                  5,
+                  14,
+                  22,
+                  34,
+                  35,
+                  41
+                ],
+                "aciertos": 3,
+                "rank_combo": 2463940,
+                "diff_rank": -103624
+              }
+            ],
+            "suggested": [
+              {
+                "combo": [
+                  7,
+                  9,
+                  10,
+                  33,
+                  37,
+                  40
+                ],
+                "aciertos": 1,
+                "rank_combo": 2918580,
+                "diff_rank": -558264
+              },
+              {
+                "combo": [
+                  1,
+                  8,
+                  19,
+                  32,
+                  36,
+                  41
+                ],
+                "aciertos": 1,
+                "rank_combo": 413263,
+                "diff_rank": 1947053
+              },
+              {
+                "combo": [
+                  2,
+                  13,
+                  28,
+                  35,
+                  38,
+                  39
+                ],
+                "aciertos": 1,
+                "rank_combo": 1134745,
+                "diff_rank": 1225571
+              }
+            ]
+          },
+          "1000": {
+            "top": [
+              {
+                "combo": [
+                  5,
+                  10,
+                  14,
+                  35,
+                  39,
+                  41
+                ],
+                "aciertos": 4,
+                "rank_combo": 2361114,
+                "diff_rank": -798
+              },
+              {
+                "combo": [
+                  5,
+                  8,
+                  10,
+                  34,
+                  38,
+                  41
+                ],
+                "aciertos": 4,
+                "rank_combo": 2279757,
+                "diff_rank": 80559
+              },
+              {
+                "combo": [
+                  10,
+                  23,
+                  26,
+                  35,
+                  38,
+                  41
+                ],
+                "aciertos": 4,
+                "rank_combo": 3750151,
+                "diff_rank": -1389835
+              }
+            ],
+            "suggested": [
+              {
+                "combo": [
+                  12,
+                  15,
+                  17,
+                  32,
+                  33,
+                  36
+                ],
+                "aciertos": 0,
+                "rank_combo": 3944845,
+                "diff_rank": -1584529
+              },
+              {
+                "combo": [
+                  11,
+                  14,
+                  19,
+                  37,
+                  39,
+                  40
+                ],
+                "aciertos": 1,
+                "rank_combo": 3814562,
+                "diff_rank": -1454246
+              },
+              {
+                "combo": [
+                  7,
+                  9,
+                  21,
+                  34,
+                  35,
+                  38
+                ],
+                "aciertos": 1,
+                "rank_combo": 2945210,
+                "diff_rank": -584894
+              }
+            ]
+          },
+          "all": {
+            "top": [
+              {
+                "combo": [
+                  5,
+                  10,
+                  15,
+                  26,
+                  38,
+                  41
+                ],
+                "aciertos": 4,
+                "rank_combo": 2363277,
+                "diff_rank": -2961
+              },
+              {
+                "combo": [
+                  9,
+                  14,
+                  17,
+                  36,
+                  38,
+                  41
+                ],
+                "aciertos": 3,
+                "rank_combo": 3498827,
+                "diff_rank": -1138511
+              },
+              {
+                "combo": [
+                  5,
+                  14,
+                  26,
+                  34,
+                  35,
+                  38
+                ],
+                "aciertos": 3,
+                "rank_combo": 2466448,
+                "diff_rank": -106132
+              }
+            ],
+            "suggested": [
+              {
+                "combo": [
+                  10,
+                  12,
+                  23,
+                  32,
+                  33,
+                  40
+                ],
+                "aciertos": 2,
+                "rank_combo": 3638179,
+                "diff_rank": -1277863
+              },
+              {
+                "combo": [
+                  5,
+                  9,
+                  24,
+                  35,
+                  36,
+                  38
+                ],
+                "aciertos": 2,
+                "rank_combo": 2344807,
+                "diff_rank": 15509
+              },
+              {
+                "combo": [
+                  8,
+                  18,
+                  22,
+                  34,
+                  37,
+                  39
+                ],
+                "aciertos": 0,
+                "rank_combo": 3351252,
+                "diff_rank": -990936
+              }
+            ]
+          }
+        }
+      },
+      {
         "sorteo": 5437,
         "fecha": "2026-06-11 21:00:00",
         "resultado": [
