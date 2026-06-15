@@ -151,6 +151,26 @@ def _get_existing_sorteos() -> set[int]:
     return existing
 
 
+def _get_incomplete_sorteos() -> set[int]:
+    """
+    Sorteos presentes en el CSV pero PROVISIONALES: tienen el Kino completo
+    pero les falta ReKino/RequeteKino (típicamente ingresados en vivo vía
+    agregar_sorteo_manual.py). Se detectan por REKINO_n14 vacío.
+    """
+    if not CSV_OUT.exists():
+        return set()
+    incomplete: set[int] = set()
+    last_col = f"REKINO_n{NUMBERS_PER_DRAW}"
+    try:
+        with open(CSV_OUT, "r", encoding="utf-8") as f:
+            for row in csv.DictReader(f):
+                if row.get("sorteo", "").isdigit() and not (row.get(last_col) or "").strip():
+                    incomplete.add(int(row["sorteo"]))
+    except (IOError, csv.Error) as e:
+        logger.warning(f"Error leyendo CSV: {e}")
+    return incomplete
+
+
 def _guardar_fila(row: dict):
     """Escribe una fila al CSV (append). Crea el header si no existe."""
     file_exists = CSV_OUT.exists() and CSV_OUT.stat().st_size > 10
@@ -159,6 +179,22 @@ def _guardar_fila(row: dict):
         if not file_exists:
             writer.writeheader()
         writer.writerow({k: row.get(k, "") for k in COLUMNS_LOTERIA})
+
+
+def _actualizar_fila(row: dict):
+    """Reescribe el CSV reemplazando la fila del sorteo dado (completa una provisional)."""
+    target = str(row["sorteo"])
+    rows: list[dict] = []
+    with open(CSV_OUT, "r", encoding="utf-8", newline="") as f:
+        for r in csv.DictReader(f):
+            if r.get("sorteo") == target:
+                rows.append({k: row.get(k, "") for k in COLUMNS_LOTERIA})
+            else:
+                rows.append({k: r.get(k, "") for k in COLUMNS_LOTERIA})
+    with open(CSV_OUT, "w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=COLUMNS_LOTERIA)
+        writer.writeheader()
+        writer.writerows(rows)
 
 
 # ==============================================================================
@@ -186,25 +222,36 @@ def scrape_loteria() -> int:
 
     logger.info(f"API window: {min(window)}..{max(window)} ({len(window)} sorteos disponibles)")
 
-    # 2. Filtrar solo los sorteos que no están en el CSV
+    # 2. Clasificar: sorteos nuevos (append) vs. provisionales a completar (update).
     existing    = _get_existing_sorteos()
+    incomplete  = _get_incomplete_sorteos()
     new_sorteos = sorted([s for s in window if s not in existing])
+    to_complete = sorted([s for s in window if s in incomplete])
 
-    if not new_sorteos:
-        logger.info("Sin sorteos nuevos. CSV ya está al día.")
+    if not new_sorteos and not to_complete:
+        logger.info("Sin sorteos nuevos ni provisionales por completar. CSV al día.")
         return 0
 
-    logger.info(f"Sorteos nuevos a descargar: {new_sorteos}")
+    if new_sorteos:
+        logger.info(f"Sorteos nuevos a descargar: {new_sorteos}")
+    if to_complete:
+        logger.info(f"Sorteos provisionales a completar (ReKino/RequeteKino): {to_complete}")
 
     # 3. Descargar y guardar
     saved = 0
-    for sorteo_num in new_sorteos:
+    for sorteo_num in new_sorteos + to_complete:
+        es_completar = sorteo_num in to_complete
         try:
             row = _get_draw_data(sorteo_num)
             if row:
-                _guardar_fila(row)
+                if es_completar:
+                    _actualizar_fila(row)
+                    accion = "completado"
+                else:
+                    _guardar_fila(row)
+                    accion = "guardado"
                 logger.info(
-                    f"#{sorteo_num} guardado — {row.get('fecha','')} ({row.get('dia_semana','')})"
+                    f"#{sorteo_num} {accion} — {row.get('fecha','')} ({row.get('dia_semana','')})"
                     f" | KINO: {','.join(str(row.get(f'KINO_n{i}','?')) for i in range(1,15))}"
                 )
                 saved += 1
@@ -214,7 +261,7 @@ def scrape_loteria() -> int:
         except Exception as e:
             logger.error(f"#{sorteo_num}: {e}")
 
-    logger.info(f"✓ Scraping completado: {saved} sorteos nuevos guardados.")
+    logger.info(f"✓ Scraping completado: {saved} sorteos guardados/completados.")
     return saved
 
 

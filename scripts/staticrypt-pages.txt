@@ -6,3 +6,4 @@ docs_src/kino/index.html|docs/kino/
 docs_src/loto/index.html|docs/loto/
 docs_src/sugerencias/index.html|docs/sugerencias/
 docs_src/jugadas/index.html|docs/jugadas/
+docs_src/ingresar/index.html|docs/ingresar/

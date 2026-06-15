@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ingresar sorteo · kino-loto</title>
+  <link rel="icon" type="image/png" href="../favicon.png" />
+  <style>
+    :root {
+      --bg: #0f1117; --card: #1a1d27; --border: #2a2d3e;
+      --text: #e2e8f0; --muted: #8892a4;
+      --accent: #f59e0b; --green: #22c55e; --red: #ef4444; --blue: #3b82f6;
+      --radius: 12px; --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+
+    header {
+      padding: 16px 24px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 16px;
+    }
+    header a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+    header a:hover { color: var(--text); }
+    header h1 { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
+
+    main { max-width: 720px; margin: 0 auto; padding: 32px 24px; }
+
+    .intro { color: var(--muted); font-size: 0.9rem; line-height: 1.5; margin-bottom: 24px; }
+
+    .panel {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px;
+    }
+
+    .form-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 22px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 140px; }
+    .form-group label { font-size: 0.78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    input[type="number"], input[type="date"] {
+      background: #12151f; border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); padding: 10px 12px; font-size: 0.95rem; font-family: var(--font);
+      width: 100%; outline: none; transition: border-color 0.15s;
+    }
+    input:focus { border-color: #60a5fa; }
+
+    .grid-label { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+    .grid-label span:first-child { font-size: 0.78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .counter { font-size: 0.95rem; font-weight: 700; color: var(--muted); }
+    .counter.ok { color: var(--green); }
+
+    .grid {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 8px;
+    }
+    .num {
+      aspect-ratio: 1; border: 1px solid var(--border); border-radius: 10px;
+      background: #12151f; color: var(--text); font-size: 1.1rem; font-weight: 700;
+      cursor: pointer; transition: background 0.12s, border-color 0.12s, color 0.12s;
+      display: flex; align-items: center; justify-content: center; user-select: none;
+    }
+    .num:hover { border-color: #60a5fa; }
+    .num.sel { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+    .num:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; align-items: center; }
+    .msg { flex: 1; font-size: 0.85rem; }
+    .msg.ok  { color: var(--green); }
+    .msg.bad { color: var(--red); }
+    .btn-clear {
+      background: transparent; border: 1px solid var(--border); border-radius: 8px;
+      color: var(--muted); padding: 10px 18px; font-size: 0.9rem; cursor: pointer;
+    }
+    .btn-clear:hover { border-color: var(--text); color: var(--text); }
+    .btn-submit {
+      background: var(--green); color: #000; border: none; border-radius: 8px;
+      padding: 10px 24px; font-size: 0.9rem; font-weight: 700; cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-submit:hover { opacity: 0.85; }
+    .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .token-warn {
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px; padding: 14px 16px; margin-bottom: 22px;
+      font-size: 0.85rem; color: #fca5a5; line-height: 1.5;
+    }
+    .note { font-size: 0.8rem; color: var(--muted); margin-top: 18px; line-height: 1.5; }
+
+    @media (max-width: 560px) {
+      main { padding: 20px 12px; }
+      .form-row { flex-direction: column; gap: 14px; }
+      .grid { gap: 6px; }
+      .num { font-size: 1rem; border-radius: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="../">← Inicio</a>
+  <h1>Ingresar sorteo Kino</h1>
+</header>
+
+<main>
+  <p class="intro">
+    Ingresa el resultado del Kino apenas salga en la transmisión, sin esperar el scraping.
+    Se guarda como fila <strong>provisional</strong> (solo los 14 del Kino); el scraper
+    completará ReKino y RequeteKino en su próxima corrida automática.
+  </p>
+
+  <div class="token-warn" id="token-warn" style="display:none">
+    No hay token configurado. Visita esta página con
+    <code>#setup=BASE64_DEL_TOKEN</code> para guardar tu PAT antes de enviar.
+  </div>
+
+  <div class="panel">
+    <div class="form-row">
+      <div class="form-group" style="max-width:180px">
+        <label for="f-sorteo">Sorteo #</label>
+        <input type="number" id="f-sorteo" min="1" placeholder="ej: 3239">
+      </div>
+      <div class="form-group" style="max-width:200px">
+        <label for="f-fecha">Fecha del sorteo</label>
+        <input type="date" id="f-fecha">
+      </div>
+    </div>
+
+    <div class="grid-label">
+      <span>Números sorteados (14 de 1–25)</span>
+      <span class="counter" id="counter">0 / 14</span>
+    </div>
+    <div class="grid" id="grid"></div>
+
+    <div class="actions">
+      <div class="msg" id="msg"></div>
+      <button class="btn-clear" id="btn-clear">Limpiar</button>
+      <button class="btn-submit" id="btn-submit" disabled>Enviar resultado</button>
+    </div>
+  </div>
+
+  <p class="note">
+    Al enviar se dispara una GitHub Action que escribe la fila en el CSV, recalcula
+    las métricas de Kino y commitea. Suele tardar 1–2 minutos en reflejarse en el sitio.
+  </p>
+</main>
+
+<script src="../js/gh-api.js"></script>
+<script>
+// getToken / hoyISO / ghDispatch viven en js/gh-api.js (cargado arriba).
+const MAX_NUMS = 14, MIN_VAL = 1, MAX_VAL = 25;
+const selected = new Set();
+
+const $ = id => document.getElementById(id);
+
+// ── Grilla 1–25 ──────────────────────────────────────────────────────────────
+function buildGrid() {
+  const grid = $('grid');
+  for (let n = MIN_VAL; n <= MAX_VAL; n++) {
+    const btn = document.createElement('button');
+    btn.className = 'num';
+    btn.textContent = n;
+    btn.dataset.n = n;
+    btn.addEventListener('click', () => toggle(n, btn));
+    grid.appendChild(btn);
+  }
+}
+
+function toggle(n, btn) {
+  if (selected.has(n)) {
+    selected.delete(n);
+    btn.classList.remove('sel');
+  } else {
+    if (selected.size >= MAX_NUMS) return;
+    selected.add(n);
+    btn.classList.add('sel');
+  }
+  refresh();
+}
+
+function refresh() {
+  const full = selected.size === MAX_NUMS;
+  $('counter').textContent = `${selected.size} / ${MAX_NUMS}`;
+  $('counter').className = full ? 'counter ok' : 'counter';
+  // Deshabilitar los no seleccionados cuando ya hay 14.
+  document.querySelectorAll('.num').forEach(b => {
+    const n = parseInt(b.dataset.n, 10);
+    b.disabled = full && !selected.has(n);
+  });
+  const hasToken = !!getToken();
+  const sorteoOk = parseInt($('f-sorteo').value, 10) >= 1;
+  $('btn-submit').disabled = !(full && sorteoOk && hasToken);
+}
+
+function clearAll() {
+  selected.clear();
+  document.querySelectorAll('.num').forEach(b => { b.classList.remove('sel'); b.disabled = false; });
+  $('msg').textContent = '';
+  refresh();
+}
+
+// ── Envío ────────────────────────────────────────────────────────────────────
+async function submit() {
+  const sorteo  = parseInt($('f-sorteo').value, 10);
+  const fecha   = $('f-fecha').value || hoyISO();
+  const numeros = [...selected].sort((a, b) => a - b);
+
+  if (!sorteo || sorteo < 1) { showMsg('Ingresa un número de sorteo válido.', 'bad'); return; }
+  if (numeros.length !== MAX_NUMS) { showMsg(`Faltan números (${numeros.length}/${MAX_NUMS}).`, 'bad'); return; }
+
+  const btn = $('btn-submit');
+  btn.disabled = true;
+  const prev = btn.textContent;
+  btn.textContent = 'Enviando…';
+  showMsg('', '');
+
+  try {
+    await ghDispatch('kino-manual', { sorteo, fecha, numeros });
+    showMsg(`✓ Sorteo #${sorteo} enviado. La Action está procesando (1–2 min).`, 'ok');
+    selected.clear();
+    document.querySelectorAll('.num').forEach(b => { b.classList.remove('sel'); b.disabled = false; });
+    refresh();
+  } catch (e) {
+    showMsg('Error al enviar: ' + e.message, 'bad');
+  } finally {
+    btn.textContent = prev;
+    refresh();
+  }
+}
+
+function showMsg(text, cls) {
+  const m = $('msg');
+  m.textContent = text;
+  m.className = 'msg' + (cls ? ' ' + cls : '');
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+buildGrid();
+$('f-fecha').value = hoyISO();
+$('btn-clear').addEventListener('click', clearAll);
+$('btn-submit').addEventListener('click', submit);
+$('f-sorteo').addEventListener('input', refresh);
+
+// Llamar a getToken() ejecuta el guardado de #setup= si vino en el hash.
+if (!getToken()) $('token-warn').style.display = 'block';
+
+// Prefijar el sorteo con el siguiente esperado (último del índice + 1).
+fetch('../data/historial_index.json', { cache: 'no-store' })
+  .then(r => r.ok ? r.json() : {})
+  .then(idx => {
+    const kino = idx.kino || {};
+    const nums = Object.keys(kino).map(k => parseInt(k, 10)).filter(n => !isNaN(n));
+    if (nums.length) $('f-sorteo').value = Math.max(...nums) + 1;
+    refresh();
+  })
+  .catch(() => {});
+
+refresh();
+</script>
+
+</body>
+</html>

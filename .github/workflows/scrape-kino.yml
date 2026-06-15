@@ -79,6 +79,6 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "data(kino): actualizar historial [${{ github.run_id }}]"
-          file_pattern: "data/loteria_historial.csv docs/data/kino_metrics.json docs/data/pozos.json data/kino_suggestions_pending.json data/suggestions_history.csv docs/data/suggestions_history.json docs/data/suggestions_detail.json data/jugadas.json docs/data/historial_index.json docs/index.html docs/kino/index.html docs/loto/index.html docs/sugerencias/index.html docs/jugadas/index.html docs/.staticrypt-src-hash docs/js/gh-api.js"
+          file_pattern: "data/loteria_historial.csv docs/data/kino_metrics.json docs/data/pozos.json data/kino_suggestions_pending.json data/suggestions_history.csv docs/data/suggestions_history.json docs/data/suggestions_detail.json data/jugadas.json docs/data/historial_index.json docs/index.html docs/kino/index.html docs/loto/index.html docs/sugerencias/index.html docs/jugadas/index.html docs/ingresar/index.html docs/.staticrypt-src-hash docs/js/gh-api.js"
           commit_user_name: "github-actions[bot]"
           commit_user_email: "github-actions[bot]@users.noreply.github.com"

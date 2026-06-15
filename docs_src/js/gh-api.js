@@ -41,6 +41,20 @@ async function ghGetFile() {
   return { content: JSON.parse(atob(d.content.replace(/\n/g, ''))), sha: d.sha };
 }
 
+// Dispara un evento repository_dispatch (requiere token con contents:write).
+// Lo usa /ingresar/ para gatillar la Action que agrega un sorteo en vivo.
+async function ghDispatch(eventType, payload) {
+  const token = getToken();
+  if (!token) throw new Error('Token no configurado');
+  const r = await fetch(
+    `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/dispatches`,
+    { method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event_type: eventType, client_payload: payload }) }
+  );
+  if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.message || `GitHub ${r.status}`); }
+}
+
 // Escribe jugadas.json (requiere token).
 async function ghPutFile(content, sha, msg) {
   const token = getToken();
