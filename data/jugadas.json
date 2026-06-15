@@ -947,5 +947,23 @@
         25
       ]
     }
+  },
+  {
+    "fecha_jugada": "2026-06-15",
+    "juego": "loto",
+    "variantes": [
+      "loto"
+    ],
+    "sorteo": 5439,
+    "numeros": [
+      1,
+      2,
+      14,
+      33,
+      35,
+      40
+    ],
+    "rango_sugerencia": "50",
+    "aciertos": null
   }
 ]
