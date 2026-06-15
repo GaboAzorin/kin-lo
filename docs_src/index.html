@@ -24,16 +24,28 @@
 
     header {
       padding: 20px 32px; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 12px;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
     }
     header h1 { font-size: 1.4rem; font-weight: 700; }
-    header span { font-size: 0.82rem; color: var(--muted); margin-left: auto; }
+    .hdr-links { display: flex; gap: 16px; }
+    .hdr-links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; white-space: nowrap; }
+    .hdr-links a:hover { color: var(--text); }
+    header #last-update { font-size: 0.82rem; color: var(--muted); margin-left: auto; }
 
     main { max-width: 960px; margin: 0 auto; padding: 36px 24px; }
     h2 { font-size: 1rem; color: var(--muted); margin-bottom: 28px; font-weight: 400; }
 
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-    @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) {
+      .grid { grid-template-columns: 1fr; }
+      header { padding: 14px 16px; gap: 8px 14px; }
+      header h1 { font-size: 1.15rem; }
+      /* Enlaces como bloque a la derecha de la línea del título */
+      .hdr-links { margin-left: auto; }
+      /* El sello Datos/Cargado baja a su propia línea, alineado a la izquierda */
+      header #last-update { order: 5; width: 100%; margin-left: 0; }
+      header #last-update > span { align-items: flex-start !important; margin-left: 0 !important; }
+    }
 
     /* ── Card principal ── */
     .card {
@@ -217,8 +229,10 @@
   </svg>
   <h1>kino-loto</h1>
   <span id="last-update">cargando...</span>
-  <a href="jugadas/" style="color:var(--muted);text-decoration:none;font-size:0.85rem;white-space:nowrap">🎟 Mis jugadas</a>
-  <a href="ingresar/" style="color:var(--muted);text-decoration:none;font-size:0.85rem;white-space:nowrap">⊕ Ingresar sorteo</a>
+  <nav class="hdr-links">
+    <a href="jugadas/">🎟 Mis jugadas</a>
+    <a href="ingresar/">⊕ Ingresar sorteo</a>
+  </nav>
 </header>
 
 <main>
