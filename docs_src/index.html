@@ -611,15 +611,18 @@ async function init() {
   // ── Loto ──
   if (loto) {
     const ult = loto.ultimo_sorteo || {};
-    document.getElementById('loto-fecha').innerHTML =
-      `Sorteo <strong>#${ult.sorteo || '—'}</strong> · ${fecha(ult.fecha)} · ${ult.dia || ''}`;
+    document.getElementById('loto-fecha').innerHTML = ult.sorteo
+      ? `Sorteo <strong>#${ult.sorteo}</strong>, ${fmtLanzado(ult.fecha)}.`
+      : `Sorteo <strong>#—</strong> · ${fecha(ult.fecha)} · ${ult.dia || ''}`;
+    document.getElementById('loto-fecha').insertAdjacentHTML('afterend',
+      bannerFaltantes(ult.fecha, 'loto', 'Loto'));
     document.getElementById('loto-total').textContent = loto.total_sorteos ?? '—';
     if (ult.numeros?.length) {
       document.getElementById('loto-nums').innerHTML =
         ult.numeros.map(n => bola(n, 'bola-loto')).join('');
     }
     if (ult.sorteo) document.getElementById('loto-sugs-label').textContent =
-      `Combinaciones sugeridas para sorteo #${ult.sorteo + 1}`;
+      fmtSorteoProximo(ult.sorteo + 1, ult.fecha, 'loto');
     renderSugs(loto.suggestions, 'loto-sugs', 'sug-bola-loto', 'loto', (ult.sorteo || 0) + 1, loto.range_scores, loto.sum_stats);
   } else {
     document.getElementById('loto-fecha').innerHTML = '<span class="error">Datos no disponibles</span>';
@@ -629,15 +632,18 @@ async function init() {
   // ── Kino ──
   if (kino) {
     const ult = kino.ultimo_sorteo || {};
-    document.getElementById('kino-fecha').innerHTML =
-      `Sorteo <strong>#${ult.sorteo || '—'}</strong> · ${fecha(ult.fecha)} · ${ult.dia || ''}`;
+    document.getElementById('kino-fecha').innerHTML = ult.sorteo
+      ? `Sorteo <strong>#${ult.sorteo}</strong>, ${fmtLanzado(ult.fecha)}.`
+      : `Sorteo <strong>#—</strong> · ${fecha(ult.fecha)} · ${ult.dia || ''}`;
+    document.getElementById('kino-fecha').insertAdjacentHTML('afterend',
+      bannerFaltantes(ult.fecha, 'kino', 'Kino'));
     document.getElementById('kino-total').textContent = kino.total_sorteos ?? '—';
     if (ult.numeros?.length) {
       document.getElementById('kino-nums').innerHTML =
         ult.numeros.map(n => bola(n, 'bola-kino')).join('');
     }
     if (ult.sorteo) document.getElementById('kino-sugs-label').textContent =
-      `Combinaciones sugeridas para sorteo #${ult.sorteo + 1}`;
+      fmtSorteoProximo(ult.sorteo + 1, ult.fecha, 'kino');
     renderSugs(kino.suggestions, 'kino-sugs', 'sug-bola-kino', 'kino', (ult.sorteo || 0) + 1, kino.range_scores, kino.sum_stats);
   } else {
     document.getElementById('kino-fecha').innerHTML = '<span class="error">Datos no disponibles</span>';

@@ -299,9 +299,12 @@ function render() {
 
   document.getElementById('sorteo-num').textContent = `Sorteo #${ult.sorteo}`;
   if (ult.sorteo) document.getElementById('sugs-title').textContent =
-    `Combinaciones sugeridas para sorteo #${ult.sorteo + 1}`;
-  document.getElementById('sorteo-fecha').textContent =
-    `${(ult.fecha||'').split(' ')[0]} · ${ult.dia||''}`;
+    fmtSorteoProximo(ult.sorteo + 1, ult.fecha, 'kino');
+  document.getElementById('sorteo-fecha').textContent = ult.sorteo
+    ? fmtLanzado(ult.fecha)
+    : `${(ult.fecha||'').split(' ')[0]} · ${ult.dia||''}`;
+  document.getElementById('sorteo-fecha').insertAdjacentHTML('afterend',
+    bannerFaltantes(ult.fecha, 'kino', 'Kino'));
 
   const numsEl = document.getElementById('ultimo-nums');
   if (ult.numeros) {

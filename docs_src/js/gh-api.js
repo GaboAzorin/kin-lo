@@ -9,6 +9,98 @@ function hoyISO() {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
+// ── Fechas y sorteos (helpers compartidos por todas las páginas) ─────────────
+const _DAYS_ES   = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const _MONTHS_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+// Días de sorteo (0=domingo). Loto: dom/mar/jue. Kino: dom/mié/vie.
+const DRAW_DAYS  = { loto: [0,2,4], kino: [0,3,5] };
+
+// Hoy en zona horaria de Chile como yyyy-mm-dd (en-CA da ese formato).
+function hoyISO_CL() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Santiago', year:'numeric', month:'2-digit', day:'2-digit'
+  }).format(new Date());
+}
+// yyyy-mm-dd → epoch UTC-medianoche, para aritmética por calendario (sin DST).
+function _isoToUTC(iso) {
+  const [y,m,d] = iso.slice(0,10).split('-').map(Number);
+  return Date.UTC(y, m-1, d);
+}
+function _utcToISO(ms) {
+  const d = new Date(ms);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+}
+// Diferencia en días de calendario (b - a), ambos yyyy-mm-dd.
+function diasEntre(aISO, bISO) {
+  return Math.round((_isoToUTC(bISO) - _isoToUTC(aISO)) / 86400000);
+}
+// "miércoles 17 de junio"
+function fmtFechaLarga(iso) {
+  const d = new Date(_isoToUTC(iso));
+  return `${_DAYS_ES[d.getUTCDay()]} ${d.getUTCDate()} de ${_MONTHS_ES[d.getUTCMonth()]}`;
+}
+// "lanzado ayer domingo 14 de junio" (relativo solo hoy/ayer/anteayer).
+function fmtLanzado(iso) {
+  if (!iso) return '';
+  const dias  = diasEntre(iso.slice(0,10), hoyISO_CL());
+  const larga = fmtFechaLarga(iso);
+  if (dias === 0) return `lanzado hoy ${larga}`;
+  if (dias === 1) return `lanzado ayer ${larga}`;
+  if (dias === 2) return `lanzado anteayer ${larga}`;
+  return `lanzado el ${larga}`;
+}
+// Primer día de sorteo estrictamente posterior a la fecha dada (yyyy-mm-dd|null).
+function proximoSorteoFecha(ultimaISO, juego) {
+  const days = DRAW_DAYS[juego] || [];
+  const base = _isoToUTC(ultimaISO.slice(0,10));
+  for (let i = 1; i <= 14; i++) {
+    const probe = base + i * 86400000;
+    if (days.includes(new Date(probe).getUTCDay())) return _utcToISO(probe);
+  }
+  return null;
+}
+// "Sugerencias para el sorteo del próximo miércoles 17 de junio, #N (en 2 días más)"
+function fmtSorteoProximo(sorteoNum, ultimaISO, juego) {
+  const prox = ultimaISO ? proximoSorteoFecha(ultimaISO, juego) : null;
+  if (!prox) return `Sugerencias para el sorteo #${sorteoNum}`;
+  const dias = diasEntre(hoyISO_CL(), prox);
+  let cuando = '';
+  if (dias === 1)      cuando = ' (mañana)';
+  else if (dias === 2) cuando = ' (en 2 días más)';
+  else if (dias > 2)   cuando = ` (en ${dias} días más)`;
+  else if (dias === 0) cuando = ' (hoy)';
+  return `Sugerencias para el sorteo del próximo ${fmtFechaLarga(prox)}, #${sorteoNum}${cuando}`;
+}
+// Sorteos pasados ya publicados que faltan por scrapear (días de sorteo entre
+// la última fecha (excl.) y hoy (excl.); el sorteo de hoy no se cuenta aún).
+function sorteosFaltantes(ultimaISO, juego) {
+  if (!ultimaISO) return 0;
+  const days  = DRAW_DAYS[juego] || [];
+  const hoyMs = _isoToUTC(hoyISO_CL());
+  let ms = _isoToUTC(ultimaISO.slice(0,10)) + 86400000, count = 0, guard = 0;
+  while (ms < hoyMs && guard++ < 500) {
+    if (days.includes(new Date(ms).getUTCDay())) count++;
+    ms += 86400000;
+  }
+  return count;
+}
+// Mensaje de alerta (singular/plural) o '' si no falta nada.
+function msgFaltantes(ultimaISO, juego, juegoLabel) {
+  const n = sorteosFaltantes(ultimaISO, juego);
+  if (n < 1) return '';
+  return n === 1
+    ? `⚠ Falta 1 sorteo de ${juegoLabel} por scrapear`
+    : `⚠ Faltan ${n} sorteos de ${juegoLabel} por scrapear`;
+}
+// HTML del banner de alerta (vacío si no falta nada).
+function bannerFaltantes(ultimaISO, juego, juegoLabel) {
+  const msg = msgFaltantes(ultimaISO, juego, juegoLabel);
+  if (!msg) return '';
+  return `<div style="margin-top:8px;padding:8px 12px;background:rgba(245,158,11,0.12);`
+       + `border:1px solid rgba(245,158,11,0.35);border-radius:8px;color:#fbbf24;`
+       + `font-size:0.82rem;font-weight:600">${msg}</div>`;
+}
+
 // Token (PAT fine-grained, solo contents:write de este repo) guardado en
 // localStorage. Configurar visitando: #setup=BASE64_DEL_TOKEN
 function getToken() {
