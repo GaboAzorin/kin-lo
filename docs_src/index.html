@@ -6,36 +6,62 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet" />
   <title>kino-loto · Análisis de Resultados</title>
   <style>
     :root {
-      --bg: #09090b;
-      --card: #18181b;
-      --card2: #0c0c0f;
-      --border: #27272a;
-      --text: #fafafa;
-      --muted: #a1a1aa;
+      --bg: #0c0e12;
+      --bg-surface: #111318;
+      --card: rgba(30,32,36,0.45);
+      --card2: rgba(255,255,255,0.03);
+      --card-solid: #1a1c20;
+      --border: rgba(255,255,255,0.10);
+      --border-strong: rgba(255,255,255,0.22);
+      --text: #e6e7ec;
+      --muted: #9aa0b0;
       --violet: #a78bfa;
       --loto: #f59e0b;
       --kino: #3b82f6;
       --green: #34d399;
-      --radius: 8px;
-      --font: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --radius: 14px;
+      --radius-sm: 10px;
+      --blur: 20px;
+      --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-head: "Montserrat", var(--font);
     }
     h1, h2, h3, .card-title, .cd-num { letter-spacing: -0.02em; }
+    header h1, .card-title, .cd-num, .cd-title { font-family: var(--font-head); }
+    .bola, .sug-bola, .cd-num, .pozo-monto, .sug-sum, .stat-mini strong { font-variant-numeric: tabular-nums; }
     a:focus-visible, button:focus-visible, input:focus-visible,
     select:focus-visible, textarea:focus-visible {
       outline: 2px solid var(--violet); outline-offset: 2px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+    body {
+      background: var(--bg-surface); color: var(--text); font-family: var(--font);
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Fondo aurora (balanceada Loto+Kino) ── */
+    .aurora-bg { position: fixed; inset: 0; z-index: -1; background: var(--bg-surface); overflow: hidden; }
+    .aurora-blob {
+      position: absolute; filter: blur(110px); opacity: 0.38; border-radius: 50%;
+      animation: float 22s infinite ease-in-out alternate;
+    }
+    .aurora-1 { width: 620px; height: 620px; background: #3b82f6; top: -12%; left: -8%; }
+    .aurora-2 { width: 520px; height: 520px; background: #6b21a8; bottom: -5%; right: -8%; animation-delay: -6s; }
+    .aurora-3 { width: 440px; height: 440px; background: #f59e0b; top: 45%; left: 38%; animation-delay: -12s; }
+    @keyframes float { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(48px,44px) scale(1.12); } }
+    @media (prefers-reduced-motion: reduce) { .aurora-blob { animation: none; } }
 
     header {
+      position: sticky; top: 0; z-index: 50;
       padding: 20px 32px; border-bottom: 1px solid var(--border);
+      background: rgba(17,19,24,0.6);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
       display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
     }
-    header h1 { font-size: 1.4rem; font-weight: 700; }
+    header h1 { font-size: 1.4rem; font-weight: 800; }
     .hdr-links { display: flex; gap: 16px; }
     .hdr-links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; white-space: nowrap; }
     .hdr-links a:hover { color: var(--text); }
@@ -58,20 +84,25 @@
 
     /* ── Card principal ── */
     .card {
-      background: var(--card); border: 1px solid var(--border);
+      background-color: var(--card);
+      background-image: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.05) 0%, transparent 70%);
+      border: 1px solid var(--border);
       border-radius: var(--radius); padding: 24px;
       display: flex; flex-direction: column; gap: 18px;
+      backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
     }
+    .card:hover { border-color: var(--border-strong); box-shadow: 0 0 22px rgba(167,139,250,0.12); }
 
     .card-header { display: flex; align-items: center; gap: 10px; }
     .badge {
       padding: 3px 10px; border-radius: 20px; font-size: 0.72rem;
       font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
     }
-    .badge-loto { background: rgba(245,158,11,0.15); color: var(--loto); }
-    .badge-kino { background: rgba(59,130,246,0.15); color: var(--kino); }
+    .badge-loto { background: rgba(245,158,11,0.15); color: var(--loto); border: 1px solid rgba(245,158,11,0.3); }
+    .badge-kino { background: rgba(59,130,246,0.15); color: var(--kino); border: 1px solid rgba(59,130,246,0.3); }
 
-    .card-title { font-size: 1.25rem; font-weight: 700; }
+    .card-title { font-size: 1.3rem; font-weight: 800; }
 
     /* ── Último sorteo ── */
     .ultimo-section {}
@@ -82,14 +113,18 @@
     .meta { font-size: 0.82rem; color: var(--muted); margin-bottom: 10px; }
     .meta strong { color: var(--text); }
 
-    .nums { display: flex; flex-wrap: wrap; gap: 7px; }
+    .nums { display: flex; flex-wrap: wrap; gap: 8px; }
     .bola {
-      width: 36px; height: 36px; border-radius: 50%;
+      width: 38px; height: 38px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 0.82rem; font-weight: 700;
+      font-size: 0.84rem; font-weight: 700; color: #fff;
+      transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s ease;
     }
-    .bola-loto { background: rgba(245,158,11,0.18); color: var(--loto); border: 1px solid rgba(245,158,11,0.35); }
-    .bola-kino { background: rgba(59,130,246,0.18); color: var(--kino); border: 1px solid rgba(59,130,246,0.35); }
+    .bola:hover { transform: translateY(-4px) scale(1.1); }
+    .bola-loto { background: rgba(245,158,11,0.10); border: 1px solid var(--loto); box-shadow: inset 0 0 10px rgba(245,158,11,0.25); }
+    .bola-loto:hover { box-shadow: inset 0 0 10px rgba(245,158,11,0.3), 0 6px 16px rgba(245,158,11,0.45); }
+    .bola-kino { background: rgba(59,130,246,0.10); border: 1px solid var(--kino); box-shadow: inset 0 0 10px rgba(59,130,246,0.25); }
+    .bola-kino:hover { box-shadow: inset 0 0 10px rgba(59,130,246,0.3), 0 6px 16px rgba(59,130,246,0.45); }
 
     /* ── Divisor ── */
     .divider { height: 1px; background: var(--border); }
@@ -98,17 +133,23 @@
     .sugs-list { display: flex; flex-direction: column; gap: 8px; }
     .sug-row {
       background: var(--card2); border: 1px solid var(--border);
-      border-radius: 8px; padding: 9px 12px;
+      border-radius: var(--radius-sm); padding: 9px 12px;
       display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+      transition: border-color 0.2s ease, background-color 0.2s ease;
     }
+    .sug-row:hover { border-color: var(--border-strong); background-color: rgba(255,255,255,0.05); }
     .sug-idx { font-size: 0.68rem; color: var(--muted); min-width: 18px; font-weight: 600; }
     .sug-bola {
       width: 30px; height: 30px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 0.73rem; font-weight: 700;
+      font-size: 0.73rem; font-weight: 700; color: #fff;
+      transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s ease;
     }
-    .sug-bola-loto { background: rgba(245,158,11,0.13); color: var(--loto); border: 1px solid rgba(245,158,11,0.25); }
-    .sug-bola-kino { background: rgba(59,130,246,0.13); color: var(--kino); border: 1px solid rgba(59,130,246,0.25); }
+    .sug-bola:hover { transform: translateY(-3px) scale(1.1); }
+    .sug-bola-loto { background: rgba(245,158,11,0.10); border: 1px solid rgba(245,158,11,0.6); box-shadow: inset 0 0 7px rgba(245,158,11,0.22); }
+    .sug-bola-loto:hover { box-shadow: inset 0 0 7px rgba(245,158,11,0.3), 0 5px 12px rgba(245,158,11,0.4); }
+    .sug-bola-kino { background: rgba(59,130,246,0.10); border: 1px solid rgba(59,130,246,0.6); box-shadow: inset 0 0 7px rgba(59,130,246,0.22); }
+    .sug-bola-kino:hover { box-shadow: inset 0 0 7px rgba(59,130,246,0.3), 0 5px 12px rgba(59,130,246,0.4); }
     .sug-sum { margin-left: auto; font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
     .sug-sum strong { color: var(--text); }
 
@@ -120,11 +161,14 @@
       color: var(--muted); letter-spacing: 0.03em; transition: all 0.15s;
       font-family: var(--font);
     }
-    .sug-pill:hover { border-color: var(--text); color: var(--text); }
-    .sug-pill-loto-active { background: rgba(245,158,11,0.15); color: var(--loto); border-color: rgba(245,158,11,0.4); }
-    .sug-pill-kino-active { background: rgba(59,130,246,0.15); color: var(--kino); border-color: rgba(59,130,246,0.4); }
-    .sug-pill-best { border-color: rgba(34,197,94,0.45); color: var(--green); }
-    .sug-pill-best:hover { border-color: var(--green); }
+    .sug-pill:hover { border-color: var(--border-strong); color: var(--text); }
+    .sug-pill-loto-active { background: rgba(245,158,11,0.15); color: #fff; border-color: var(--loto); box-shadow: 0 0 10px rgba(245,158,11,0.35); }
+    .sug-pill-kino-active { background: rgba(59,130,246,0.15); color: #fff; border-color: var(--kino); box-shadow: 0 0 10px rgba(59,130,246,0.35); }
+    .sug-pill-best {
+      background: linear-gradient(to right, #fbbf24, #d97706); color: #1a1306;
+      border-color: transparent; font-weight: 800; box-shadow: 0 0 10px rgba(245,158,11,0.5);
+    }
+    .sug-pill-best:hover { color: #1a1306; border-color: transparent; }
 
     /* ── Aviso "ya jugaste" ── */
     .ya-jugaste {
@@ -141,13 +185,14 @@
     .stat-mini strong { color: var(--text); font-size: 1rem; }
 
     .btn {
-      display: inline-block; padding: 9px 18px; border-radius: 8px;
-      font-size: 0.83rem; font-weight: 600; text-decoration: none;
-      transition: opacity 0.15s;
+      display: inline-block; padding: 9px 18px; border-radius: var(--radius-sm);
+      font-size: 0.83rem; font-weight: 700; text-decoration: none;
+      background-image: linear-gradient(to bottom, rgba(255,255,255,0.18), rgba(255,255,255,0));
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
-    .btn:hover { opacity: 0.85; }
-    .btn-loto { background: var(--loto); color: #000; }
-    .btn-kino  { background: var(--kino); color: #fff; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-loto { background-color: var(--loto); color: #1a1306; box-shadow: 0 0 14px rgba(245,158,11,0.35); }
+    .btn-kino  { background-color: var(--kino); color: #fff; box-shadow: 0 0 14px rgba(59,130,246,0.35); }
 
     footer {
       text-align: center; padding: 28px;
@@ -199,11 +244,14 @@
 
     .cd-card {
       border-radius: var(--radius); padding: 18px 20px;
-      border: 1px solid var(--border); background: var(--card);
+      border: 1px solid var(--border);
+      background-color: var(--card);
+      background-image: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.05) 0%, transparent 70%);
+      backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
       display: flex; flex-direction: column; gap: 8px;
-      transition: border-color 0.3s;
+      transition: border-color 0.3s, box-shadow 0.3s;
     }
-    .cd-card.next { border-color: var(--accent-cd); box-shadow: 0 0 0 1px var(--accent-cd); }
+    .cd-card.next { border-color: var(--accent-cd); box-shadow: 0 0 18px -2px var(--accent-cd); }
 
     .cd-header {
       display: flex; align-items: center; gap: 8px;
@@ -223,13 +271,19 @@
       font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
     }
     .cd-label { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
-    .cd-sep { font-size: 1.5rem; font-weight: 300; color: var(--border); padding-bottom: 4px; }
+    .cd-sep { font-size: 1.5rem; font-weight: 300; color: rgba(255,255,255,0.25); padding-bottom: 4px; }
 
     .cd-date { font-size: 0.78rem; color: var(--muted); }
     .cd-date strong { color: var(--text); }
   </style>
 </head>
 <body>
+
+<div class="aurora-bg" aria-hidden="true">
+  <div class="aurora-blob aurora-1"></div>
+  <div class="aurora-blob aurora-2"></div>
+  <div class="aurora-blob aurora-3"></div>
+</div>
 
 <header>
   <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
@@ -594,13 +648,14 @@ function renderPozos(variantes, containerId, accentVar, total) {
   const maxMM = Math.max(...variantes.map(v => v.millones));
   const rows = variantes.map(v => {
     const grande = v.millones === maxMM && v.millones >= 500 ? ' grande' : '';
+    const real   = `$${(v.millones * 1_000_000).toLocaleString('es-CL')}`;
     return `<div class="pozo-row">
       <span class="pozo-nombre">${v.nombre}</span>
-      <span class="pozo-monto${grande}" style="color:var(${accentVar})">${fmtMillones(v.millones)}</span>
+      <span class="pozo-monto${grande}" style="color:var(${accentVar});cursor:help" title="Pozo estimado: ${real}">${fmtMillones(v.millones)}</span>
     </div>`;
   }).join('');
   const totalRow = total
-    ? `<div class="pozo-total">Total estimado: <strong>$${total.toLocaleString('es-CL')} MM</strong></div>`
+    ? `<div class="pozo-total">Total estimado: <strong style="cursor:help" title="$${(total * 1_000_000).toLocaleString('es-CL')}">$${total.toLocaleString('es-CL')} MM</strong></div>`
     : '';
   el.innerHTML = rows + totalRow;
 }
