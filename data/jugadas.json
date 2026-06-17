@@ -1003,5 +1003,23 @@
     ],
     "rango_sugerencia": "500",
     "aciertos": null
+  },
+  {
+    "fecha_jugada": "2026-06-17",
+    "juego": "loto",
+    "variantes": [
+      "loto"
+    ],
+    "sorteo": 5440,
+    "numeros": [
+      4,
+      12,
+      20,
+      33,
+      35,
+      37
+    ],
+    "rango_sugerencia": "250",
+    "aciertos": null
   }
 ]
