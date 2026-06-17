@@ -5,59 +5,95 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet" />
   <title>Detalle de Sugerencias · kino-loto</title>
   <style>
     :root {
-      --bg: #09090b; --card: #18181b; --border: #27272a;
-      --text: #fafafa; --muted: #a1a1aa;
+      --bg: #0c0e12; --bg-surface: #111318;
+      --card: rgba(30,32,36,0.45); --card-solid: #1a1c20;
+      --border: rgba(255,255,255,0.10); --border-strong: rgba(255,255,255,0.22);
+      --text: #e6e7ec; --muted: #9aa0b0;
       --accent: #f59e0b; --green: #34d399; --red: #ef4444;
       --blue: #3b82f6; --violet: #a78bfa;
-      --radius: 8px; --font: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --radius: 14px; --radius-sm: 10px; --blur: 20px;
+      --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-head: "Montserrat", var(--font);
     }
-    h1, h2, h3, .section-title { letter-spacing: -0.02em; }
+    h1, h2, h3, .section-title, .sorteo-title { letter-spacing: -0.02em; }
+    h1, .sorteo-title { font-family: var(--font-head); }
+    .bola, .bola-sm, .rank-num, .aciertos-badge, .rank-pos, .combos-table { font-variant-numeric: tabular-nums; }
     a:focus-visible, button:focus-visible, input:focus-visible,
     select:focus-visible, textarea:focus-visible {
       outline: 2px solid var(--violet); outline-offset: 2px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); font-family: var(--font); }
+    body {
+      background: var(--bg-surface); color: var(--text); font-family: var(--font);
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Fondo aurora (balanceada) ── */
+    .aurora-bg { position: fixed; inset: 0; z-index: -1; background: var(--bg-surface); overflow: hidden; }
+    .aurora-blob {
+      position: absolute; filter: blur(110px); opacity: 0.36; border-radius: 50%;
+      animation: float 22s infinite ease-in-out alternate;
+    }
+    .aurora-1 { width: 620px; height: 620px; background: #3b82f6; top: -12%; left: -8%; }
+    .aurora-2 { width: 520px; height: 520px; background: #6b21a8; bottom: -5%; right: -8%; animation-delay: -6s; }
+    .aurora-3 { width: 440px; height: 440px; background: #f59e0b; top: 45%; left: 38%; animation-delay: -12s; }
+    @keyframes float { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(48px,44px) scale(1.12); } }
+    @media (prefers-reduced-motion: reduce) { .aurora-blob { animation: none; } }
 
     header {
+      position: sticky; top: 0; z-index: 50;
       padding: 16px 24px; border-bottom: 1px solid var(--border);
+      background: rgba(17,19,24,0.6);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
       display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
     }
-    header a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+    header a { color: var(--muted); text-decoration: none; font-size: 0.9rem; transition: color 0.15s; }
     header a:hover { color: var(--text); }
-    header h1 { font-size: 1.2rem; font-weight: 700; }
+    header h1 { font-size: 1.25rem; font-weight: 800; }
     .header-nav { margin-left: auto; display: flex; gap: 16px; font-size: 0.85rem; }
     .header-nav a { color: var(--muted); }
     .header-nav a:hover { color: var(--accent); }
 
     main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
 
-    .tab-bar { display: flex; gap: 8px; margin-bottom: 28px; }
+    .tab-bar { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
     .tab {
-      padding: 7px 18px; border-radius: 6px; cursor: pointer;
+      padding: 7px 18px; border-radius: 999px; cursor: pointer;
       font-size: 0.85rem; font-weight: 600;
       border: 1px solid var(--border); color: var(--muted);
-      background: transparent; transition: all 0.15s; font-family: var(--font);
+      background: rgba(255,255,255,0.03); transition: all 0.15s; font-family: var(--font);
     }
-    .tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
+    .tab:hover { border-color: var(--border-strong); color: var(--text); }
+    .tab.active { background: var(--accent); color: #000; border-color: var(--accent); box-shadow: 0 0 12px rgba(245,158,11,0.35); }
 
     .sorteo-card {
-      background: var(--card); border: 1px solid var(--border);
+      background-color: var(--card);
+      background-image: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.05) 0%, transparent 70%);
+      border: 1px solid var(--border);
       border-radius: var(--radius); margin-bottom: 16px; overflow: hidden;
+      backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
     }
     .sorteo-header {
       padding: 18px 22px;
       display: flex; flex-wrap: wrap; align-items: center; gap: 16px;
       cursor: pointer; user-select: none;
     }
-    .sorteo-header:hover { background: rgba(255,255,255,0.02); }
+    .sorteo-header:hover { background: rgba(255,255,255,0.03); }
     .sorteo-card.open .sorteo-header { border-bottom: 1px solid var(--border); }
-    .sorteo-body { display: none; }
-    .sorteo-card.open .sorteo-body { display: block; }
+    .sorteo-body {
+      display: grid; grid-template-rows: 0fr;
+      transition: grid-template-rows 0.34s cubic-bezier(0.4,0,0.2,1);
+    }
+    .sorteo-card.open .sorteo-body { grid-template-rows: 1fr; }
+    .sorteo-body-inner {
+      overflow: hidden; min-height: 0;
+      opacity: 0; transition: opacity 0.28s ease 0.04s;
+    }
+    .sorteo-card.open .sorteo-body-inner { opacity: 1; }
     .chevron {
       margin-left: auto; color: var(--muted); font-size: 1rem;
       transition: transform 0.2s; line-height: 1;
@@ -71,14 +107,17 @@
     .bola {
       width: 34px; height: 34px; border-radius: 50%;
       display: inline-flex; align-items: center; justify-content: center;
-      font-size: 0.78rem; font-weight: 700;
-      background: rgba(245,158,11,0.15); color: var(--accent);
-      border: 1px solid rgba(245,158,11,0.35);
+      font-size: 0.78rem; font-weight: 700; color: #fff;
+      background: rgba(245,158,11,0.10);
+      border: 1px solid var(--accent); box-shadow: inset 0 0 8px rgba(245,158,11,0.22);
+      transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s ease;
     }
+    .bola:hover { transform: translateY(-3px) scale(1.1); box-shadow: inset 0 0 8px rgba(245,158,11,0.3), 0 5px 12px rgba(245,158,11,0.4); }
     .bola-resultado {
-      background: rgba(34,197,94,0.15); color: var(--green);
-      border: 1px solid rgba(34,197,94,0.35);
+      background: rgba(52,211,153,0.10); color: #fff;
+      border: 1px solid var(--green); box-shadow: inset 0 0 8px rgba(52,211,153,0.22);
     }
+    .bola-resultado:hover { box-shadow: inset 0 0 8px rgba(52,211,153,0.3), 0 5px 12px rgba(52,211,153,0.4); }
     .rank-badge {
       text-align: right;
       font-size: 0.78rem; color: var(--muted); line-height: 1.5;
@@ -88,7 +127,7 @@
     /* Rango section inside card */
     .rango-section { border-top: 1px solid var(--border); }
     .rango-header {
-      padding: 10px 22px; background: rgba(255,255,255,0.02);
+      padding: 10px 22px; background: rgba(255,255,255,0.03);
       font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.08em; color: var(--muted);
     }
@@ -104,19 +143,19 @@
     .combos-table th:first-child, .combos-table td:first-child { padding-left: 0; }
     .combos-table th:last-child, .combos-table td:last-child { padding-right: 0; }
     .combos-table tr:last-child td { border-bottom: none; }
-    .combos-table tbody tr:hover td { background: rgba(255,255,255,0.02); }
+    .combos-table tbody tr:hover td { background: rgba(255,255,255,0.03); }
 
     .combo-nums { display: flex; flex-wrap: wrap; gap: 4px; }
     .bola-sm {
       width: 26px; height: 26px; border-radius: 50%;
       display: inline-flex; align-items: center; justify-content: center;
-      font-size: 0.7rem; font-weight: 700;
-      background: rgba(245,158,11,0.12); color: var(--accent);
-      border: 1px solid rgba(245,158,11,0.28);
+      font-size: 0.7rem; font-weight: 700; color: #fff;
+      background: rgba(245,158,11,0.10);
+      border: 1px solid rgba(245,158,11,0.55); box-shadow: inset 0 0 6px rgba(245,158,11,0.2);
     }
     .bola-sm.hit {
-      background: rgba(34,197,94,0.2); color: var(--green);
-      border-color: rgba(34,197,94,0.45);
+      background: rgba(52,211,153,0.14); color: #fff;
+      border-color: var(--green); box-shadow: inset 0 0 6px rgba(52,211,153,0.3);
     }
 
     .aciertos-badge {
@@ -129,12 +168,13 @@
     .diff-neg { color: var(--red); }
     .diff-zero { color: var(--accent); }
 
-    .rank-num { font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+    .rank-num { letter-spacing: -0.01em; }
 
     .disclaimer {
       background: rgba(59,130,246,0.07); border: 1px solid rgba(59,130,246,0.3);
       border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px;
       font-size: 0.82rem; line-height: 1.55; color: var(--text);
+      backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
     }
     .disclaimer strong { color: var(--blue); }
     .disclaimer ul { margin: 8px 0 0; padding-left: 20px; }
@@ -142,8 +182,11 @@
     .disclaimer li b { color: var(--text); }
 
     .backtest-card {
-      background: var(--card); border: 1px solid var(--border);
+      background-color: var(--card);
+      background-image: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.05) 0%, transparent 70%);
+      border: 1px solid var(--border);
       border-radius: var(--radius); padding: 18px 22px; margin-bottom: 28px;
+      backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
     }
     .backtest-card h2 {
       font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
@@ -151,9 +194,11 @@
     }
     .bt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
     .bt-metric {
-      background: rgba(255,255,255,0.02); border: 1px solid var(--border);
-      border-radius: 8px; padding: 12px 14px;
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 12px 14px;
+      transition: border-color 0.2s ease, background-color 0.2s ease;
     }
+    .bt-metric:hover { border-color: var(--border-strong); background: rgba(255,255,255,0.05); }
     .bt-metric .label {
       font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;
       color: var(--muted); margin-bottom: 6px;
@@ -212,6 +257,12 @@
   </style>
 </head>
 <body>
+
+<div class="aurora-bg" aria-hidden="true">
+  <div class="aurora-blob aurora-1"></div>
+  <div class="aurora-blob aurora-2"></div>
+  <div class="aurora-blob aurora-3"></div>
+</div>
 
 <header>
   <a href="../">← kino-loto</a>
@@ -545,7 +596,7 @@ function render() {
           </div>
           <span class="chevron">▾</span>
         </div>
-        <div class="sorteo-body">${rangoSections}</div>
+        <div class="sorteo-body"><div class="sorteo-body-inner">${rangoSections}</div></div>
       </div>`;
   }).join('');
 
