@@ -35,3 +35,10 @@ historial.csv
 .DS_Store
 Thumbs.db
 
+# Preview local: copia temporal de datos para servir docs_src (no es fuente)
+docs_src/data/
+
+# Export crudo de Google Stitch (referencia pesada; los tokens viven en design/design-tokens.md)
+design/stitch_export/
+design/*.zip
+
