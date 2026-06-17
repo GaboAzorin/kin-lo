@@ -3,14 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <title>Ingresar sorteo · kino-loto</title>
   <link rel="icon" type="image/png" href="../favicon.png" />
   <style>
     :root {
-      --bg: #0f1117; --card: #1a1d27; --border: #2a2d3e;
-      --text: #e2e8f0; --muted: #8892a4;
-      --accent: #f59e0b; --green: #22c55e; --red: #ef4444; --blue: #3b82f6;
-      --radius: 12px; --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --bg: #09090b; --card: #18181b; --border: #27272a;
+      --text: #fafafa; --muted: #a1a1aa;
+      --accent: #f59e0b; --green: #34d399; --red: #ef4444; --blue: #3b82f6; --violet: #a78bfa;
+      --radius: 8px; --font: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    h1, h2, h3, .section-title { letter-spacing: -0.02em; }
+    a:focus-visible, button:focus-visible, input:focus-visible,
+    select:focus-visible, textarea:focus-visible {
+      outline: 2px solid var(--violet); outline-offset: 2px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
