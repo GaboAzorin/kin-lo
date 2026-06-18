@@ -214,6 +214,41 @@
     .rdm-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 7px; vertical-align: middle; }
     .rdm-empty { color: var(--muted); font-size: 0.85rem; font-style: italic;
       padding: 28px; text-align: center; }
+
+    /* ── Cartones jugados ── */
+    .cart-head { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+    .cart-head-text { flex: 1; min-width: 200px; }
+    .cart-head-text h3 { font-size: 1.15rem; font-weight: 700; font-family: var(--font-head); letter-spacing: -0.02em; }
+    .cart-head-text p { color: var(--muted); font-size: 0.82rem; margin-top: 4px; }
+    .cart-chip {
+      flex-shrink: 0; padding: 4px 12px; border-radius: 999px;
+      font-size: 0.66rem; font-weight: 700; letter-spacing: 0.06em;
+      background: rgba(59,130,246,0.15); color: var(--accent-soft);
+      border: 1px solid rgba(59,130,246,0.4); align-self: center;
+    }
+    .cart-hero { margin-bottom: 24px; }
+    .cart-hero-num {
+      font-size: clamp(2.2rem, 8vw, 3.2rem); font-weight: 800; line-height: 1;
+      color: var(--accent-soft); font-variant-numeric: tabular-nums;
+    }
+    .cart-hero-num span { font-size: 0.42em; font-weight: 600; color: var(--muted); margin-left: 8px; }
+    .cart-hero-meta { color: var(--muted); font-size: 0.85rem; margin-top: 8px; font-variant-numeric: tabular-nums; }
+    .cart-chart-wrap { margin-bottom: 24px; }
+    .cart-mini-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    @media (max-width: 560px) { .cart-mini-row { grid-template-columns: 1fr; } }
+    .cart-mini {
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 14px 16px;
+    }
+    .cart-mini-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+    .cart-mini-val { font-size: 1.5rem; font-weight: 700; margin-top: 6px; font-variant-numeric: tabular-nums; color: var(--text); }
+    .cart-mini-sub { font-size: 0.74rem; color: var(--muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .cart-mini.is-max .cart-mini-val { color: #fbbf24; }
+    .cart-note {
+      display: flex; align-items: flex-start; gap: 8px; margin-top: 20px;
+      font-size: 0.76rem; color: var(--muted); line-height: 1.5;
+    }
+    .cart-note svg { flex-shrink: 0; margin-top: 1px; opacity: 0.7; }
   </style>
 </head>
 <body>
@@ -244,6 +279,52 @@
       <div>
         <p style="font-size:0.75rem;color:var(--muted);margin-bottom:8px">14 números sorteados</p>
         <div class="nums" id="ultimo-nums"><span class="loading">cargando...</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cartones jugados -->
+  <div class="section" id="cartones-section" style="display:none">
+    <div class="section-title">Volumen de juego</div>
+    <div class="card">
+      <div class="cart-head">
+        <div class="cart-head-text">
+          <h3>¿Cuántos cartones se jugaron?</h3>
+          <p>Estimación a partir de los ganadores de cada sorteo · solo Kino</p>
+        </div>
+        <span class="cart-chip">ESTIMADO</span>
+      </div>
+
+      <div class="cart-hero">
+        <div class="cart-hero-num" id="cart-hero-num">—</div>
+        <div class="cart-hero-meta" id="cart-hero-meta">—</div>
+      </div>
+
+      <div class="cart-chart-wrap">
+        <canvas id="cart-chart" height="150"></canvas>
+      </div>
+
+      <div class="cart-mini-row">
+        <div class="cart-mini">
+          <div class="cart-mini-label">Promedio</div>
+          <div class="cart-mini-val" id="cart-avg">—</div>
+          <div class="cart-mini-sub" id="cart-avg-sub">cartones / sorteo</div>
+        </div>
+        <div class="cart-mini">
+          <div class="cart-mini-label">Mínimo</div>
+          <div class="cart-mini-val" id="cart-min">—</div>
+          <div class="cart-mini-sub" id="cart-min-sub">—</div>
+        </div>
+        <div class="cart-mini is-max">
+          <div class="cart-mini-label">Máximo</div>
+          <div class="cart-mini-val" id="cart-max">—</div>
+          <div class="cart-mini-sub" id="cart-max-sub">—</div>
+        </div>
+      </div>
+
+      <div class="cart-note">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>Estimación estadística (MLE hipergeométrico). Es un índice de volumen, no un conteo exacto: el margen de error es menor al 1%.</span>
       </div>
     </div>
   </div>
@@ -317,19 +398,23 @@
 <script>
 let globalData = null;
 let historialData = null;
+let cartonesData = null;
 let sumChart = null;
 let rdmChart = null;
+let cartChart = null;
 let existingJugadas = [];
 
 async function loadData() {
   try {
-    const [r1, r2] = await Promise.all([
+    const [r1, r2, r4] = await Promise.all([
       fetch('../data/kino_metrics.json'),
       fetch('../data/suggestions_history.json').catch(() => null),
+      fetch('../data/kino_cartones.json').catch(() => null),
     ]);
     if (!r1.ok) throw new Error('No data');
     globalData    = await r1.json();
     historialData = r2 && r2.ok ? await r2.json() : null;
+    cartonesData  = r4 && r4.ok ? await r4.json().catch(() => null) : null;
     try {
       const ghH = { Accept: 'application/vnd.github+json' };
       const tok = getToken(); if (tok) ghH.Authorization = `Bearer ${tok}`;
@@ -377,6 +462,118 @@ function render() {
   renderSumChart();
   renderSugerencias();
   renderRendimiento();
+  renderCartones();
+}
+
+const NF_CL = new Intl.NumberFormat('es-CL');
+const MESES_CL = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+
+function fmtFechaCorta(iso) {
+  // "2026-06-17" -> "17 jun 2026" (sin depender de zona horaria)
+  if (!iso || typeof iso !== 'string') return '';
+  const m = iso.split('-');
+  if (m.length !== 3) return iso;
+  const d = parseInt(m[2], 10), mes = parseInt(m[1], 10);
+  if (!d || !mes || mes < 1 || mes > 12) return iso;
+  return `${d} ${MESES_CL[mes - 1]} ${m[0]}`;
+}
+
+function renderCartones() {
+  const section = document.getElementById('cartones-section');
+  if (!section) return;
+  const sorteos = (cartonesData && Array.isArray(cartonesData.sorteos)) ? cartonesData.sorteos : [];
+  // Solo entradas con un valor numérico válido
+  const data = sorteos.filter(s => s && Number.isFinite(s.cartones_estimados));
+  if (!data.length) { section.style.display = 'none'; return; }
+  section.style.display = '';
+
+  // Ordenar por número de sorteo ascendente para el eje X
+  data.sort((a, b) => (a.sorteo || 0) - (b.sorteo || 0));
+
+  const valores = data.map(s => s.cartones_estimados);
+  const ultimo = data[data.length - 1]; // mayor número de sorteo
+  const avg = Math.round(valores.reduce((a, b) => a + b, 0) / valores.length);
+  let minItem = data[0], maxItem = data[0];
+  for (const s of data) {
+    if (s.cartones_estimados < minItem.cartones_estimados) minItem = s;
+    if (s.cartones_estimados > maxItem.cartones_estimados) maxItem = s;
+  }
+
+  // Hero (último sorteo)
+  document.getElementById('cart-hero-num').innerHTML =
+    `${NF_CL.format(ultimo.cartones_estimados)}<span>cartones</span>`;
+  const errPart = Number.isFinite(ultimo.error_estandar)
+    ? ` · ± ${NF_CL.format(ultimo.error_estandar)}` +
+      (Number.isFinite(ultimo.error_pct) ? ` (${ultimo.error_pct.toLocaleString('es-CL')}%)` : '')
+    : '';
+  document.getElementById('cart-hero-meta').textContent =
+    `Sorteo ${ultimo.sorteo} · ${fmtFechaCorta(ultimo.fecha)}${errPart}`;
+
+  // Mini-stats
+  document.getElementById('cart-avg').textContent = NF_CL.format(avg);
+  document.getElementById('cart-min').textContent = NF_CL.format(minItem.cartones_estimados);
+  document.getElementById('cart-min-sub').textContent = fmtFechaCorta(minItem.fecha) || '—';
+  document.getElementById('cart-max').textContent = NF_CL.format(maxItem.cartones_estimados);
+  document.getElementById('cart-max-sub').textContent = fmtFechaCorta(maxItem.fecha) || '—';
+
+  // Gráfico de barras
+  const labels = data.map(s => String(s.sorteo));
+  const colors = data.map(s => s.cartones_estimados === maxItem.cartones_estimados
+    ? '#fbbf24' : 'rgba(59,130,246,0.75)');
+
+  if (cartChart) cartChart.destroy();
+  const ctx = document.getElementById('cart-chart').getContext('2d');
+  cartChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          type: 'bar',
+          label: 'Cartones estimados',
+          data: valores,
+          backgroundColor: colors,
+          borderRadius: 4, borderSkipped: false,
+          order: 2,
+        },
+        {
+          type: 'line',
+          label: 'Promedio',
+          data: valores.map(() => avg),
+          borderColor: 'rgba(230,231,236,0.55)',
+          borderDash: [5, 5], borderWidth: 1.5,
+          pointRadius: 0, pointHitRadius: 0, fill: false,
+          order: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => {
+              const s = data[items[0].dataIndex];
+              return `Sorteo ${s.sorteo} · ${fmtFechaCorta(s.fecha)}`;
+            },
+            label: (item) => item.datasetIndex === 1
+              ? `Promedio: ${NF_CL.format(avg)}`
+              : `${NF_CL.format(item.parsed.y)} cartones`,
+          },
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { color: '#a1a1aa', maxTicksLimit: 5, callback: (v) => NF_CL.format(v) },
+          grid: { color: '#27272a' },
+        },
+        x: { ticks: { color: '#a1a1aa', maxRotation: 0, autoSkip: true, maxTicksLimit: 13 }, grid: { display: false } },
+      },
+    },
+  });
 }
 
 function switchGame(key, btn) {
