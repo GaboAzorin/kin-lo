@@ -249,6 +249,16 @@
       font-size: 0.76rem; color: var(--muted); line-height: 1.5;
     }
     .cart-note svg { flex-shrink: 0; margin-top: 1px; opacity: 0.7; }
+
+    /* ── Distribuciones (aciertos / suma) — reusa cart-* ── */
+    .dist-highlight {
+      font-size: clamp(1.4rem, 5vw, 2rem); font-weight: 800; line-height: 1.15;
+      color: var(--accent-soft); font-variant-numeric: tabular-nums;
+      margin: 8px 0 4px;
+    }
+    .dist-highlight strong { color: var(--green); }
+    .dist-highlight.is-suma { color: var(--text); }
+    .dist-sub { color: var(--muted); font-size: 0.85rem; }
   </style>
 </head>
 <body>
@@ -329,6 +339,72 @@
     </div>
   </div>
 
+  <!-- Distribución de aciertos -->
+  <div class="section" id="aciertos-section" style="display:none">
+    <div class="section-title">Probabilidad de aciertos</div>
+    <div class="card">
+      <div class="cart-head">
+        <div class="cart-head-text">
+          <h3>¿Cuántos números vas a acertar?</h3>
+          <p>Distribución real de aciertos de un cartón cualquiera de Kino</p>
+        </div>
+        <span class="cart-chip">PROBABILIDAD</span>
+      </div>
+
+      <div class="cart-chart-wrap">
+        <canvas id="aciertos-chart" height="150"></canvas>
+      </div>
+
+      <div class="dist-highlight" id="aciertos-highlight">—</div>
+
+      <div class="cart-note">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>Esta distribución es idéntica para CUALQUIER combinación de 14 números: no existen números "con más probabilidad". Por eso ninguna estrategia de elección mejora tus posibilidades.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Distribución de la suma -->
+  <div class="section" id="suma-section" style="display:none">
+    <div class="section-title">Forma de un sorteo</div>
+    <div class="card">
+      <div class="cart-head">
+        <div class="cart-head-text">
+          <h3>La forma de un sorteo típico</h3>
+          <p id="suma-sub">Distribución de la suma de los 14 números</p>
+        </div>
+        <span class="cart-chip">DISTRIBUCIÓN</span>
+      </div>
+
+      <div class="cart-chart-wrap">
+        <canvas id="suma-chart" height="150"></canvas>
+      </div>
+
+      <div class="cart-mini-row">
+        <div class="cart-mini">
+          <div class="cart-mini-label">Media μ</div>
+          <div class="cart-mini-val" id="suma-media">—</div>
+          <div class="cart-mini-sub">suma promedio</div>
+        </div>
+        <div class="cart-mini">
+          <div class="cart-mini-label">Desviación σ</div>
+          <div class="cart-mini-val" id="suma-desv">—</div>
+          <div class="cart-mini-sub">dispersión típica</div>
+        </div>
+        <div class="cart-mini">
+          <div class="cart-mini-label">Rango ±2σ</div>
+          <div class="cart-mini-val" id="suma-rango">—</div>
+          <div class="cart-mini-sub">~95% de los sorteos</div>
+        </div>
+      </div>
+
+      <div class="cart-note">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>La suma es casi normal (campana). OJO: que tu cartón sume cerca de <span id="suma-note-media">181</span> NO mejora tu probabilidad de ganar — toda combinación es igual de probable. Solo describe la "forma" típica de un sorteo.</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Sugerencias -->
   <div class="section">
     <div class="section-title" id="sugs-title">Combinaciones sugeridas para el próximo sorteo</div>
@@ -399,22 +475,27 @@
 let globalData = null;
 let historialData = null;
 let cartonesData = null;
+let distribucionesData = null;
 let sumChart = null;
 let rdmChart = null;
 let cartChart = null;
+let aciertosChart = null;
+let sumaDistChart = null;
 let existingJugadas = [];
 
 async function loadData() {
   try {
-    const [r1, r2, r4] = await Promise.all([
+    const [r1, r2, r4, r5] = await Promise.all([
       fetch('../data/kino_metrics.json'),
       fetch('../data/suggestions_history.json').catch(() => null),
       fetch('../data/kino_cartones.json').catch(() => null),
+      fetch('../data/kino_distribuciones.json').catch(() => null),
     ]);
     if (!r1.ok) throw new Error('No data');
     globalData    = await r1.json();
     historialData = r2 && r2.ok ? await r2.json() : null;
     cartonesData  = r4 && r4.ok ? await r4.json().catch(() => null) : null;
+    distribucionesData = r5 && r5.ok ? await r5.json().catch(() => null) : null;
     try {
       const ghH = { Accept: 'application/vnd.github+json' };
       const tok = getToken(); if (tok) ghH.Authorization = `Bearer ${tok}`;
@@ -463,6 +544,8 @@ function render() {
   renderSugerencias();
   renderRendimiento();
   renderCartones();
+  renderAciertos();
+  renderSumaDist();
 }
 
 const NF_CL = new Intl.NumberFormat('es-CL');
@@ -571,6 +654,220 @@ function renderCartones() {
           grid: { color: '#27272a' },
         },
         x: { ticks: { color: '#a1a1aa', maxRotation: 0, autoSkip: true, maxTicksLimit: 13 }, grid: { display: false } },
+      },
+    },
+  });
+}
+
+// Formato es-CL para porcentajes con N decimales
+function fmtPct(frac, dec) {
+  if (!Number.isFinite(frac)) return '—';
+  return (frac * 100).toLocaleString('es-CL', { minimumFractionDigits: dec, maximumFractionDigits: dec }) + '%';
+}
+function fmtNum(x, dec) {
+  if (!Number.isFinite(x)) return '—';
+  return x.toLocaleString('es-CL', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+
+// ── CARD 1: distribución de aciertos ──
+function renderAciertos() {
+  const section = document.getElementById('aciertos-section');
+  if (!section) return;
+  const a = distribucionesData && distribucionesData.aciertos;
+  const dist = a && Array.isArray(a.dist) ? a.dist.filter(d => d && Number.isFinite(d.k) && Number.isFinite(d.p)) : [];
+  if (!dist.length) { section.style.display = 'none'; return; }
+  section.style.display = '';
+
+  dist.sort((x, y) => x.k - y.k);
+  const labels = dist.map(d => String(d.k));
+  const values = dist.map(d => d.p);
+  const colors = dist.map(d => d.paga
+    ? 'rgba(52,211,153,0.85)'      // verde para k que paga (>=10)
+    : 'rgba(59,130,246,0.75)');    // azul para el resto
+
+  // Frase destacada (leída del JSON, no hardcodeada)
+  const hl = document.getElementById('aciertos-highlight');
+  const pagaK = Number.isFinite(a.aciertos_paga) ? a.aciertos_paga : 10;
+  if (Number.isFinite(a.prob_premio)) {
+    const unoEn = Number.isFinite(a.prob_premio_uno_en) ? ` · 1 en ${NF_CL.format(a.prob_premio_uno_en)}` : '';
+    hl.innerHTML = `Ganar algo (${pagaK}+ aciertos): <strong>${fmtPct(a.prob_premio, 2)}</strong>${unoEn}`;
+  } else {
+    hl.textContent = '';
+  }
+
+  const media = Number.isFinite(a.media) ? a.media : null;
+
+  if (aciertosChart) aciertosChart.destroy();
+  const ctx = document.getElementById('aciertos-chart').getContext('2d');
+  aciertosChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Probabilidad',
+        data: values,
+        backgroundColor: colors,
+        borderRadius: 4, borderSkipped: false,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => `${dist[items[0].dataIndex].k} aciertos`,
+            label: (item) => {
+              const d = dist[item.dataIndex];
+              const pct = fmtPct(d.p, d.p < 0.001 ? 5 : 2);
+              const unoEn = Number.isFinite(d.uno_en) ? ` · 1 en ${NF_CL.format(d.uno_en)}` : '';
+              return `probabilidad ${pct}${unoEn}`;
+            },
+          },
+        },
+        // Marca de la media: subtítulo (Chart.js core, sin plugins)
+        subtitle: media !== null ? {
+          display: true,
+          text: `promedio: ${fmtNum(media, 2)} aciertos`,
+          color: '#a1a1aa',
+          font: { size: 11, style: 'italic' },
+          padding: { bottom: 6 },
+        } : { display: false },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { color: '#a1a1aa', callback: (v) => (v * 100).toLocaleString('es-CL') + '%' },
+          grid: { color: '#27272a' },
+        },
+        x: {
+          title: { display: true, text: 'nº de aciertos', color: '#9aa0b0', font: { size: 11 } },
+          ticks: { color: '#a1a1aa' },
+          grid: { display: false },
+        },
+      },
+    },
+  });
+}
+
+// ── CARD 2: distribución de la suma (campana) ──
+function renderSumaDist() {
+  const section = document.getElementById('suma-section');
+  if (!section) return;
+  const s = distribucionesData && distribucionesData.suma;
+  const hist = s && Array.isArray(s.histograma)
+    ? s.histograma.filter(h => h && Number.isFinite(h.suma) && Number.isFinite(h.count)) : [];
+  const media = s && Number.isFinite(s.media) ? s.media : null;
+  const desv  = s && Number.isFinite(s.desv) ? s.desv : null;
+  if (!hist.length || media === null || desv === null || desv <= 0) {
+    section.style.display = 'none'; return;
+  }
+  section.style.display = '';
+
+  hist.sort((a, b) => a.suma - b.suma);
+  const n = Number.isFinite(s.n) ? s.n : hist.reduce((acc, h) => acc + h.count, 0);
+
+  // Subtítulo con n formateado
+  document.getElementById('suma-sub').textContent =
+    `Distribución de la suma de los 14 números · ${NF_CL.format(n)} sorteos`;
+
+  // Mini-stats
+  document.getElementById('suma-media').textContent = NF_CL.format(Math.round(media));
+  document.getElementById('suma-desv').textContent = fmtNum(desv, 1);
+  const lo = Math.round(media - 2 * desv), hi = Math.round(media + 2 * desv);
+  document.getElementById('suma-rango').textContent = `${NF_CL.format(lo)} – ${NF_CL.format(hi)}`;
+  document.getElementById('suma-note-media').textContent = NF_CL.format(Math.round(media));
+
+  // Datos en forma {x: suma, y: ...} sobre un eje X lineal: así las barras del
+  // histograma y las líneas σ verticales comparten la misma escala numérica.
+  const minX = hist[0].suma, maxX = hist[hist.length - 1].suma;
+  const counts = hist.map(h => ({ x: h.suma, y: h.count }));
+  const norm = (x) => (1 / (desv * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - media) / desv, 2));
+  const curve = hist.map(h => ({ x: h.suma, y: norm(h.suma) * n })); // densidad * n * bin(=1)
+  const maxCount = Math.max(...hist.map(h => h.count));
+  const maxCurve = Math.max(...curve.map(p => p.y));
+  const topY = Math.max(maxCount, maxCurve);
+
+  // Líneas σ como datasets de línea vertical de 2 puntos (sin plugins de anotación)
+  const sigmaXs = [
+    { x: media - 2 * desv, lbl: '−2σ' },
+    { x: media - desv,     lbl: '−1σ' },
+    { x: media,            lbl: 'μ'   },
+    { x: media + desv,     lbl: '+1σ' },
+    { x: media + 2 * desv, lbl: '+2σ' },
+  ];
+  const sigmaDatasets = sigmaXs
+    .filter(sx => sx.x >= minX && sx.x <= maxX)
+    .map(sx => ({
+      type: 'line',
+      label: sx.lbl,
+      data: [{ x: sx.x, y: 0 }, { x: sx.x, y: topY }],
+      borderColor: sx.lbl === 'μ' ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.22)',
+      borderWidth: sx.lbl === 'μ' ? 1.5 : 1,
+      borderDash: sx.lbl === 'μ' ? [] : [4, 4],
+      pointRadius: 0, pointHitRadius: 0, fill: false,
+      order: 0,
+    }));
+
+  if (sumaDistChart) sumaDistChart.destroy();
+  const ctx = document.getElementById('suma-chart').getContext('2d');
+  sumaDistChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      datasets: [
+        {
+          type: 'bar',
+          label: 'Sorteos (histograma)',
+          data: counts,
+          backgroundColor: 'rgba(59,130,246,0.35)',
+          borderRadius: 2, borderSkipped: false,
+          barPercentage: 1.0, categoryPercentage: 1.0,
+          order: 3,
+        },
+        {
+          type: 'line',
+          label: 'Curva normal',
+          data: curve,
+          borderColor: '#60a5fa',
+          backgroundColor: 'transparent',
+          borderWidth: 2, tension: 0.4,
+          pointRadius: 0, pointHitRadius: 0, fill: false,
+          order: 1,
+        },
+        ...sigmaDatasets,
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          filter: (item) => item.datasetIndex <= 1, // solo barras y curva, no líneas σ
+          callbacks: {
+            title: (items) => `Suma ${NF_CL.format(items[0].parsed.x)}`,
+            label: (item) => item.datasetIndex === 0
+              ? `${NF_CL.format(item.parsed.y)} sorteos`
+              : `Curva normal: ${fmtNum(item.parsed.y, 1)}`,
+          },
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { color: '#a1a1aa', maxTicksLimit: 5, callback: (v) => NF_CL.format(v) },
+          grid: { color: '#27272a' },
+          title: { display: true, text: 'nº de sorteos', color: '#9aa0b0', font: { size: 11 } },
+        },
+        x: {
+          type: 'linear',
+          min: minX, max: maxX,
+          offset: false,
+          title: { display: true, text: 'suma de los 14 números (μ ± σ marcados)', color: '#9aa0b0', font: { size: 11 } },
+          ticks: { color: '#a1a1aa', maxRotation: 0, autoSkip: true, maxTicksLimit: 9, callback: (v) => NF_CL.format(v) },
+          grid: { display: false },
+        },
       },
     },
   });
