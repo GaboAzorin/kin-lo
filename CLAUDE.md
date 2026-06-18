@@ -89,6 +89,19 @@ GitHub Pages sirve docs/ → https://gaboazorin.github.io/kin-lo/
   Solo el sorteo 3100 tenía datos pre-renderizados en HTML (SSG); los demás requieren JS.
   Usar la API REST directamente es mucho más eficiente.
 
+### Estimación de cartones jugados (`src/scrapers/scraper_premios_kino.py` + `src/analytics/estimar_cartones.py`)
+
+- `scraper_premios_kino.py` captura el **desglose de ganadores por categoría** (10–13
+  aciertos) de cada sorteo Kino desde `rckino.loteria.cl` → `data/kino_premios_historial.csv`.
+- **No es backfilleable**: kinohistorico.cl solo expone `winners_count` de la categoría
+  máxima (14 aciertos ≈ siempre 0). Las categorías bajas solo están en loteria.cl y solo
+  para los últimos ~26 sorteos. Por eso se acumulan de aquí en adelante (corre en el cron).
+- `estimar_cartones.py` estima cuántos cartones se jugaron con un **pooled MLE
+  hipergeométrico**: `N̂ = Σ ganadores_k / Σ P(k)` (k=10..13), error estándar `√Σg / Σp`.
+  Salida: `docs/data/kino_cartones.json`. **Solo KINO** (ReKino/RequeteKino no traen
+  categorías bajas en la API). Es un índice de volumen con sesgo absoluto (los jugadores no
+  eligen al azar) pero error estadístico <1% y muy robusto para comparar sorteos.
+
 ### Analytics (`src/analytics/`)
 
 - `metrics.py` lee los CSV y genera JSON en `docs/data/`.

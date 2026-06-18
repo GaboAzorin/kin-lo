@@ -1,0 +1,214 @@
+{
+  "metodo": "pooled MLE hipergeometrico sobre ganadores k=10..13 (KINO)",
+  "n_sorteos": 26,
+  "sorteos": [
+    {
+      "sorteo": 3216,
+      "fecha": "2026-04-19",
+      "cartones_estimados": 278139,
+      "error_estandar": 1770,
+      "error_pct": 0.64,
+      "ganadores_usados": 24682
+    },
+    {
+      "sorteo": 3217,
+      "fecha": "2026-04-22",
+      "cartones_estimados": 234134,
+      "error_estandar": 1624,
+      "error_pct": 0.69,
+      "ganadores_usados": 20777
+    },
+    {
+      "sorteo": 3218,
+      "fecha": "2026-04-24",
+      "cartones_estimados": 188889,
+      "error_estandar": 1459,
+      "error_pct": 0.77,
+      "ganadores_usados": 16762
+    },
+    {
+      "sorteo": 3219,
+      "fecha": "2026-04-26",
+      "cartones_estimados": 254316,
+      "error_estandar": 1693,
+      "error_pct": 0.67,
+      "ganadores_usados": 22568
+    },
+    {
+      "sorteo": 3220,
+      "fecha": "2026-04-29",
+      "cartones_estimados": 295842,
+      "error_estandar": 1826,
+      "error_pct": 0.62,
+      "ganadores_usados": 26253
+    },
+    {
+      "sorteo": 3221,
+      "fecha": "2026-05-01",
+      "cartones_estimados": 181497,
+      "error_estandar": 1430,
+      "error_pct": 0.79,
+      "ganadores_usados": 16106
+    },
+    {
+      "sorteo": 3222,
+      "fecha": "2026-05-03",
+      "cartones_estimados": 348513,
+      "error_estandar": 1982,
+      "error_pct": 0.57,
+      "ganadores_usados": 30927
+    },
+    {
+      "sorteo": 3223,
+      "fecha": "2026-05-06",
+      "cartones_estimados": 358080,
+      "error_estandar": 2009,
+      "error_pct": 0.56,
+      "ganadores_usados": 31776
+    },
+    {
+      "sorteo": 3224,
+      "fecha": "2026-05-08",
+      "cartones_estimados": 314966,
+      "error_estandar": 1884,
+      "error_pct": 0.6,
+      "ganadores_usados": 27950
+    },
+    {
+      "sorteo": 3225,
+      "fecha": "2026-05-10",
+      "cartones_estimados": 413591,
+      "error_estandar": 2159,
+      "error_pct": 0.52,
+      "ganadores_usados": 36702
+    },
+    {
+      "sorteo": 3226,
+      "fecha": "2026-05-13",
+      "cartones_estimados": 502514,
+      "error_estandar": 2380,
+      "error_pct": 0.47,
+      "ganadores_usados": 44593
+    },
+    {
+      "sorteo": 3227,
+      "fecha": "2026-05-15",
+      "cartones_estimados": 374477,
+      "error_estandar": 2054,
+      "error_pct": 0.55,
+      "ganadores_usados": 33231
+    },
+    {
+      "sorteo": 3228,
+      "fecha": "2026-05-17",
+      "cartones_estimados": 511518,
+      "error_estandar": 2401,
+      "error_pct": 0.47,
+      "ganadores_usados": 45392
+    },
+    {
+      "sorteo": 3229,
+      "fecha": "2026-05-20",
+      "cartones_estimados": 981600,
+      "error_estandar": 3326,
+      "error_pct": 0.34,
+      "ganadores_usados": 87107
+    },
+    {
+      "sorteo": 3230,
+      "fecha": "2026-05-22",
+      "cartones_estimados": 506165,
+      "error_estandar": 2388,
+      "error_pct": 0.47,
+      "ganadores_usados": 44917
+    },
+    {
+      "sorteo": 3231,
+      "fecha": "2026-05-24",
+      "cartones_estimados": 537504,
+      "error_estandar": 2461,
+      "error_pct": 0.46,
+      "ganadores_usados": 47698
+    },
+    {
+      "sorteo": 3232,
+      "fecha": "2026-05-27",
+      "cartones_estimados": 504418,
+      "error_estandar": 2384,
+      "error_pct": 0.47,
+      "ganadores_usados": 44762
+    },
+    {
+      "sorteo": 3233,
+      "fecha": "2026-05-29",
+      "cartones_estimados": 426043,
+      "error_estandar": 2191,
+      "error_pct": 0.51,
+      "ganadores_usados": 37807
+    },
+    {
+      "sorteo": 3234,
+      "fecha": "2026-05-31",
+      "cartones_estimados": 543769,
+      "error_estandar": 2475,
+      "error_pct": 0.46,
+      "ganadores_usados": 48254
+    },
+    {
+      "sorteo": 3235,
+      "fecha": "2026-06-03",
+      "cartones_estimados": 580213,
+      "error_estandar": 2557,
+      "error_pct": 0.44,
+      "ganadores_usados": 51488
+    },
+    {
+      "sorteo": 3236,
+      "fecha": "2026-06-05",
+      "cartones_estimados": 391966,
+      "error_estandar": 2102,
+      "error_pct": 0.54,
+      "ganadores_usados": 34783
+    },
+    {
+      "sorteo": 3237,
+      "fecha": "2026-06-07",
+      "cartones_estimados": 545493,
+      "error_estandar": 2479,
+      "error_pct": 0.45,
+      "ganadores_usados": 48407
+    },
+    {
+      "sorteo": 3238,
+      "fecha": "2026-06-10",
+      "cartones_estimados": 382354,
+      "error_estandar": 2076,
+      "error_pct": 0.54,
+      "ganadores_usados": 33930
+    },
+    {
+      "sorteo": 3239,
+      "fecha": "2026-06-12",
+      "cartones_estimados": 311078,
+      "error_estandar": 1872,
+      "error_pct": 0.6,
+      "ganadores_usados": 27605
+    },
+    {
+      "sorteo": 3240,
+      "fecha": "2026-06-14",
+      "cartones_estimados": 396113,
+      "error_estandar": 2113,
+      "error_pct": 0.53,
+      "ganadores_usados": 35151
+    },
+    {
+      "sorteo": 3241,
+      "fecha": "2026-06-17",
+      "cartones_estimados": 372212,
+      "error_estandar": 2048,
+      "error_pct": 0.55,
+      "ganadores_usados": 33030
+    }
+  ]
+}

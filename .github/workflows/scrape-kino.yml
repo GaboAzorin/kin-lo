@@ -47,11 +47,21 @@ jobs:
         continue-on-error: true
         run: python src/scrapers/scraper_kinohistorico.py
 
+      - name: Capturar premios/ganadores por categoría (para estimar cartones)
+        # Solo loteria.cl expone las categorías bajas (10-13 aciertos) y solo de
+        # los últimos ~26 sorteos; por eso se acumulan de aquí en adelante.
+        continue-on-error: true
+        run: python src/scrapers/scraper_premios_kino.py
+
       - name: Calcular métricas y sugerencias (Kino)
         run: python src/analytics/metrics.py --game kino
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+      - name: Estimar cartones Kino jugados (desde ganadores por categoría)
+        continue-on-error: true
+        run: python src/analytics/estimar_cartones.py
 
       - name: Actualizar pozos estimados
         # rckino.loteria.cl no bloquea IPs → Kino siempre OK.
@@ -79,6 +89,6 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "data(kino): actualizar historial [${{ github.run_id }}]"
-          file_pattern: "data/loteria_historial.csv docs/data/kino_metrics.json docs/data/pozos.json data/kino_suggestions_pending.json data/suggestions_history.csv docs/data/suggestions_history.json docs/data/suggestions_detail.json data/jugadas.json docs/data/historial_index.json docs/index.html docs/kino/index.html docs/loto/index.html docs/sugerencias/index.html docs/jugadas/index.html docs/ingresar/index.html docs/.staticrypt-src-hash docs/js/gh-api.js"
+          file_pattern: "data/loteria_historial.csv data/kino_premios_historial.csv docs/data/kino_cartones.json docs/data/kino_metrics.json docs/data/pozos.json data/kino_suggestions_pending.json data/suggestions_history.csv docs/data/suggestions_history.json docs/data/suggestions_detail.json data/jugadas.json docs/data/historial_index.json docs/index.html docs/kino/index.html docs/loto/index.html docs/sugerencias/index.html docs/jugadas/index.html docs/ingresar/index.html docs/.staticrypt-src-hash docs/js/gh-api.js"
           commit_user_name: "github-actions[bot]"
           commit_user_email: "github-actions[bot]@users.noreply.github.com"
