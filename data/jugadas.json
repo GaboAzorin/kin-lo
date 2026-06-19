@@ -1040,7 +1040,19 @@
       37
     ],
     "rango_sugerencia": "250",
-    "aciertos": null
+    "aciertos": {
+      "loto": 1
+    },
+    "resultado_sorteo": {
+      "loto": [
+        7,
+        17,
+        19,
+        22,
+        24,
+        33
+      ]
+    }
   },
   {
     "fecha_jugada": "2026-06-18",
