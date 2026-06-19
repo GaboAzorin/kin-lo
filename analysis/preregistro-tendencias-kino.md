@@ -1,7 +1,7 @@
 # Pre-registro: ¿hay tendencias predecibles en los rangos del Kino?
 
-> **Estado:** ABIERTO, esperando definir hipótesis. Creado 2026-06-18.
-> **Para retomar:** el usuario dirá *"Quiero entrarle"*. Ver sección **▶ CÓMO SEGUIR MAÑANA**.
+> **Estado:** CERRADO — veredicto NULO por poder estadístico. Cerrado 2026-06-19.
+> Creado 2026-06-18. Ver sección **REGISTRO CONGELADO** para el veredicto final.
 
 ---
 
@@ -105,7 +105,50 @@ Otras estadísticas disponibles para hipótesis (ya existen o son fáciles de de
 
 ## REGISTRO CONGELADO
 
-> _(vacío — se llena al congelar mañana, con timestamp y commit)_
+**Veredicto: NULO por poder estadístico. Experimento CERRADO el 2026-06-19** (antes de que
+se sortease ningún sorteo ≥ 3242; el CSV terminaba en el 3241 / 2026-06-17).
+
+Decisión: **no se congela ninguna hipótesis para evaluación out-of-sample**, porque ninguna
+hipótesis derivable de los datos es detectable en un horizonte práctico. El pre-registro se
+cierra con la conclusión de que no hay tendencia explotable y, lo más importante, que **no la
+habría aunque existiese un efecto chico**, por falta de poder.
+
+### Análisis de poder (la razón del cierre)
+
+Calculado sobre el baseline in-sample (n=2.443, sorteos 799–3241; μ=181,13 · σ=18,62):
+
+- Bins ±1σ: BAJO <162,5 · MEDIO 162,5–199,8 · ALTO >199,8. Tasas base: BAJO 15,9% ·
+  MEDIO 68,2% · ALTO 15,9%.
+- Celda candidata (la única que "encendió" pescando bins): **P(BAJO | anterior ALTO) = 11,3%**
+  (388 casos ALTO previos), vs base 15,9% → caída de 4,6 pts. Dirección = *pegajosidad*
+  (tras ALTO, menos probable BAJO), **contraria** a la intuición de compensación.
+- Sorteos out-of-sample necesarios para confirmar esa celda al 80% de poder (p<0,05 una cola):
+
+  | Efecto a detectar | Sorteos ≥3242 necesarios |
+  |---|---|
+  | caída 3 pts | ~5.772 (~37 años) |
+  | caída 5 pts | ~2.078 (~13 años) |
+  | caída 8 pts | ~812 (~5 años) |
+
+- Test continuo más sensible (autocorrelación lag-1 de la suma, libre de bins):
+  **r = 0,0304, z = 1,50 con n=2.443 → ni siquiera significativo in-sample.**
+
+### Por qué esto cierra el caso (no solo lo pospone)
+
+El in-sample de 2.443 sorteos **ya es el test más potente que vamos a tener jamás**. Si
+existiera una memoria real explotable en la suma, a ese n sería evidente (z ≫ 3); no lo es
+(máximo z = 1,50). Cualquier efecto lo bastante grande para detectarse en ~100-200 sorteos
+nuevos (r ≳ 0,16 / caída ≳ 8 pts) ya saldría a gritos en el histórico, y no aparece. Y la
+celda de pegajosidad (11,3%) se halló *pescando* entre cortes de bins (look-elsewhere), así que
+su "significancia" in-sample no es confiable — pero un test out-of-sample con tan poco poder
+**no la confirmaría ni la refutaría** ni corriendo años: sería no informativo en ambas
+direcciones. Pre-registrarla solo simularía rigor sin aportar evidencia.
+
+**Conclusión:** la suma del Kino no tiene memoria explotable, y el diseño out-of-sample no
+puede revelar lo que un histórico con más poder ya no muestra. Caso cerrado.
+
+Script de los números: ver el cálculo inline corrido el 2026-06-19 (csv → suma por sorteo →
+bins ±1σ → celda de transición + autocorrelación lag-1 + tamaño de muestra para 80% de poder).
 
 ---
 
