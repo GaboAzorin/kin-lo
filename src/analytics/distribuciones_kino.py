@@ -29,8 +29,9 @@ POOL = 25          # rango 1..25
 ACIERTOS_PAGA = 10  # desde 10 aciertos hay premio
 
 
-def _sumas_kino() -> list[int]:
-    sumas = []
+def _serie_kino() -> list[tuple[int, str, int]]:
+    """Lista cronológica de (sorteo, fecha, suma) de cada Kino con los 14 números."""
+    filas = []
     with open(CSV_IN, "r", encoding="utf-8") as f:
         for row in csv.DictReader(f):
             nums = []
@@ -42,12 +43,19 @@ def _sumas_kino() -> list[int]:
                     break
                 nums.append(int(float(v)))
             if ok and len(nums) == NUMS:
-                sumas.append(sum(nums))
-    return sumas
+                try:
+                    sorteo = int(float((row.get("sorteo") or "0").strip()))
+                except ValueError:
+                    sorteo = 0
+                fecha = (row.get("fecha") or "").strip()
+                filas.append((sorteo, fecha, sum(nums)))
+    filas.sort(key=lambda r: r[0])  # cronológico por nº de sorteo
+    return filas
 
 
 def dist_suma() -> dict:
-    sumas = _sumas_kino()
+    serie = _serie_kino()
+    sumas = [r[2] for r in serie]
     n = len(sumas)
     media = sum(sumas) / n
     var = sum((s - media) ** 2 for s in sumas) / n
@@ -64,6 +72,12 @@ def dist_suma() -> dict:
         "max": smax,
         "rango_teorico": [sum(range(1, NUMS + 1)), sum(range(POOL - NUMS + 1, POOL + 1))],
         "histograma": histograma,
+        # Serie cronológica para la barra temporal de la campana (frontend).
+        "serie": {
+            "sorteo": [r[0] for r in serie],
+            "fecha": [r[1] for r in serie],
+            "suma": [r[2] for r in serie],
+        },
     }
 
 

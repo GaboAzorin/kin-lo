@@ -104,6 +104,13 @@
     .resultado-wrap { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .resultado-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.07em; color: var(--muted); }
+    .resultado-suma {
+      font-size: 0.78rem; font-weight: 700; color: var(--green);
+      background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.35);
+      border-radius: 999px; padding: 3px 10px; white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+    .resultado-suma span { color: var(--muted); font-weight: 600; }
     .bola {
       width: 34px; height: 34px; border-radius: 50%;
       display: inline-flex; align-items: center; justify-content: center;
@@ -525,6 +532,11 @@ function render() {
       `<span class="bola bola-resultado">${n}</span>`
     ).join('');
 
+    const sumaResultado = (s.resultado || []).reduce((acc, n) => acc + n, 0);
+    const sumaHtml = (s.resultado && s.resultado.length)
+      ? `<span class="resultado-suma" title="Suma de los ${s.resultado.length} números sorteados"><span>Suma</span> ${fmt(sumaResultado)}</span>`
+      : '';
+
     const bestHtml = s.best
       ? `<strong class="rank-num">${s.best.aciertos}/${k}</strong><br>en ${RANGE_LABELS[s.best.rango] || s.best.rango}`
       : '—';
@@ -590,6 +602,7 @@ function render() {
           <div class="resultado-wrap">
             <span class="resultado-label">Resultado</span>
             ${resultadoBolas || '<span style="color:var(--muted)">—</span>'}
+            ${sumaHtml}
           </div>
           <div class="rank-badge">
             Mejor del sorteo<br>${bestHtml}

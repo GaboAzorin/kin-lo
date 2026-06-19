@@ -259,6 +259,30 @@
     .dist-highlight strong { color: var(--green); }
     .dist-highlight.is-suma { color: var(--text); }
     .dist-sub { color: var(--muted); font-size: 0.85rem; }
+
+    /* ── Barra temporal de la campana ── */
+    .suma-time { margin: 14px 2px 2px; }
+    .suma-time-head {
+      display: flex; justify-content: space-between; align-items: baseline;
+      gap: 10px; margin-bottom: 6px; font-size: 0.8rem;
+    }
+    .suma-time-label { color: var(--muted); }
+    .suma-time-pos { color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .suma-time input[type=range] {
+      width: 100%; -webkit-appearance: none; appearance: none; height: 6px;
+      border-radius: 999px; background: rgba(255,255,255,0.12); outline: none; cursor: pointer;
+    }
+    .suma-time input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none; width: 18px; height: 18px;
+      border-radius: 50%; background: #60a5fa; border: 2px solid #0a0e1a;
+      box-shadow: 0 0 8px rgba(96,165,250,0.6); cursor: pointer;
+    }
+    .suma-time input[type=range]::-moz-range-thumb {
+      width: 18px; height: 18px; border-radius: 50%; background: #60a5fa;
+      border: 2px solid #0a0e1a; box-shadow: 0 0 8px rgba(96,165,250,0.6); cursor: pointer;
+    }
+    .suma-time-hint { color: var(--muted); font-size: 0.72rem; margin-top: 5px; }
+    .suma-time-hint b { color: #93b9f7; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -378,6 +402,15 @@
 
       <div class="cart-chart-wrap">
         <canvas id="suma-chart" height="150"></canvas>
+      </div>
+
+      <div class="suma-time" id="suma-time" style="display:none">
+        <div class="suma-time-head">
+          <span class="suma-time-label">Recorrer el tiempo</span>
+          <span class="suma-time-pos" id="suma-time-pos">—</span>
+        </div>
+        <input type="range" id="suma-time-range" min="1" max="1" value="1" step="1" aria-label="Recorrer los sorteos en el tiempo">
+        <div class="suma-time-hint">Mueve la barra para ver cómo se rellena la campana. Las <b>líneas punteadas</b> marcan dónde llega cada barra en el presente.</div>
       </div>
 
       <div class="cart-mini-row">
@@ -768,86 +801,97 @@ function renderSumaDist() {
   hist.sort((a, b) => a.suma - b.suma);
   const n = Number.isFinite(s.n) ? s.n : hist.reduce((acc, h) => acc + h.count, 0);
 
-  // Subtítulo con n formateado
-  document.getElementById('suma-sub').textContent =
-    `Distribución de la suma de los 14 números · ${NF_CL.format(n)} sorteos`;
-
-  // Mini-stats
-  document.getElementById('suma-media').textContent = NF_CL.format(Math.round(media));
-  document.getElementById('suma-desv').textContent = fmtNum(desv, 1);
-  const lo = Math.round(media - 2 * desv), hi = Math.round(media + 2 * desv);
-  document.getElementById('suma-rango').textContent = `${NF_CL.format(lo)} – ${NF_CL.format(hi)}`;
-  document.getElementById('suma-note-media').textContent = NF_CL.format(Math.round(media));
-
-  // Datos en forma {x: suma, y: ...} sobre un eje X lineal: así las barras del
-  // histograma y las líneas σ verticales comparten la misma escala numérica.
+  // Eje X fijo (rango presente): así las barras, la curva y las líneas σ comparten
+  // la misma escala mientras se recorre el tiempo.
   const minX = hist[0].suma, maxX = hist[hist.length - 1].suma;
-  const counts = hist.map(h => ({ x: h.suma, y: h.count }));
-  const norm = (x) => (1 / (desv * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - media) / desv, 2));
-  const curve = hist.map(h => ({ x: h.suma, y: norm(h.suma) * n })); // densidad * n * bin(=1)
-  const maxCount = Math.max(...hist.map(h => h.count));
-  const maxCurve = Math.max(...curve.map(p => p.y));
-  const topY = Math.max(maxCount, maxCurve);
+  const sumas = [];
+  for (let x = minX; x <= maxX; x++) sumas.push(x);
+  const presentCounts = hist.reduce((m, h) => (m[h.suma] = h.count, m), {});
+  const presentArr = sumas.map(x => presentCounts[x] || 0);
 
-  // Líneas σ como datasets de línea vertical de 2 puntos (sin plugins de anotación)
-  const sigmaXs = [
-    { x: media - 2 * desv, lbl: '−2σ' },
-    { x: media - desv,     lbl: '−1σ' },
-    { x: media,            lbl: 'μ'   },
-    { x: media + desv,     lbl: '+1σ' },
-    { x: media + 2 * desv, lbl: '+2σ' },
-  ];
-  const sigmaDatasets = sigmaXs
-    .filter(sx => sx.x >= minX && sx.x <= maxX)
-    .map(sx => ({
-      type: 'line',
-      label: sx.lbl,
+  // Tope Y fijo (al presente) para que la campana se vea "llenándose", no reescalándose.
+  const normOf = (mu, sd) => (x) => (1 / (sd * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mu) / sd, 2));
+  const presentCurveMax = Math.max(...sumas.map(x => normOf(media, desv)(x) * n));
+  const topY = Math.max(Math.max(...presentArr), presentCurveMax);
+
+  // Serie cronológica (opcional): habilita la barra temporal.
+  const serie = s.serie && Array.isArray(s.serie.suma) ? s.serie : null;
+
+  // Estadística de un subconjunto de sumas (población).
+  const statsOf = (arr) => {
+    const k = arr.length;
+    if (k === 0) return { media: 0, desv: 0 };
+    const mu = arr.reduce((a, b) => a + b, 0) / k;
+    const v = arr.reduce((a, b) => a + (b - mu) ** 2, 0) / k;
+    return { media: mu, desv: Math.sqrt(v) };
+  };
+
+  // Construye los datasets para un estado dado (counts por suma + media/σ).
+  const buildDatasets = (countsArr, mu, sd) => {
+    const counts = sumas.map((x, i) => ({ x, y: countsArr[i] }));
+    const ghost = sumas.map((x, i) => ({ x, y: countsArr[i] < presentArr[i] ? presentArr[i] : null }));
+    const norm = (sd > 0) ? normOf(mu, sd) : (() => 0);
+    const subN = countsArr.reduce((a, b) => a + b, 0);
+    const curve = sumas.map(x => ({ x, y: norm(x) * subN }));
+    const sigmaXs = sd > 0 ? [
+      { x: mu - 2 * sd, lbl: '−2σ' }, { x: mu - sd, lbl: '−1σ' }, { x: mu, lbl: 'μ' },
+      { x: mu + sd, lbl: '+1σ' }, { x: mu + 2 * sd, lbl: '+2σ' },
+    ] : [];
+    const sigmaDatasets = sigmaXs.filter(sx => sx.x >= minX && sx.x <= maxX).map(sx => ({
+      type: 'line', label: sx.lbl,
       data: [{ x: sx.x, y: 0 }, { x: sx.x, y: topY }],
       borderColor: sx.lbl === 'μ' ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.22)',
       borderWidth: sx.lbl === 'μ' ? 1.5 : 1,
       borderDash: sx.lbl === 'μ' ? [] : [4, 4],
-      pointRadius: 0, pointHitRadius: 0, fill: false,
-      order: 0,
+      pointRadius: 0, pointHitRadius: 0, fill: false, order: 0,
     }));
+    return [
+      { type: 'bar', label: 'Sorteos (histograma)', data: counts,
+        backgroundColor: 'rgba(59,130,246,0.35)', borderRadius: 2, borderSkipped: false,
+        barPercentage: 1.0, categoryPercentage: 1.0, order: 3 },
+      { type: 'bar', label: 'Presente', data: ghost, grouped: false,
+        backgroundColor: 'transparent', borderColor: 'rgba(147,197,253,0.85)',
+        borderWidth: 1, borderDash: [3, 3], borderSkipped: false,
+        barPercentage: 1.0, categoryPercentage: 1.0, order: 2 },
+      { type: 'line', label: 'Curva normal', data: curve,
+        borderColor: '#60a5fa', backgroundColor: 'transparent',
+        borderWidth: 2, tension: 0.4, pointRadius: 0, pointHitRadius: 0, fill: false, order: 1 },
+      ...sigmaDatasets,
+    ];
+  };
+
+  // Actualiza mini-stats, subtítulo y posición temporal.
+  const setStats = (mu, sd, subN, posIdx) => {
+    document.getElementById('suma-sub').textContent =
+      `Distribución de la suma de los 14 números · ${NF_CL.format(subN)} sorteos`;
+    document.getElementById('suma-media').textContent = sd > 0 ? NF_CL.format(Math.round(mu)) : '—';
+    document.getElementById('suma-desv').textContent = sd > 0 ? fmtNum(sd, 1) : '—';
+    document.getElementById('suma-rango').textContent = sd > 0
+      ? `${NF_CL.format(Math.round(mu - 2 * sd))} – ${NF_CL.format(Math.round(mu + 2 * sd))}` : '—';
+    document.getElementById('suma-note-media').textContent = NF_CL.format(Math.round(sd > 0 ? mu : media));
+    const posEl = document.getElementById('suma-time-pos');
+    if (posEl && serie && posIdx != null) {
+      const sort = serie.sorteo ? serie.sorteo[posIdx] : null;
+      const fch = serie.fecha ? (serie.fecha[posIdx] || '').split(' ')[0] : '';
+      posEl.textContent = (sort != null ? `Sorteo #${NF_CL.format(sort)}` : `${NF_CL.format(subN)} sorteos`)
+        + (fch ? ` · ${fch}` : '');
+    }
+  };
 
   if (sumaDistChart) sumaDistChart.destroy();
   const ctx = document.getElementById('suma-chart').getContext('2d');
   sumaDistChart = new Chart(ctx, {
     type: 'bar',
-    data: {
-      datasets: [
-        {
-          type: 'bar',
-          label: 'Sorteos (histograma)',
-          data: counts,
-          backgroundColor: 'rgba(59,130,246,0.35)',
-          borderRadius: 2, borderSkipped: false,
-          barPercentage: 1.0, categoryPercentage: 1.0,
-          order: 3,
-        },
-        {
-          type: 'line',
-          label: 'Curva normal',
-          data: curve,
-          borderColor: '#60a5fa',
-          backgroundColor: 'transparent',
-          borderWidth: 2, tension: 0.4,
-          pointRadius: 0, pointHitRadius: 0, fill: false,
-          order: 1,
-        },
-        ...sigmaDatasets,
-      ],
-    },
+    data: { datasets: buildDatasets(presentArr, media, desv) },
     options: {
-      responsive: true,
-      maintainAspectRatio: true,
+      responsive: true, maintainAspectRatio: true, animation: false,
       plugins: {
         legend: { display: false },
         tooltip: {
-          filter: (item) => item.datasetIndex <= 1, // solo barras y curva, no líneas σ
+          filter: (item) => item.dataset.label === 'Sorteos (histograma)' || item.dataset.label === 'Curva normal',
           callbacks: {
             title: (items) => `Suma ${NF_CL.format(items[0].parsed.x)}`,
-            label: (item) => item.datasetIndex === 0
+            label: (item) => item.dataset.label === 'Sorteos (histograma)'
               ? `${NF_CL.format(item.parsed.y)} sorteos`
               : `Curva normal: ${fmtNum(item.parsed.y, 1)}`,
           },
@@ -855,15 +899,13 @@ function renderSumaDist() {
       },
       scales: {
         y: {
-          beginAtZero: true,
+          beginAtZero: true, max: Math.ceil(topY * 1.02),
           ticks: { color: '#a1a1aa', maxTicksLimit: 5, callback: (v) => NF_CL.format(v) },
           grid: { color: '#27272a' },
           title: { display: true, text: 'nº de sorteos', color: '#9aa0b0', font: { size: 11 } },
         },
         x: {
-          type: 'linear',
-          min: minX, max: maxX,
-          offset: false,
+          type: 'linear', min: minX, max: maxX, offset: false,
           title: { display: true, text: 'suma de los 14 números (μ ± σ marcados)', color: '#9aa0b0', font: { size: 11 } },
           ticks: { color: '#a1a1aa', maxRotation: 0, autoSkip: true, maxTicksLimit: 9, callback: (v) => NF_CL.format(v) },
           grid: { display: false },
@@ -871,6 +913,30 @@ function renderSumaDist() {
       },
     },
   });
+
+  setStats(media, desv, n, serie ? serie.suma.length - 1 : null);
+
+  // Barra temporal: solo si hay serie cronológica.
+  const timeWrap = document.getElementById('suma-time');
+  const range = document.getElementById('suma-time-range');
+  if (serie && timeWrap && range) {
+    const total = serie.suma.length;
+    timeWrap.style.display = '';
+    range.min = 1; range.max = total; range.value = total;
+    const update = (t) => {
+      const subset = serie.suma.slice(0, t);
+      const cnt = {};
+      for (const v of subset) cnt[v] = (cnt[v] || 0) + 1;
+      const arr = sumas.map(x => cnt[x] || 0);
+      const { media: mu, desv: sd } = statsOf(subset);
+      sumaDistChart.data.datasets = buildDatasets(arr, mu, sd);
+      sumaDistChart.update('none');
+      setStats(mu, sd, t, t - 1);
+    };
+    range.oninput = (e) => update(parseInt(e.target.value, 10));
+  } else if (timeWrap) {
+    timeWrap.style.display = 'none';
+  }
 }
 
 function switchGame(key, btn) {
