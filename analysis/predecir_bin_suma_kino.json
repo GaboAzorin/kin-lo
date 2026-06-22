@@ -1,0 +1,62 @@
+{
+  "game": "kino",
+  "n_sorteos": 2445,
+  "n_muestras": 2435,
+  "n_bins": 5,
+  "binning": "quantile",
+  "K_lags": 10,
+  "edges": [
+    117.0,
+    165.0,
+    177.0,
+    186.0,
+    197.0,
+    239.0
+  ],
+  "test_size": 487,
+  "suma_media": 181.13,
+  "suma_desv": 18.62,
+  "baselines": {
+    "modal": 0.2094,
+    "modal_bin": 1,
+    "marginal_esperada": 0.2005,
+    "persistencia": 0.1704
+  },
+  "modelos": {
+    "logistica": 0.1971,
+    "mlp": 0.2156,
+    "lstm": 0.1869
+  },
+  "control_permutacion_mlp": 0.1807,
+  "proyeccion_siguiente": {
+    "ultimo_sorteo_en_csv": 3243,
+    "proximo_sorteo": 3244,
+    "mlp_bin": 4,
+    "mlp_rango_suma": "[197 – 239]",
+    "mlp_proba": [
+      0.229,
+      0.134,
+      0.205,
+      0.108,
+      0.324
+    ],
+    "lstm_bin": 0,
+    "lstm_rango_suma": "[117 – 165]",
+    "lstm_proba": [
+      0.364,
+      0.118,
+      0.111,
+      0.23,
+      0.177
+    ],
+    "marginal_proba": [
+      0.187,
+      0.212,
+      0.199,
+      0.198,
+      0.205
+    ]
+  },
+  "veredicto": "NULO: el mejor modelo (0.216) NO supera a la mejor linea base (0.209) mas alla del ruido (±0.018). Como se esperaba, la red converge a la marginal: el sorteo no tiene memoria explotable.",
+  "generado": "2026-06-22T13:30:43.710102+00:00"
+}
