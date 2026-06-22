@@ -400,6 +400,10 @@
     .rw-dap-sub { font-size: 0.61rem; color: var(--muted); margin-top: 5px; line-height: 1.35; }
     .rw-empty { font-size: 0.85rem; color: var(--muted); padding: 26px 8px; text-align: center; line-height: 1.7; }
     .rw-empty .muted2 { font-size: 0.74rem; opacity: 0.8; }
+    .rw-ico-3d { display: inline-block; vertical-align: middle; }
+    .rw-ico .rw-ico-3d { width: 26px; height: 26px; margin: -3px -2px; }
+    .rw-final .rw-ico .rw-ico-3d { width: 30px; height: 30px; }
+    .rw-dap-label .rw-ico-3d { width: 19px; height: 19px; }
     @media (max-width: 640px) {
       .realidad { margin-top: 32px; }
       .realidad-head { padding: 18px 16px; }
@@ -939,6 +943,7 @@ async function init() {
   renderRealidad('realidad-loto', 'loto', loto && loto.premio_mayor_real);
   renderRealidad('realidad-kino', 'kino', kino && kino.premio_mayor_real);
   try { initRealidad3D(); } catch (e) { /* three.js opcional */ }
+  try { initRealidadIcons3D(); } catch (e) { /* three.js opcional */ }
 
   // ── Modal de alerta: faltan sorteos por scrapear ──
   // Se calcula en cada carga; al cerrarlo no se persiste, así que reaparece al
@@ -1003,24 +1008,24 @@ function realidadCardHTML(juego, pm) {
   const sorteoTxt = pm.sorteo ? ` · sorteo #${pm.sorteo}` : '';
   return head + `
     <div class="rw-row rw-top">
-      <span class="rw-ico">🏆</span>
+      <span class="rw-ico">${ico3d('trophy')}</span>
       <span class="rw-label">Premio mayor — único ganador</span>
       <span class="rw-amt">${CLP(c.monto)}</span>
     </div>
     <div class="rw-sub">monto real a repartir (${cat})${sorteoTxt}</div>
-    <div class="rw-row"><span class="rw-ico">🧾</span><span class="rw-label">− 15% Ley de Donaciones</span><span class="rw-amt neg">−${CLP(c.don)}</span></div>
-    <div class="rw-row"><span class="rw-ico">🙏</span><span class="rw-label">− 10% Diezmo</span><span class="rw-amt neg">−${CLP(c.diez)}</span></div>
-    <div class="rw-row"><span class="rw-ico">🏠</span><span class="rw-label">− Prepago crédito hipotecario</span><span class="rw-amt neg">−${CLP(c.hip)}</span></div>
-    <div class="rw-row"><span class="rw-ico">🚗</span><span class="rw-label">− Tesla</span><span class="rw-amt neg">−${CLP(c.tesla)}</span></div>
+    <div class="rw-row"><span class="rw-ico">${ico3d('receipt')}</span><span class="rw-label">− 15% Ley de Donaciones</span><span class="rw-amt neg">−${CLP(c.don)}</span></div>
+    <div class="rw-row"><span class="rw-ico">${ico3d('prayer')}</span><span class="rw-label">− 10% Diezmo</span><span class="rw-amt neg">−${CLP(c.diez)}</span></div>
+    <div class="rw-row"><span class="rw-ico">${ico3d('house')}</span><span class="rw-label">− Prepago crédito hipotecario</span><span class="rw-amt neg">−${CLP(c.hip)}</span></div>
+    <div class="rw-row"><span class="rw-ico">${ico3d('car')}</span><span class="rw-label">− Tesla</span><span class="rw-amt neg">−${CLP(c.tesla)}</span></div>
     <div class="rw-divider"></div>
-    <div class="rw-final"><span class="rw-ico">💰</span><span class="rw-label">Monto final disponible</span><span class="rw-amt">${CLP(c.fin)}</span></div>
+    <div class="rw-final"><span class="rw-ico">${ico3d('bag')}</span><span class="rw-label">Monto final disponible</span><span class="rw-amt">${CLP(c.fin)}</span></div>
     <div class="rw-dap">
       <div class="rw-dap-card">
-        <div class="rw-dap-label">🏦 DAP regular</div>
+        <div class="rw-dap-label">${ico3d('bank')} DAP regular</div>
         <div class="rw-dap-amt">${CLP(c.dapReg)} <small>/mes</small></div>
       </div>
       <div class="rw-dap-card">
-        <div class="rw-dap-label">🛡️ DAP UF + 2%</div>
+        <div class="rw-dap-label">${ico3d('shield')} DAP UF + 2%</div>
         <div class="rw-dap-amt">${CLP(c.dapUF)} <small>/mes</small></div>
         <div class="rw-dap-sub">renta real anual 2% sobre capital reajustado a UF</div>
       </div>
@@ -1082,6 +1087,203 @@ function initRealidad3D() {
     w = canvas.clientWidth; h = canvas.clientHeight;
     if (w && h) { renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); }
   });
+}
+
+// ── Mini-íconos 3D de la cascada "¿Cuánto queda de verdad?" ──────────────
+// Un único WebGLRenderer compartido dibuja 8 escenas low-poly doradas y copia
+// cada fotograma a los mini-canvas con drawImage (evita 16 contextos WebGL).
+function ico3d(type) {
+  return `<canvas class="rw-ico-3d" data-icon="${type}" width="72" height="72" aria-hidden="true"></canvas>`;
+}
+
+function _goldMat(over) {
+  return new THREE.MeshStandardMaterial(Object.assign({
+    color: 0xf5b942, metalness: 0.85, roughness: 0.32,
+    emissive: 0x3a2700, emissiveIntensity: 0.32,
+  }, over || {}));
+}
+
+function _icoLights(scene) {
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  const dir = new THREE.DirectionalLight(0xfff0d0, 1.8); dir.position.set(2, 3, 4); scene.add(dir);
+  const key = new THREE.PointLight(0xffd27f, 0.8); key.position.set(-3, -1, 3); scene.add(key);
+}
+
+// Cada builder devuelve { scene, cam, update(t) } con el modelo centrado en ~[-1,1].
+const ICO_BUILDERS = {
+  trophy() {
+    const g = new THREE.Group();
+    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.28, 0.5, 16), _goldMat());
+    bowl.position.y = 0.42; g.add(bowl);
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.28, 10), _goldMat());
+    stem.position.y = 0.03; g.add(stem);
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.36, 0.13, 14), _goldMat());
+    base.position.y = -0.18; g.add(base);
+    const hL = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.045, 8, 14), _goldMat());
+    hL.position.set(-0.5, 0.45, 0); hL.rotation.y = Math.PI / 2; g.add(hL);
+    const hR = hL.clone(); hR.position.x = 0.5; g.add(hR);
+    return g;
+  },
+  receipt() {
+    const g = new THREE.Group();
+    const sh = new THREE.Shape();
+    sh.moveTo(-0.38, 0.62); sh.lineTo(0.38, 0.62); sh.lineTo(0.38, -0.5);
+    sh.lineTo(0.25, -0.62); sh.lineTo(0.12, -0.5); sh.lineTo(0, -0.62);
+    sh.lineTo(-0.12, -0.5); sh.lineTo(-0.25, -0.62); sh.lineTo(-0.38, -0.5); sh.closePath();
+    const geo = new THREE.ExtrudeGeometry(sh, { depth: 0.06, bevelEnabled: false });
+    geo.center();
+    const paper = new THREE.Mesh(geo, _goldMat({ color: 0xffe9b0, metalness: 0.4, roughness: 0.55, emissiveIntensity: 0.2 }));
+    g.add(paper);
+    for (let i = 0; i < 3; i++) {
+      const line = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.02), _goldMat({ color: 0xc9962e }));
+      line.position.set(0, 0.22 - i * 0.22, 0.05); g.add(line);
+    }
+    return g;
+  },
+  prayer() {
+    const g = new THREE.Group();
+    const mk = (sx) => {
+      const h = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.78, 0.34), _goldMat());
+      h.position.set(0.13 * sx, 0, 0); h.rotation.z = -0.28 * sx; return h;
+    };
+    g.add(mk(1)); g.add(mk(-1));
+    const heart = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 8), _goldMat({ color: 0xf0c468 }));
+    heart.position.set(0, 0.5, 0.16); g.add(heart);
+    return g;
+  },
+  house() {
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, 0.8), _goldMat());
+    body.position.y = -0.12; g.add(body);
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(0.66, 0.46, 4), _goldMat({ color: 0xd99a2e }));
+    roof.position.y = 0.4; roof.rotation.y = Math.PI / 4; g.add(roof);
+    const door = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.32, 0.04), _goldMat({ color: 0x8a5e1e, metalness: 0.5 }));
+    door.position.set(0, -0.26, 0.41); g.add(door);
+    return g;
+  },
+  car() {
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.26, 0.5), _goldMat());
+    body.position.y = 0.02; g.add(body);
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.26, 0.46), _goldMat({ color: 0xf7d27a }));
+    cabin.position.set(-0.05, 0.26, 0); g.add(cabin);
+    const wheelGeo = new THREE.CylinderGeometry(0.16, 0.16, 0.12, 14);
+    const wheelMat = _goldMat({ color: 0x4a3a16, metalness: 0.6, roughness: 0.5, emissiveIntensity: 0.1 });
+    [[-0.38, -0.28], [0.38, -0.28], [-0.38, 0.28], [0.38, 0.28]].forEach(([x, z]) => {
+      const wh = new THREE.Mesh(wheelGeo, wheelMat);
+      wh.rotation.x = Math.PI / 2; wh.position.set(x, -0.15, z); g.add(wh);
+    });
+    return g;
+  },
+  bag() {
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.52, 14, 12), _goldMat());
+    body.position.y = -0.08; body.scale.y = 1.05; g.add(body);
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.34, 0.22, 12), _goldMat({ color: 0xe0a93a }));
+    neck.position.y = 0.42; g.add(neck);
+    const tie = new THREE.Mesh(new THREE.TorusGeometry(0.21, 0.05, 8, 16), _goldMat({ color: 0xc9962e }));
+    tie.position.y = 0.34; tie.rotation.x = Math.PI / 2; g.add(tie);
+    const s = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.42, 0.04), _goldMat({ color: 0xfff1c2, emissiveIntensity: 0.5 }));
+    s.position.set(0, -0.08, 0.5); g.add(s);
+    const sb = s.clone(); sb.scale.set(2.4, 0.25, 1); sb.position.set(0, 0.04, 0.5); g.add(sb);
+    const sb2 = sb.clone(); sb2.position.y = -0.2; g.add(sb2);
+    return g;
+  },
+  bank() {
+    const g = new THREE.Group();
+    const steps = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.12, 0.6), _goldMat());
+    steps.position.y = -0.42; g.add(steps);
+    const colGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.6, 10);
+    [-0.36, -0.12, 0.12, 0.36].forEach(x => {
+      const col = new THREE.Mesh(colGeo, _goldMat({ color: 0xf7d27a }));
+      col.position.set(x, -0.06, 0.18); g.add(col);
+    });
+    const arch = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.14, 0.55), _goldMat());
+    arch.position.y = 0.28; g.add(arch);
+    const pedSh = new THREE.Shape();
+    pedSh.moveTo(-0.55, 0); pedSh.lineTo(0.55, 0); pedSh.lineTo(0, 0.34); pedSh.closePath();
+    const ped = new THREE.Mesh(new THREE.ExtrudeGeometry(pedSh, { depth: 0.5, bevelEnabled: false }),
+      _goldMat({ color: 0xd99a2e }));
+    ped.position.set(0, 0.35, -0.25); g.add(ped);
+    return g;
+  },
+  shield() {
+    const g = new THREE.Group();
+    const sh = new THREE.Shape();
+    sh.moveTo(-0.5, 0.6); sh.lineTo(0.5, 0.6); sh.lineTo(0.5, -0.08);
+    sh.lineTo(0, -0.72); sh.lineTo(-0.5, -0.08); sh.closePath();
+    const geo = new THREE.ExtrudeGeometry(sh, { depth: 0.18, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.05, bevelSegments: 2 });
+    geo.center();
+    g.add(new THREE.Mesh(geo, _goldMat()));
+    const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.95, 0.04), _goldMat({ color: 0xfff1c2, emissiveIntensity: 0.45 }));
+    stripe.position.z = 0.13; g.add(stripe);
+    const cross = stripe.clone(); cross.scale.set(3.4, 0.13, 1); cross.position.set(0, 0.18, 0.13); g.add(cross);
+    return g;
+  },
+};
+
+function initRealidadIcons3D() {
+  if (typeof THREE === 'undefined') return;
+  const canvases = {};   // tipo → [ctx2d...]
+  document.querySelectorAll('canvas.rw-ico-3d').forEach(c => {
+    const t = c.dataset.icon;
+    if (!ICO_BUILDERS[t]) return;
+    (canvases[t] = canvases[t] || []).push(c.getContext('2d'));
+  });
+  const types = Object.keys(canvases);
+  if (!types.length) return;
+
+  const SIZE = 144;
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer.setPixelRatio(1);
+  renderer.setSize(SIZE, SIZE, false);
+  const src = renderer.domElement;
+
+  const scenes = {};
+  for (const t of types) {
+    const scene = new THREE.Scene();
+    _icoLights(scene);
+    const group = ICO_BUILDERS[t]();
+    scene.add(group);
+    const cam = new THREE.PerspectiveCamera(40, 1, 0.1, 50);
+    cam.position.set(0, 0.15, 3.4);
+    cam.lookAt(0, 0, 0);
+    scenes[t] = { scene, cam, group, phase: Math.random() * Math.PI * 2 };
+  }
+
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function renderFrame(t) {
+    for (const type of types) {
+      const s = scenes[type];
+      s.group.rotation.y = t * 0.7 + s.phase;
+      s.group.position.y = Math.sin(t * 1.6 + s.phase) * 0.06;
+      renderer.render(s.scene, s.cam);
+      for (const ctx of canvases[type]) {
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.drawImage(src, 0, 0, ctx.canvas.width, ctx.canvas.height);
+      }
+    }
+  }
+
+  if (reduce) { renderFrame(0); return; }
+
+  let running = false, raf = 0;
+  const t0 = performance.now();
+  function loop(now) {
+    renderFrame((now - t0) / 1000);
+    raf = requestAnimationFrame(loop);
+  }
+  function start() { if (!running) { running = true; raf = requestAnimationFrame(loop); } }
+  function stop() { if (running) { running = false; cancelAnimationFrame(raf); } }
+
+  const section = document.getElementById('realidad');
+  if (section && 'IntersectionObserver' in window) {
+    new IntersectionObserver(([e]) => e.isIntersecting ? start() : stop(),
+      { threshold: 0.05 }).observe(section);
+  } else {
+    start();
+  }
 }
 
 init();
