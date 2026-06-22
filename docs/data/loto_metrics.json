@@ -1512,7 +1512,12 @@
     }
   },
   "premio_mayor_real": {
-    "disponible": false,
-    "motivo": "el CSV aún no tiene columnas de premio (se llenan desde el próximo scrapeo de Loto)"
+    "disponible": true,
+    "monto": 729339924,
+    "sorteo": 5441,
+    "fecha": "2026-06-21 21:00:00",
+    "ganadores": 0,
+    "categoria": "6 aciertos",
+    "fuente": "polla_historial.csv (LOTO_POZO_REAL)"
   }
 }
