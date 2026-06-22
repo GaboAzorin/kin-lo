@@ -6,7 +6,8 @@ Solo registra n° de sorteo, fecha, día de la semana y los números de cada jue
 Basado en scraper_puro.py. Cambios:
   - Solo juego LOTO (ID 5271); Recargado/Revancha/Desquite vienen incluidos
     en additionalGameResults de la misma respuesta.
-  - Salida filtrada a COLUMNS_POLLA (sin premios ni montos).
+  - Salida filtrada a COLUMNS_POLLA: números + el premio mayor REAL de Loto
+    (ganadores/monto/pozo real de 6 aciertos), que el parser ya entrega.
   - Rutas relativas al repositorio.
 """
 
@@ -85,6 +86,14 @@ COLUMNS_POLLA = [
     # Desquite
     "DESQUITE_n1", "DESQUITE_n2", "DESQUITE_n3", "DESQUITE_n4",
     "DESQUITE_n5", "DESQUITE_n6",
+    # Premio mayor REAL de Loto (6 aciertos). El parser ya los entrega; antes se
+    # filtraban. NO es backfilleable: el histórico previo queda vacío y estas
+    # columnas se llenan desde el primer sorteo scrapeado con este cambio.
+    #   _GANADORES      → nº de ganadores de 6 aciertos
+    #   _MONTO          → premio por ganador (o monto de la categoría)
+    #   _POZO_REAL      → pozo real a repartir de la categoría de 6 aciertos
+    #   _POZO_ACUMULADO → pozo acumulado total (poolAccumulated)
+    "LOTO_GANADORES", "LOTO_MONTO", "LOTO_POZO_REAL", "LOTO_POZO_ACUMULADO",
 ]
 
 # ==============================================================================

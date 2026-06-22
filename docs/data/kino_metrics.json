@@ -1251,5 +1251,14 @@
       "aciertos_avg": 7.88,
       "aciertos_max": 12
     }
+  },
+  "premio_mayor_real": {
+    "disponible": true,
+    "monto": 5504630450,
+    "sorteo": 3243,
+    "fecha": "2026-06-21",
+    "ganadores": 0,
+    "categoria": "14 aciertos",
+    "fuente": "kino_premios_historial.csv"
   }
 }

@@ -152,6 +152,70 @@ def _top_pairs(df: pd.DataFrame, cols: list[str], top_n: int = 10) -> list[dict]
     return [{"pair": k, "count": v} for k, v in top]
 
 
+PREMIOS_KINO_CSV = DATA_DIR / "kino_premios_historial.csv"
+
+
+def _premio_mayor_real(juego: str, df: pd.DataFrame) -> dict:
+    """
+    Monto REAL a repartir del premio mayor, asumiendo un único ganador.
+
+      - Kino: `premio_total` de la categoría "14 aciertos" del último sorteo en
+        kino_premios_historial.csv. Es el pozo acumulado real aunque nadie gane
+        (ganadores=0), mucho más exacto que el estimado redondeado de pozos.json.
+      - Loto: `LOTO_POZO_REAL` (pozo de la categoría de 6 aciertos) del último
+        sorteo del CSV principal. Solo disponible desde que scraper_polla.py
+        persiste las columnas de premio (sorteos nuevos); no es backfilleable.
+
+    Devuelve {"disponible": False, "motivo": ...} si todavía no hay dato.
+    """
+    if juego == "kino":
+        if not PREMIOS_KINO_CSV.exists():
+            return {"disponible": False, "motivo": "sin kino_premios_historial.csv"}
+        dp = pd.read_csv(PREMIOS_KINO_CSV)
+        dp = dp[(dp["game_code"] == "KINO")
+                & (pd.to_numeric(dp["aciertos"], errors="coerce") == 14)].copy()
+        if dp.empty:
+            return {"disponible": False, "motivo": "sin categoría 14 aciertos"}
+        dp["_s"] = pd.to_numeric(dp["sorteo"], errors="coerce")
+        fila  = dp.sort_values("_s").iloc[-1]
+        monto = int(pd.to_numeric(fila.get("premio_total"), errors="coerce") or 0)
+        return {
+            "disponible": monto > 0,
+            "monto":      monto,
+            "sorteo":     int(fila["_s"]),
+            "fecha":      str(fila.get("fecha", "")),
+            "ganadores":  int(pd.to_numeric(fila.get("ganadores"), errors="coerce") or 0),
+            "categoria":  "14 aciertos",
+            "fuente":     "kino_premios_historial.csv",
+        }
+
+    # Loto: buscar la primera columna de premio disponible con monto > 0.
+    candidatas = ["LOTO_POZO_REAL", "LOTO_POZO_ACUMULADO", "LOTO_MONTO"]
+    col = next((c for c in candidatas if c in df.columns), None)
+    if col is None:
+        return {"disponible": False,
+                "motivo": "el CSV aún no tiene columnas de premio "
+                          "(se llenan desde el próximo scrapeo de Loto)"}
+    d = df.copy()
+    d["_s"] = pd.to_numeric(d["sorteo"], errors="coerce")
+    d["_m"] = pd.to_numeric(d[col], errors="coerce").fillna(0)
+    d = d[d["_m"] > 0]
+    if d.empty:
+        return {"disponible": False,
+                "motivo": "aún sin montos reales registrados (próximo sorteo de Loto)"}
+    fila = d.sort_values("_s").iloc[-1]
+    gan  = pd.to_numeric(fila.get("LOTO_GANADORES"), errors="coerce")
+    return {
+        "disponible": True,
+        "monto":      int(fila["_m"]),
+        "sorteo":     int(fila["_s"]),
+        "fecha":      str(fila.get("fecha", "")),
+        "ganadores":  int(gan) if pd.notna(gan) else None,
+        "categoria":  "6 aciertos",
+        "fuente":     f"polla_historial.csv ({col})",
+    }
+
+
 def _ultimo_sorteo(df: pd.DataFrame, cols: list[str], comodin_col: str | None) -> dict:
     """Extrae los datos del último sorteo del DataFrame."""
     last = df.iloc[-1]
@@ -1018,6 +1082,9 @@ def main():
 
     # 3. Añadir scores históricos de rangos al JSON
     data["range_scores"] = _range_scores(juego_key)
+
+    # 3b. Monto real a repartir del premio mayor (para la sección "en términos reales")
+    data["premio_mayor_real"] = _premio_mayor_real(juego_key, df)
 
     # 4. Enviar notificaciones Telegram
     _enviar_notificaciones(juego_key, data.get("ultimo_sorteo", {}),

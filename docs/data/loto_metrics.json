@@ -1510,5 +1510,9 @@
       "aciertos_avg": 0.86,
       "aciertos_max": 4
     }
+  },
+  "premio_mayor_real": {
+    "disponible": false,
+    "motivo": "el CSV aún no tiene columnas de premio (se llenan desde el próximo scrapeo de Loto)"
   }
 }
