@@ -152,6 +152,11 @@
     .sug-bola-kino:hover { box-shadow: inset 0 0 7px rgba(59,130,246,0.3), 0 5px 12px rgba(59,130,246,0.4); }
     .sug-sum { margin-left: auto; font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
     .sug-sum strong { color: var(--text); }
+    .sug-media {
+      font-size: 0.7rem; color: var(--muted); margin: -2px 0 8px; cursor: help;
+      font-variant-numeric: tabular-nums;
+    }
+    .sug-media strong { color: var(--text); }
 
     /* ── Pills de rango ── */
     .sug-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
@@ -723,7 +728,10 @@ function renderSugs(sugs, containerId, bolaCls, juego, sorteoProximo, rangeScore
     const aviso = jugadasSorteo.length
       ? `<div class="ya-jugaste">✓ Tienes ${jugadasSorteo.length} jugada${jugadasSorteo.length > 1 ? 's' : ''} registrada${jugadasSorteo.length > 1 ? 's' : ''} para este sorteo — <a href="jugadas/">ver en Mis jugadas</a></div>`
       : '';
-    el.innerHTML = `${aviso}<div class="sug-pills">${pills}</div><div class="sug-combos" id="${containerId}-combos">${combosHTML(activeKey)}</div>`;
+    const mediaNote = sumStats
+      ? `<div class="sug-media" title="Promedio de la suma de todos los sorteos históricos. Lo más probable es que el próximo sorteo caiga cerca de aquí.">Σ media histórica: <strong>${Math.round(sumStats.mean)}</strong> · zona central ${sumStats.p25}–${sumStats.p75}</div>`
+      : '';
+    el.innerHTML = `${aviso}<div class="sug-pills">${pills}</div>${mediaNote}<div class="sug-combos" id="${containerId}-combos">${combosHTML(activeKey)}</div>`;
     el.querySelectorAll('.sug-pill').forEach(btn =>
       btn.addEventListener('click', () => { activeKey = btn.dataset.key; render(); })
     );
