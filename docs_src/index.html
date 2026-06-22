@@ -346,6 +346,67 @@
     }
     .falta-btn:hover { filter: brightness(1.08); }
     .falta-btn:active { transform: translateY(1px); }
+
+    /* ── Si me gano: en términos reales ── */
+    .realidad { margin-top: 44px; }
+    .realidad-head {
+      position: relative; overflow: hidden; border-radius: var(--radius);
+      border: 1px solid var(--border); padding: 22px 24px; margin-bottom: 20px;
+      background: linear-gradient(110deg, rgba(245,158,11,0.07), rgba(59,130,246,0.07));
+    }
+    .realidad-canvas {
+      position: absolute; top: 0; right: 0; width: 320px; height: 100%;
+      opacity: 0.9; pointer-events: none;
+      -webkit-mask-image: linear-gradient(to right, transparent, #000 55%);
+              mask-image: linear-gradient(to right, transparent, #000 55%);
+    }
+    .realidad-head-text { position: relative; z-index: 1; max-width: 66%; }
+    .realidad-title { font-family: var(--font-head); font-size: 1.5rem; font-weight: 800; margin: 4px 0 6px; }
+    .realidad-title em { color: var(--loto); font-style: italic; }
+    .realidad-sub { font-size: 0.84rem; color: var(--muted); max-width: 48ch; line-height: 1.5; }
+    .realidad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .realidad-card {
+      background-color: var(--card);
+      background-image: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.05) 0%, transparent 70%);
+      border: 1px solid var(--border); border-radius: var(--radius); padding: 20px;
+      backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .realidad-card:hover { border-color: var(--border-strong); box-shadow: 0 0 22px rgba(167,139,250,0.10); }
+    .realidad-loto { border-top: 2px solid var(--loto); }
+    .realidad-kino { border-top: 2px solid var(--kino); }
+    .realidad-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .realidad-card-title { font-family: var(--font-head); font-size: 1.15rem; font-weight: 800; }
+    .rw-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 0.9rem; }
+    .rw-ico { width: 22px; text-align: center; flex: none; font-size: 1rem; }
+    .rw-label { color: var(--text); }
+    .rw-amt { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+    .rw-amt.neg { color: #f87171; font-weight: 600; }
+    .rw-top .rw-amt { font-size: 1.05rem; }
+    .rw-sub { font-size: 0.72rem; color: var(--muted); margin: -3px 0 5px 32px; }
+    .rw-divider { height: 1px; background: var(--border); margin: 9px 0; }
+    .rw-final {
+      display: flex; align-items: center; gap: 10px; margin-top: 4px; padding: 12px 14px;
+      border-radius: var(--radius-sm); background: rgba(52,211,153,0.08);
+      border: 1px solid rgba(52,211,153,0.30);
+    }
+    .rw-final .rw-label { font-weight: 700; }
+    .rw-final .rw-amt { color: var(--green); font-size: 1.25rem; text-shadow: 0 0 14px rgba(52,211,153,0.45); }
+    .rw-dap { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+    .rw-dap-card { background: var(--card2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
+    .rw-dap-label { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .rw-dap-amt { font-size: 1rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .rw-dap-amt small { font-size: 0.62rem; color: var(--muted); font-weight: 500; }
+    .rw-dap-sub { font-size: 0.61rem; color: var(--muted); margin-top: 5px; line-height: 1.35; }
+    .rw-empty { font-size: 0.85rem; color: var(--muted); padding: 26px 8px; text-align: center; line-height: 1.7; }
+    .rw-empty .muted2 { font-size: 0.74rem; opacity: 0.8; }
+    @media (max-width: 640px) {
+      .realidad-grid { grid-template-columns: 1fr; }
+      .realidad-canvas { width: 190px; opacity: 0.6; }
+      .realidad-head-text { max-width: 100%; }
+      .rw-dap { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) { .realidad-canvas { opacity: 0.5; } }
   </style>
 </head>
 <body>
@@ -480,6 +541,22 @@
     </div>
 
   </div>
+
+  <!-- ══ SI ME GANO: EN TÉRMINOS REALES ══ -->
+  <section class="realidad" id="realidad">
+    <div class="realidad-head">
+      <canvas id="realidad-canvas" class="realidad-canvas" aria-hidden="true"></canvas>
+      <div class="realidad-head-text">
+        <div class="section-label">Si te lo ganas</div>
+        <h3 class="realidad-title">¿Cuánto queda <em>de verdad</em>?</h3>
+        <p class="realidad-sub">Del monto real a repartir del premio mayor (como único ganador), menos el 15% de la ley de donaciones, el 10% del diezmo y tus gastos planificados.</p>
+      </div>
+    </div>
+    <div class="realidad-grid">
+      <div class="realidad-card realidad-loto" id="realidad-loto"><span class="loading">cargando...</span></div>
+      <div class="realidad-card realidad-kino" id="realidad-kino"><span class="loading">cargando...</span></div>
+    </div>
+  </section>
 </main>
 
 <footer>
@@ -489,6 +566,7 @@
 </footer>
 
 <script src="js/gh-api.js?v=2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 // ─────────────────────────────────────────────
 // COUNTDOWN
@@ -841,6 +919,11 @@ async function init() {
     document.getElementById('kino-sugs').innerHTML  = '<span class="error">Sin datos</span>';
   }
 
+  // ── Si me gano: en términos reales ──
+  renderRealidad('realidad-loto', 'loto', loto && loto.premio_mayor_real);
+  renderRealidad('realidad-kino', 'kino', kino && kino.premio_mayor_real);
+  try { initRealidad3D(); } catch (e) { /* three.js opcional */ }
+
   // ── Modal de alerta: faltan sorteos por scrapear ──
   // Se calcula en cada carga; al cerrarlo no se persiste, así que reaparece al
   // recargar mientras siga habiendo sorteos publicados sin scrapear.
@@ -869,6 +952,120 @@ async function init() {
       <span>Datos: <strong style="color:var(--text)">${dataFecha}</strong></span>
       <span>Cargado: <strong style="color:var(--text)">${pageStamp}</strong></span>
     </span>`;
+}
+
+// ── Si me gano: en términos reales ──────────────────────
+function CLP(x) { return '$' + Math.round(x).toLocaleString('es-CL'); }
+
+function calcRealidad(monto) {
+  const tDon  = monto * 0.85;          // − 15% ley de donaciones
+  const tDiez = tDon  * 0.90;          // − 10% diezmo
+  const tHip  = tDiez - 145000000;     // − prepago hipotecario
+  const fin   = tHip  - 50000000;      // − Tesla
+  return {
+    monto, don: monto * 0.15, tDon, diez: tDon * 0.10, tDiez,
+    hip: 145000000, tHip, tesla: 50000000, fin,
+    dapReg: fin * 0.0042,              // DAP regular mensual
+    dapUF:  fin * 0.02 / 12,           // DAP UF + 2% anual → mensual
+  };
+}
+
+function realidadCardHTML(juego, pm) {
+  const isLoto = juego === 'loto';
+  const badge  = isLoto ? '<span class="badge badge-loto">Polla.cl</span>'
+                        : '<span class="badge badge-kino">Loteria.cl</span>';
+  const titulo = isLoto ? 'Loto' : 'Kino';
+  const cat    = isLoto ? '6 aciertos' : '14 aciertos';
+  const head   = `<div class="realidad-card-head">${badge}<span class="realidad-card-title">${titulo}</span></div>`;
+
+  if (!pm || !pm.disponible) {
+    const motivo = (pm && pm.motivo) ? pm.motivo : 'aún no disponible';
+    return head + `<div class="rw-empty">Monto real a repartir del premio mayor (${cat}) aún no disponible.<br><span class="muted2">${motivo}</span></div>`;
+  }
+
+  const c = calcRealidad(pm.monto);
+  const sorteoTxt = pm.sorteo ? ` · sorteo #${pm.sorteo}` : '';
+  return head + `
+    <div class="rw-row rw-top">
+      <span class="rw-ico">🏆</span>
+      <span class="rw-label">Premio mayor — único ganador</span>
+      <span class="rw-amt">${CLP(c.monto)}</span>
+    </div>
+    <div class="rw-sub">monto real a repartir (${cat})${sorteoTxt}</div>
+    <div class="rw-row"><span class="rw-ico">🧾</span><span class="rw-label">− 15% Ley de Donaciones</span><span class="rw-amt neg">−${CLP(c.don)}</span></div>
+    <div class="rw-row"><span class="rw-ico">🙏</span><span class="rw-label">− 10% Diezmo</span><span class="rw-amt neg">−${CLP(c.diez)}</span></div>
+    <div class="rw-row"><span class="rw-ico">🏠</span><span class="rw-label">− Prepago crédito hipotecario</span><span class="rw-amt neg">−${CLP(c.hip)}</span></div>
+    <div class="rw-row"><span class="rw-ico">🚗</span><span class="rw-label">− Tesla</span><span class="rw-amt neg">−${CLP(c.tesla)}</span></div>
+    <div class="rw-divider"></div>
+    <div class="rw-final"><span class="rw-ico">💰</span><span class="rw-label">Monto final disponible</span><span class="rw-amt">${CLP(c.fin)}</span></div>
+    <div class="rw-dap">
+      <div class="rw-dap-card">
+        <div class="rw-dap-label">🏦 DAP regular</div>
+        <div class="rw-dap-amt">${CLP(c.dapReg)} <small>/mes</small></div>
+      </div>
+      <div class="rw-dap-card">
+        <div class="rw-dap-label">🛡️ DAP UF + 2%</div>
+        <div class="rw-dap-amt">${CLP(c.dapUF)} <small>/mes</small></div>
+        <div class="rw-dap-sub">renta real anual 2% sobre capital reajustado a UF</div>
+      </div>
+    </div>`;
+}
+
+function renderRealidad(containerId, juego, pm) {
+  const el = document.getElementById(containerId);
+  if (el) el.innerHTML = realidadCardHTML(juego, pm);
+}
+
+function initRealidad3D() {
+  const canvas = document.getElementById('realidad-canvas');
+  if (!canvas || typeof THREE === 'undefined') return;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let w = canvas.clientWidth || 320, h = canvas.clientHeight || 150;
+
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(w, h, false);
+
+  const scene = new THREE.Scene();
+  const cam = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
+  cam.position.set(0, 0, 5);
+
+  // Moneda dorada low-poly
+  const coin = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.45, 1.45, 0.22, 36),
+    new THREE.MeshStandardMaterial({ color: 0xf5b942, metalness: 0.9, roughness: 0.28,
+                                     emissive: 0x3a2700, emissiveIntensity: 0.35 })
+  );
+  coin.rotation.x = 1.15;  // inclinada hacia el espectador
+  scene.add(coin);
+
+  // Polvo de oro
+  const N = 200, pos = new Float32Array(N * 3);
+  for (let i = 0; i < N * 3; i++) pos[i] = (Math.random() - 0.5) * 11;
+  const pg = new THREE.BufferGeometry();
+  pg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const pts = new THREE.Points(pg,
+    new THREE.PointsMaterial({ color: 0xf0c468, size: 0.05, transparent: true, opacity: 0.7 }));
+  scene.add(pts);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  const dir = new THREE.DirectionalLight(0xfff0d0, 1.7); dir.position.set(3, 4, 5); scene.add(dir);
+  const key = new THREE.PointLight(0xffd27f, 0.9); key.position.set(-3, -2, 3); scene.add(key);
+
+  function frame() {
+    coin.rotation.y += 0.02;
+    const p = pts.geometry.attributes.position.array;
+    for (let i = 1; i < p.length; i += 3) { p[i] -= 0.011; if (p[i] < -5.5) p[i] = 5.5; }
+    pts.geometry.attributes.position.needsUpdate = true;
+    renderer.render(scene, cam);
+    if (!reduce) requestAnimationFrame(frame);
+  }
+  frame();
+
+  window.addEventListener('resize', () => {
+    w = canvas.clientWidth; h = canvas.clientHeight;
+    if (w && h) { renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); }
+  });
 }
 
 init();
