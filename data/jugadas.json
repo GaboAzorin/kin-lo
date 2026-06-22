@@ -1142,6 +1142,18 @@
       40
     ],
     "rango_sugerencia": "250",
-    "aciertos": null
+    "aciertos": {
+      "loto": 0
+    },
+    "resultado_sorteo": {
+      "loto": [
+        13,
+        15,
+        17,
+        18,
+        21,
+        31
+      ]
+    }
   }
 ]
