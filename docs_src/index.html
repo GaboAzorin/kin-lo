@@ -379,8 +379,8 @@
     .realidad-card-title { font-family: var(--font-head); font-size: 1.15rem; font-weight: 800; }
     .rw-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 0.9rem; }
     .rw-ico { width: 22px; text-align: center; flex: none; font-size: 1rem; }
-    .rw-label { color: var(--text); }
-    .rw-amt { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+    .rw-label { color: var(--text); flex: 1; min-width: 0; }
+    .rw-amt { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; flex: none; }
     .rw-amt.neg { color: #f87171; font-weight: 600; }
     .rw-top .rw-amt { font-size: 1.05rem; }
     .rw-sub { font-size: 0.72rem; color: var(--muted); margin: -3px 0 5px 32px; }
@@ -401,9 +401,25 @@
     .rw-empty { font-size: 0.85rem; color: var(--muted); padding: 26px 8px; text-align: center; line-height: 1.7; }
     .rw-empty .muted2 { font-size: 0.74rem; opacity: 0.8; }
     @media (max-width: 640px) {
-      .realidad-grid { grid-template-columns: 1fr; }
-      .realidad-canvas { width: 190px; opacity: 0.6; }
-      .realidad-head-text { max-width: 100%; }
+      .realidad { margin-top: 32px; }
+      .realidad-head { padding: 18px 16px; }
+      .realidad-canvas { width: 120px; opacity: 0.5; }
+      .realidad-head-text { max-width: calc(100% - 96px); }
+      .realidad-title { font-size: 1.2rem; }
+      .realidad-sub { font-size: 0.8rem; }
+      .realidad-grid { grid-template-columns: 1fr; gap: 16px; }
+      .realidad-card { padding: 16px; }
+      .rw-row { font-size: 0.84rem; gap: 8px; padding: 6px 0; }
+      .rw-ico { width: 18px; font-size: 0.95rem; }
+      .rw-amt { font-size: 0.84rem; }
+      .rw-top .rw-amt { font-size: 0.95rem; }
+      .rw-sub { margin-left: 26px; }
+      .rw-final { padding: 11px 12px; flex-wrap: wrap; row-gap: 2px; }
+      .rw-final .rw-amt { font-size: 1.05rem; }
+      .rw-dap { gap: 8px; }
+      .rw-dap-amt { font-size: 0.92rem; }
+    }
+    @media (max-width: 400px) {
       .rw-dap { grid-template-columns: 1fr; }
     }
     @media (prefers-reduced-motion: reduce) { .realidad-canvas { opacity: 0.5; } }
