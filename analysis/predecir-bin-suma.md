@@ -53,12 +53,16 @@ que ninguna arquitectura puede inventar memoria donde el proceso no la tiene.
 **Lo único honesto que se puede proyectar del próximo sorteo es la marginal:** el
 bin central es el más probable, con la misma probabilidad de siempre.
 
-## Reproducir
+## El bin central (la única "proyección" válida)
 
-```bash
-python src/analytics/predecir_bin_suma.py --game kino --bins 5 --binning quantile
-python src/analytics/predecir_bin_suma.py --game loto --bins 5 --binning quantile
-python src/analytics/predecir_bin_suma.py --game kino --bins 7 --binning fixed
-```
+| Juego | Media | σ | Suma más frecuente | Rango central ±1σ (~68%) | Rango posible |
+|---|---|---|---|---|---|
+| Kino | 181 | 18,6 | 180 | **163 – 200** | 117 – 239 |
+| Loto | 127 | 26,2 | 134 | **101 – 153** | 38 – 207 |
 
-JSON con métricas y proyección: `analysis/predecir_bin_suma_{kino,loto}.json`.
+## Nota sobre el código
+
+El script `src/analytics/predecir_bin_suma.py` y sus JSON se **eliminaron** tras
+confirmar el resultado: un "predictor" que solo reproduce la marginal puede
+engañar a quien lo lea sin contexto. La evidencia del experimento queda en este
+documento; el código es recuperable del historial git (commit `477e94b`).
