@@ -119,14 +119,20 @@ function getToken() {
 }
 
 // Lee jugadas.json. Funciona anónimo (sin token) o autenticado.
+// La lectura es pública: si hay un token y GitHub lo rechaza (401 expirado /
+// 403 sin permiso), reintenta sin token en vez de romper la página.
 async function ghGetFile() {
   const token = getToken();
-  const headers = { Accept: 'application/vnd.github+json' };
-  if (token) headers.Authorization = `Bearer ${token}`;
-  const r = await fetch(
-    `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
-    { headers, cache: 'no-store' }
-  );
+  async function fetchWith(authToken) {
+    const headers = { Accept: 'application/vnd.github+json' };
+    if (authToken) headers.Authorization = `Bearer ${authToken}`;
+    return fetch(
+      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
+      { headers, cache: 'no-store' }
+    );
+  }
+  let r = await fetchWith(token);
+  if (token && (r.status === 401 || r.status === 403)) r = await fetchWith('');
   if (r.status === 404) return { content: [], sha: null };
   if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.message || `GitHub ${r.status}`); }
   const d = await r.json();
