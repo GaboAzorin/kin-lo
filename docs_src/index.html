@@ -1291,12 +1291,22 @@ init();
 // ── GitHub API ────────────────────────────────────────
 // getToken / ghGetFile / ghPutFile / hoyISO viven en js/gh-api.js (cargado arriba).
 
+// ¿El error es de autenticación (token ausente, expirado o sin permiso)?
+function esErrorAuth(e) {
+  return /bad credentials|requires authentication|401|403|not accessible|token/i.test(e?.message || '');
+}
+// Pide y guarda un token nuevo. Devuelve true si quedó uno válido.
+function pedirToken() {
+  const b64 = prompt('Token no configurado o expirado.\nUsa un PAT fine-grained (solo este repo, permiso Contents: Read and write, expiración corta).\nPega aquí el resultado de:\n  btoa("github_pat_TU_TOKEN")');
+  if (!b64) return false;
+  localStorage.setItem('kl_gh_token', b64.trim());
+  if (!getToken()) { alert('Token inválido. Debe ser el resultado exacto de btoa().'); return false; }
+  return true;
+}
+
 async function handleJugar(btn, juego, sorteo, numeros, rango) {
   if (!getToken()) {
-    const b64 = prompt('Token no configurado.\nUsa un PAT fine-grained (solo este repo, permiso Contents: Read and write, expiración corta).\nPega aquí el resultado de:\n  btoa("github_pat_TU_TOKEN")');
-    if (!b64) return;
-    localStorage.setItem('kl_gh_token', b64.trim());
-    if (!getToken()) { alert('Token inválido. Debe ser el resultado exacto de btoa().'); return; }
+    if (!pedirToken()) return;
   }
   const variantes = [juego];
   if (juego === 'loto') {
@@ -1330,6 +1340,11 @@ async function handleJugar(btn, juego, sorteo, numeros, rango) {
     btn.textContent = '⚠';
     btn.title = e.message;
     setTimeout(() => { btn.classList.remove('err'); btn.textContent = '🎟'; btn.title = ''; }, 5000);
+    // Token expirado/sin permiso: bórralo y ofrece reconfigurarlo en el acto.
+    if (esErrorAuth(e)) {
+      localStorage.removeItem('kl_gh_token');
+      alert('Tu token de GitHub expiró o no tiene permiso de escritura.\nConfigura uno nuevo y vuelve a intentar registrar la jugada.');
+    }
   }
 }
 </script>
