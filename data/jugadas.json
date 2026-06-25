@@ -1230,6 +1230,26 @@
       24
     ],
     "rango_sugerencia": "500",
-    "aciertos": null
+    "aciertos": {
+      "kino": 8
+    },
+    "resultado_sorteo": {
+      "kino": [
+        3,
+        5,
+        6,
+        7,
+        9,
+        11,
+        14,
+        15,
+        16,
+        17,
+        20,
+        23,
+        24,
+        25
+      ]
+    }
   }
 ]
