@@ -1281,5 +1281,31 @@
         35
       ]
     }
+  },
+  {
+    "fecha_jugada": "2026-06-26",
+    "juego": "kino",
+    "variantes": [
+      "kino"
+    ],
+    "sorteo": 3245,
+    "numeros": [
+      2,
+      4,
+      5,
+      7,
+      9,
+      10,
+      12,
+      13,
+      17,
+      18,
+      20,
+      22,
+      24,
+      25
+    ],
+    "rango_sugerencia": "500",
+    "aciertos": null
   }
 ]
