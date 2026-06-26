@@ -1035,7 +1035,8 @@ function renderSumChart() {
 
 const RANGE_LABELS = {
   '50':'Últ. 50','100':'Últ. 100','250':'Últ. 250',
-  '500':'Últ. 500','1000':'Últ. 1000','all':'Todos'
+  '500':'Últ. 500','1000':'Últ. 1000','all':'Todos',
+  'dia':'Día','mes':'Mes'
 };
 
 function renderSugerencias() {
@@ -1121,7 +1122,7 @@ function renderSugerencias() {
 }
 
 const RDM_COLORS = ['#3b82f6','#f59e0b','#34d399','#a855f7','#f97316','#06b6d4'];
-const RANGO_ORDER = ['50','100','250','500','1000','all'];
+const RANGO_ORDER = ['50','100','250','500','1000','all','dia','mes'];
 
 function renderRendimiento() {
   const tablaEl   = document.getElementById('rdm-tabla');

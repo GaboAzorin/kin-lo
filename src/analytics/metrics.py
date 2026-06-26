@@ -68,8 +68,17 @@ _DIA_ES = {
     "Monday": "lunes", "Tuesday": "martes", "Wednesday": "miércoles",
     "Thursday": "jueves", "Friday": "viernes", "Saturday": "sábado", "Sunday": "domingo",
 }
-_RANGOS_ORDEN  = ["50", "100", "250", "500", "1000", "all"]
+_RANGOS_ORDEN  = ["50", "100", "250", "500", "1000", "all", "dia", "mes"]
 _UMBRAL_ALERTA = {"kino": 12, "loto": 5}   # aciertos mínimos para alerta destacada
+# Etiquetas legibles por rango para la tabla de Telegram (los numéricos van tal cual).
+_RANGO_LABEL_TG = {"all": "Todos", "dia": "Día", "mes": "Mes"}
+
+# Calendario fijo de sorteos por juego — Python weekday(): lunes=0 … domingo=6.
+#   loto → martes/jueves/domingo ; kino → miércoles/viernes/domingo
+DRAW_WEEKDAYS = {"loto": {1, 3, 6}, "kino": {2, 4, 6}}
+# Nombres de día en inglés, como aparecen en la columna `dia_semana` del CSV.
+_WEEKDAY_EN = ["Monday", "Tuesday", "Wednesday", "Thursday",
+               "Friday", "Saturday", "Sunday"]
 
 # ---------------------------------------------------------------------------
 # Rangos para sugerencias
@@ -554,22 +563,59 @@ def _stats_ligeros(df: pd.DataFrame, cols: list[str], num_range: int) -> dict:
     }
 
 
+def _proximo_sorteo_dia_mes(df: pd.DataFrame, juego: str) -> tuple[str | None, int | None]:
+    """
+    Día de la semana (en inglés, como la columna `dia_semana`) y mes (1-12) del
+    PRÓXIMO sorteo, calculados desde la fecha del último sorteo + el calendario
+    fijo del juego. Devuelve (None, None) si la fecha no se puede parsear.
+    """
+    last_fecha = pd.to_datetime(str(df.iloc[-1].get("fecha", ""))[:10], errors="coerce")
+    if pd.isna(last_fecha):
+        return None, None
+    sched = DRAW_WEEKDAYS.get(juego, set())
+    for i in range(1, 15):
+        probe = last_fecha + pd.Timedelta(days=i)
+        if probe.weekday() in sched:
+            return _WEEKDAY_EN[probe.weekday()], int(probe.month)
+    return None, None
+
+
 def _sugerencias_por_rango(df_full: pd.DataFrame, prefix: str,
                             num_range: int, pick: int) -> dict:
     """
-    Genera N_EVAL (500) sugerencias por cada rango válido (últimos N sorteos + todos).
+    Genera N_EVAL (500) sugerencias por cada rango válido.
+
+    Rangos:
+      - "50".."1000": últimos N sorteos (ventana móvil); "all": historial completo.
+      - "dia": todos los sorteos pasados que cayeron el MISMO día de la semana que
+        el próximo sorteo. "mes": todos los del MISMO mes calendario que el próximo.
 
     - Estadísticas calculadas sobre el slice del rango.
     - Unicidad verificada contra df_full (historial completo).
     - Las primeras N_DISPLAY van por diversidad MMR (lo que se muestra); el resto
       por score, para evaluar el "mejor grupo" sobre una muestra grande.
-
-    Devuelve un dict con claves "50", "100", "250", "500", "1000", "all"
-    (solo incluye los rangos donde N < total de sorteos disponibles).
     """
     cols  = [f"{prefix}_n{i}" for i in range(1, pick + 1)]
     total = len(df_full)
-    rangos = [n for n in SUGGESTION_RANGES if n < total] + [None]  # None → "all"
+    juego = "loto" if prefix == "LOTO" else "kino"
+
+    # Slices como pares (label, df). Numéricos + "all", luego "dia" y "mes".
+    slices: list[tuple[str, pd.DataFrame]] = [
+        (str(n), df_full.tail(n)) for n in SUGGESTION_RANGES if n < total
+    ]
+    slices.append(("all", df_full))
+
+    dia_en, mes_n = _proximo_sorteo_dia_mes(df_full, juego)
+    if dia_en is not None and "dia_semana" in df_full.columns:
+        df_dia = df_full[df_full["dia_semana"] == dia_en]
+        if len(df_dia):
+            slices.append(("dia", df_dia))
+    if mes_n is not None and "fecha" in df_full.columns:
+        meses  = pd.to_datetime(df_full["fecha"].astype(str).str[:10],
+                                errors="coerce").dt.month
+        df_mes = df_full[meses == mes_n]
+        if len(df_mes):
+            slices.append(("mes", df_mes))
 
     # Calcular dist_params para Kino (num_range <= 25)
     dist_params = None
@@ -594,10 +640,8 @@ def _sugerencias_por_rango(df_full: pd.DataFrame, prefix: str,
         }
 
     result: dict = {}
-    for n in rangos:
-        label    = str(n) if n is not None else "all"
-        df_rango = df_full.tail(n) if n is not None else df_full
-        stats    = _stats_ligeros(df_rango, cols, num_range)
+    for label, df_rango in slices:
+        stats = _stats_ligeros(df_rango, cols, num_range)
         if stats.get("total_sorteos", 0) == 0:
             continue
         result[label] = generar_sugerencias(
@@ -989,7 +1033,7 @@ def _enviar_notificaciones(juego: str, ultimo: dict,
             if r not in range_scores:
                 continue
             v     = range_scores[r]
-            label = r.rjust(5) if r != "all" else "Todos"
+            label = _RANGO_LABEL_TG.get(r, r.rjust(5))
             avg_s = f"{v['aciertos_avg']:.2f} / {pick}"
             rows.append(f"{label}  {avg_s:<14}  {v['aciertos_max']:>3}")
 
@@ -1009,7 +1053,7 @@ def _enviar_notificaciones(juego: str, ultimo: dict,
         # Con N_EVAL combos por rango, alertar solo la mejor (evita inundar Telegram).
         c = max(v["combos"], key=lambda x: x["aciertos"])
         if c["aciertos"] >= umbral:
-            label  = f"Últ. {rango}" if rango != "all" else "Todos"
+            label  = _RANGO_LABEL_TG.get(rango, f"Últ. {rango}")
             nums_c = "  ".join(str(n).rjust(2) for n in c["combo"])
             sufijo = " 🎉🎉🎉" if c["aciertos"] == pick else ""
             tg_send(

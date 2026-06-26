@@ -320,9 +320,10 @@ let activeGame = 'loto';
 
 const RANGE_LABELS = {
   '50':'Últ. 50', '100':'Últ. 100', '250':'Últ. 250',
-  '500':'Últ. 500', '1000':'Últ. 1000', 'all':'Todos los sorteos'
+  '500':'Últ. 500', '1000':'Últ. 1000', 'all':'Todos los sorteos',
+  'dia':'Mismo día', 'mes':'Mismo mes'
 };
-const RANGO_ORDER = ['50','100','250','500','1000','all'];
+const RANGO_ORDER = ['50','100','250','500','1000','all','dia','mes'];
 
 async function loadData() {
   // Backtest (opcional): no bloquea el render principal.
