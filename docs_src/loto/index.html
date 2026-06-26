@@ -309,8 +309,8 @@ let existingJugadas = [];
 async function loadData() {
   try {
     const [r1, r2] = await Promise.all([
-      fetch('../data/loto_metrics.json'),
-      fetch('../data/suggestions_history.json').catch(() => null),
+      fetch('../data/loto_metrics.json', { cache: 'no-store' }),
+      fetch('../data/suggestions_history.json', { cache: 'no-store' }).catch(() => null),
     ]);
     if (!r1.ok) throw new Error('No data');
     globalData   = await r1.json();

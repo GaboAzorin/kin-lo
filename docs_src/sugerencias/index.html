@@ -327,19 +327,19 @@ const RANGO_ORDER = ['50','100','250','500','1000','all','dia','mes'];
 
 async function loadData() {
   // Backtest (opcional): no bloquea el render principal.
-  fetch('../data/backtest.json')
+  fetch('../data/backtest.json', { cache: 'no-store' })
     .then(r => r.ok ? r.json() : null)
     .then(d => { backtestData = d; renderBacktest(); })
     .catch(() => {});
 
   // Histórico por conjunto (opcional): no bloquea el render principal.
-  fetch('../data/suggestions_history.json')
+  fetch('../data/suggestions_history.json', { cache: 'no-store' })
     .then(r => r.ok ? r.json() : null)
     .then(d => { histData = d; renderConjuntos(); })
     .catch(() => {});
 
   try {
-    const r = await fetch('../data/suggestions_detail.json');
+    const r = await fetch('../data/suggestions_detail.json', { cache: 'no-store' });
     if (!r.ok) throw new Error('no data');
     detailData = await r.json();
     render();
