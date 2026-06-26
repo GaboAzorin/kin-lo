@@ -1268,6 +1268,18 @@
       39
     ],
     "rango_sugerencia": "50",
-    "aciertos": null
+    "aciertos": {
+      "loto": 0
+    },
+    "resultado_sorteo": {
+      "loto": [
+        7,
+        8,
+        11,
+        13,
+        20,
+        35
+      ]
+    }
   }
 ]
