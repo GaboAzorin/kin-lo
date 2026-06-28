@@ -1353,5 +1353,23 @@
     ],
     "rango_sugerencia": "dia",
     "aciertos": null
+  },
+  {
+    "fecha_jugada": "2026-06-27",
+    "juego": "loto",
+    "variantes": [
+      "loto"
+    ],
+    "sorteo": 5444,
+    "numeros": [
+      4,
+      8,
+      13,
+      32,
+      33,
+      36
+    ],
+    "rango_sugerencia": "dia",
+    "aciertos": null
   }
 ]
