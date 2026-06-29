@@ -1421,5 +1421,31 @@
     ],
     "rango_sugerencia": "50",
     "aciertos": null
+  },
+  {
+    "fecha_jugada": "2026-06-29",
+    "juego": "kino",
+    "variantes": [
+      "kino"
+    ],
+    "sorteo": 3247,
+    "numeros": [
+      1,
+      2,
+      4,
+      5,
+      9,
+      11,
+      13,
+      15,
+      17,
+      18,
+      20,
+      22,
+      24,
+      25
+    ],
+    "rango_sugerencia": "mes",
+    "aciertos": null
   }
 ]
