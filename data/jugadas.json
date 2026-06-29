@@ -1370,6 +1370,18 @@
       36
     ],
     "rango_sugerencia": "dia",
-    "aciertos": null
+    "aciertos": {
+      "loto": 1
+    },
+    "resultado_sorteo": {
+      "loto": [
+        17,
+        20,
+        28,
+        35,
+        36,
+        40
+      ]
+    }
   }
 ]
