@@ -1403,5 +1403,24 @@
         40
       ]
     }
+  },
+  {
+    "fecha_jugada": "2026-06-28",
+    "juego": "loto",
+    "variantes": [
+      "loto",
+      "recargado"
+    ],
+    "sorteo": 5445,
+    "numeros": [
+      1,
+      11,
+      14,
+      32,
+      33,
+      38
+    ],
+    "rango_sugerencia": "50",
+    "aciertos": null
   }
 ]
