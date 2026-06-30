@@ -1,44 +1,44 @@
 {
-  "updated": "2026-06-26 11:31",
+  "updated": "2026-06-29 08:58",
   "kino": {
-    "proximo_sorteo": "26 de junio 2026",
-    "pozo_total": "9.800",
+    "proximo_sorteo": "1 de julio 2026",
+    "pozo_total": "10.200",
     "variantes": [
       {
         "nombre": "Kino",
-        "pozo_str": "5.840",
-        "millones": 5840
+        "pozo_str": "6.020",
+        "millones": 6020
       },
       {
         "nombre": "ReKino",
-        "pozo_str": "170",
-        "millones": 170
+        "pozo_str": "280",
+        "millones": 280
       },
       {
         "nombre": "RequeteKino",
-        "pozo_str": "510",
-        "millones": 510
+        "pozo_str": "620",
+        "millones": 620
       }
     ]
   },
   "loto": {
-    "total_millones": 3700,
+    "total_millones": 3800,
     "variantes": [
       {
         "nombre": "Loto",
-        "millones": 1120
+        "millones": 1170
       },
       {
         "nombre": "Recargado",
-        "millones": 220
+        "millones": 250
       },
       {
         "nombre": "Revancha",
-        "millones": 560
+        "millones": 570
       },
       {
         "nombre": "Desquite",
-        "millones": 240
+        "millones": 250
       }
     ]
   }
