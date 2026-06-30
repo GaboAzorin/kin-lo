@@ -983,10 +983,10 @@ function calcRealidad(monto) {
   const tDon  = monto * 0.85;          // − 15% ley de donaciones
   const tDiez = tDon  * 0.90;          // − 10% diezmo
   const tHip  = tDiez - 145000000;     // − prepago hipotecario
-  const fin   = tHip  - 50000000;      // − Tesla
+  const fin   = tHip  - 59000000;      // − Tesla
   return {
     monto, don: monto * 0.15, tDon, diez: tDon * 0.10, tDiez,
-    hip: 145000000, tHip, tesla: 50000000, fin,
+    hip: 145000000, tHip, tesla: 59000000, fin,
     dapReg: fin * 0.0042,              // DAP regular mensual
     dapUF:  fin * 0.02 / 12,           // DAP UF + 2% anual → mensual
   };
