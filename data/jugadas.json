@@ -1420,7 +1420,19 @@
       38
     ],
     "rango_sugerencia": "50",
-    "aciertos": null
+    "aciertos": {
+      "loto": 0
+    },
+    "resultado_sorteo": {
+      "loto": [
+        10,
+        13,
+        17,
+        20,
+        27,
+        28
+      ]
+    }
   },
   {
     "fecha_jugada": "2026-06-29",
