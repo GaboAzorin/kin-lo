@@ -1571,5 +1571,31 @@
         25
       ]
     }
+  },
+  {
+    "fecha_jugada": "2026-07-06",
+    "juego": "kino",
+    "variantes": [
+      "kino"
+    ],
+    "sorteo": 3250,
+    "numeros": [
+      1,
+      2,
+      5,
+      6,
+      8,
+      10,
+      11,
+      14,
+      17,
+      18,
+      20,
+      21,
+      23,
+      25
+    ],
+    "rango_sugerencia": "1000",
+    "aciertos": null
   }
 ]
