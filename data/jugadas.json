@@ -1634,6 +1634,18 @@
       37
     ],
     "rango_sugerencia": "50",
-    "aciertos": null
+    "aciertos": {
+      "loto": 0
+    },
+    "resultado_sorteo": {
+      "loto": [
+        1,
+        8,
+        9,
+        22,
+        23,
+        29
+      ]
+    }
   }
 ]
