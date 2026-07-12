@@ -1711,5 +1711,31 @@
     ],
     "rango_sugerencia": null,
     "aciertos": null
+  },
+  {
+    "fecha_jugada": "2026-07-11",
+    "juego": "kino",
+    "variantes": [
+      "kino"
+    ],
+    "sorteo": 3252,
+    "numeros": [
+      2,
+      4,
+      5,
+      7,
+      8,
+      11,
+      12,
+      14,
+      16,
+      17,
+      20,
+      21,
+      23,
+      24
+    ],
+    "rango_sugerencia": "100",
+    "aciertos": null
   }
 ]
