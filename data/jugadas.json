@@ -1693,5 +1693,23 @@
         25
       ]
     }
+  },
+  {
+    "fecha_jugada": "2026-07-11",
+    "juego": "loto",
+    "variantes": [
+      "loto"
+    ],
+    "sorteo": 5450,
+    "numeros": [
+      10,
+      12,
+      22,
+      26,
+      35,
+      36
+    ],
+    "rango_sugerencia": null,
+    "aciertos": null
   }
 ]
