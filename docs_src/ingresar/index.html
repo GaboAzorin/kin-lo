@@ -88,6 +88,7 @@
       display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 8px;
     }
     .num {
+      position: relative;
       aspect-ratio: 1; border: 1px solid var(--border); border-radius: 12px;
       background: rgba(0,0,0,0.25); color: var(--text); font-size: 1.15rem; font-weight: 700;
       cursor: pointer; user-select: none;
@@ -95,6 +96,11 @@
       transition: transform 0.14s cubic-bezier(0.34,1.56,0.64,1), background 0.14s, border-color 0.14s, box-shadow 0.14s, color 0.14s;
     }
     .num:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .num.played::after {
+      content: ''; position: absolute; top: 5px; right: 5px;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--violet); box-shadow: 0 0 4px rgba(167,139,250,0.8);
+    }
     .num.sel {
       background: rgba(59,130,246,0.9); border-color: var(--accent-soft); color: #fff;
       box-shadow: 0 0 14px rgba(59,130,246,0.55), inset 0 0 8px rgba(255,255,255,0.15);
@@ -282,12 +288,43 @@ function showMsg(text, cls) {
   m.className = 'msg' + (cls ? ' ' + cls : '');
 }
 
+// ── Marcar números ya jugados (de /jugadas/) para el sorteo ingresado ────────
+let jugadasCache = null;
+async function loadJugadas() {
+  if (jugadasCache) return jugadasCache;
+  try {
+    const { content } = await ghGetFile();
+    jugadasCache = Array.isArray(content) ? content : [];
+  } catch {
+    jugadasCache = [];
+  }
+  return jugadasCache;
+}
+
+async function markPlayed() {
+  const sorteo = parseInt($('f-sorteo').value, 10);
+  document.querySelectorAll('.num').forEach(b => { b.classList.remove('played'); b.title = ''; });
+  if (!sorteo || sorteo < 1) return;
+  const jugadas = await loadJugadas();
+  const nums = new Set();
+  jugadas
+    .filter(j => j.juego === 'kino' && j.sorteo === sorteo)
+    .forEach(j => (j.numeros || []).forEach(n => nums.add(n)));
+  if (!nums.size) return;
+  document.querySelectorAll('.num').forEach(b => {
+    if (nums.has(parseInt(b.dataset.n, 10))) {
+      b.classList.add('played');
+      b.title = 'Jugaste este número en este sorteo';
+    }
+  });
+}
+
 // ── Init ─────────────────────────────────────────────────────────────────────
 buildGrid();
 $('f-fecha').value = hoyISO();
 $('btn-clear').addEventListener('click', clearAll);
 $('btn-submit').addEventListener('click', submit);
-$('f-sorteo').addEventListener('input', refresh);
+$('f-sorteo').addEventListener('input', () => { refresh(); markPlayed(); });
 
 // Llamar a getToken() ejecuta el guardado de #setup= si vino en el hash.
 if (!getToken()) $('token-warn').style.display = 'block';
@@ -300,10 +337,12 @@ fetch('../data/historial_index.json', { cache: 'no-store' })
     const nums = Object.keys(kino).map(k => parseInt(k, 10)).filter(n => !isNaN(n));
     if (nums.length) $('f-sorteo').value = Math.max(...nums) + 1;
     refresh();
+    markPlayed();
   })
   .catch(() => {});
 
 refresh();
+markPlayed();
 </script>
 
 </body>
