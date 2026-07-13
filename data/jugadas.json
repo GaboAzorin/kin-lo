@@ -1710,7 +1710,19 @@
       36
     ],
     "rango_sugerencia": null,
-    "aciertos": null
+    "aciertos": {
+      "loto": 0
+    },
+    "resultado_sorteo": {
+      "loto": [
+        1,
+        9,
+        17,
+        29,
+        31,
+        40
+      ]
+    }
   },
   {
     "fecha_jugada": "2026-07-11",
