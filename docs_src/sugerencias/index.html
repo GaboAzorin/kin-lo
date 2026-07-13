@@ -287,16 +287,15 @@
   </p>
 
   <div class="disclaimer">
-    <strong>Cómo leer esto (honestamente).</strong>
-    La lotería es justa: todas las combinaciones son igual de probables y cada sorteo es
-    independiente. <b>Ninguna estrategia mejora tu probabilidad de ganar</b> — lo verificamos
-    con un backtest sobre todo el historial. Lo que sí optimiza el motor son las dos únicas
-    palancas con valor real:
+    <strong>Cómo leer esto.</strong>
+    El motor genera combinaciones optimizando:
     <ul>
-      <li><b>Anti-reparto:</b> evita patrones que juega mucha gente (fechas, secuencias,
-        múltiplos). Si ganas, repartes el premio con menos personas → premio esperado mayor.</li>
       <li><b>Diversidad:</b> las combinaciones se pisan poco entre sí, cubriendo más números
         si juegas varios cartones.</li>
+      <li><b>Forma típica:</b> suma, paridad y balance parecidos a un sorteo real.</li>
+      <li><b>Unicidad:</b> ninguna combinación sugerida ha salido antes en el historial.
+        El grupo <b>Todos + subjuegos</b> además excluye lo que salió en los subjuegos
+        (Recargado/Revancha/Desquite en Loto; ReKino/RequeteKino en Kino).</li>
     </ul>
   </div>
 
@@ -321,9 +320,9 @@ let activeGame = 'loto';
 const RANGE_LABELS = {
   '50':'Últ. 50', '100':'Últ. 100', '250':'Últ. 250',
   '500':'Últ. 500', '1000':'Últ. 1000', 'all':'Todos los sorteos',
-  'dia':'Mismo día', 'mes':'Mismo mes'
+  'all_sub':'Todos + subjuegos', 'dia':'Mismo día', 'mes':'Mismo mes'
 };
-const RANGO_ORDER = ['50','100','250','500','1000','all','dia','mes'];
+const RANGO_ORDER = ['50','100','250','500','1000','all','all_sub','dia','mes'];
 
 async function loadData() {
   // Backtest (opcional): no bloquea el render principal.
@@ -364,9 +363,8 @@ function renderBacktest() {
   const bt = backtestData && backtestData[activeGame];
   if (!bt) { el.innerHTML = ''; return; }
 
-  const ac = bt.aciertos, pop = bt.popularidad, ol = bt.solapamiento;
+  const ac = bt.aciertos, ol = bt.solapamiento;
   const acTie = !bt.aciertos_test.significativo;
-  const popWin = pop.smart < pop.random;
   const olWin  = ol.smart < ol.random;
 
   el.innerHTML = `
@@ -382,16 +380,6 @@ function renderBacktest() {
           <div class="note">${acTie
             ? '<span class="tie">Empate</span> — ningún método predice mejor (lotería justa).'
             : 'diferencia dentro de lo medible.'}</div>
-        </div>
-        <div class="bt-metric">
-          <div class="label">Popularidad (anti-reparto)</div>
-          <div class="vals">
-            <span class="smart">${pop.smart.toFixed(3)}</span>
-            <span class="rand">azar ${pop.random.toFixed(3)}</span>
-          </div>
-          <div class="note">${popWin
-            ? `<span class="win">−${Math.abs(pop.reduccion_pct).toFixed(0)}%</span> menos popular → menos reparto del premio.`
-            : 'sin ventaja.'}</div>
         </div>
         <div class="bt-metric">
           <div class="label">Solapamiento entre combos</div>

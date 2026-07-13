@@ -278,80 +278,76 @@
     "50": [
       {
         "combo": [
-          7,
-          10,
-          31,
-          32,
-          35,
+          9,
+          15,
+          19,
+          21,
+          30,
           38
         ],
-        "suma": 153,
+        "suma": 132,
         "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 6.2,
-        "gap_std": 7.44,
-        "zones": [],
-        "parity": [
-          3,
-          3
-        ]
-      },
-      {
-        "combo": [
-          5,
-          13,
-          18,
-          33,
-          34,
-          36
-        ],
-        "suma": 139,
-        "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 6.2,
-        "gap_std": 5.04,
-        "zones": [],
-        "parity": [
-          3,
-          3
-        ]
-      },
-      {
-        "combo": [
-          9,
-          12,
-          16,
-          37,
-          39,
-          41
-        ],
-        "suma": 154,
-        "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 6.4,
-        "gap_std": 7.34,
+        "mean_gap": 5.8,
+        "gap_std": 2.56,
         "zones": [],
         "parity": [
           2,
           4
+        ]
+      },
+      {
+        "combo": [
+          10,
+          13,
+          17,
+          28,
+          37,
+          41
+        ],
+        "suma": 146,
+        "score": 1.0,
+        "mean_gap": 6.2,
+        "gap_std": 3.19,
+        "zones": [],
+        "parity": [
+          2,
+          4
+        ]
+      },
+      {
+        "combo": [
+          7,
+          11,
+          24,
+          26,
+          35,
+          36
+        ],
+        "suma": 139,
+        "score": 1.0,
+        "mean_gap": 5.8,
+        "gap_std": 4.53,
+        "zones": [],
+        "parity": [
+          3,
+          3
         ]
       }
     ],
     "100": [
       {
         "combo": [
-          11,
-          12,
-          25,
-          34,
-          36,
+          6,
+          10,
+          22,
+          23,
+          33,
           38
         ],
-        "suma": 156,
+        "suma": 132,
         "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 5.4,
-        "gap_std": 4.76,
+        "mean_gap": 6.4,
+        "gap_std": 4.03,
         "zones": [],
         "parity": [
           4,
@@ -360,38 +356,36 @@
       },
       {
         "combo": [
-          2,
-          8,
-          27,
-          32,
-          40,
+          13,
+          15,
+          16,
+          28,
+          36,
           41
         ],
-        "suma": 150,
+        "suma": 149,
         "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 7.8,
-        "gap_std": 6.05,
+        "mean_gap": 5.6,
+        "gap_std": 4.03,
         "zones": [],
         "parity": [
-          4,
-          2
+          3,
+          3
         ]
       },
       {
         "combo": [
-          4,
-          6,
-          16,
-          33,
-          35,
-          37
+          1,
+          2,
+          11,
+          14,
+          34,
+          39
         ],
-        "suma": 131,
+        "suma": 101,
         "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 6.6,
-        "gap_std": 6.05,
+        "mean_gap": 7.6,
+        "gap_std": 6.74,
         "zones": [],
         "parity": [
           3,
@@ -402,99 +396,16 @@
     "250": [
       {
         "combo": [
-          8,
-          13,
-          18,
-          32,
-          34,
-          39
-        ],
-        "suma": 144,
-        "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 6.2,
-        "gap_std": 4.07,
-        "zones": [],
-        "parity": [
-          4,
-          2
-        ]
-      },
-      {
-        "combo": [
-          6,
-          11,
-          23,
-          33,
-          36,
-          37
-        ],
-        "suma": 146,
-        "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 6.2,
-        "gap_std": 4.17,
-        "zones": [],
-        "parity": [
-          2,
-          4
-        ]
-      },
-      {
-        "combo": [
           7,
-          14,
           17,
-          38,
-          40,
-          41
+          18,
+          21,
+          24,
+          30
         ],
-        "suma": 157,
+        "suma": 117,
         "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 6.8,
-        "gap_std": 7.39,
-        "zones": [],
-        "parity": [
-          3,
-          3
-        ]
-      }
-    ],
-    "500": [
-      {
-        "combo": [
-          7,
-          16,
-          25,
-          34,
-          36,
-          37
-        ],
-        "suma": 155,
-        "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 6.0,
-        "gap_std": 3.69,
-        "zones": [],
-        "parity": [
-          3,
-          3
-        ]
-      },
-      {
-        "combo": [
-          3,
-          14,
-          22,
-          32,
-          39,
-          41
-        ],
-        "suma": 151,
-        "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 7.6,
+        "mean_gap": 4.6,
         "gap_std": 3.14,
         "zones": [],
         "parity": [
@@ -505,17 +416,94 @@
       {
         "combo": [
           1,
-          5,
-          12,
-          33,
-          38,
-          40
+          4,
+          19,
+          22,
+          34,
+          41
         ],
-        "suma": 129,
+        "suma": 121,
         "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 7.8,
-        "gap_std": 6.79,
+        "mean_gap": 8.0,
+        "gap_std": 4.82,
+        "zones": [],
+        "parity": [
+          3,
+          3
+        ]
+      },
+      {
+        "combo": [
+          3,
+          20,
+          28,
+          31,
+          32,
+          37
+        ],
+        "suma": 151,
+        "score": 1.0,
+        "mean_gap": 6.8,
+        "gap_std": 5.6,
+        "zones": [],
+        "parity": [
+          3,
+          3
+        ]
+      }
+    ],
+    "500": [
+      {
+        "combo": [
+          13,
+          15,
+          18,
+          19,
+          40,
+          41
+        ],
+        "suma": 146,
+        "score": 1.0,
+        "mean_gap": 5.6,
+        "gap_std": 7.74,
+        "zones": [],
+        "parity": [
+          2,
+          4
+        ]
+      },
+      {
+        "combo": [
+          1,
+          8,
+          11,
+          24,
+          30,
+          38
+        ],
+        "suma": 112,
+        "score": 1.0,
+        "mean_gap": 7.4,
+        "gap_std": 3.26,
+        "zones": [],
+        "parity": [
+          4,
+          2
+        ]
+      },
+      {
+        "combo": [
+          2,
+          12,
+          16,
+          25,
+          27,
+          29
+        ],
+        "suma": 111,
+        "score": 1.0,
+        "mean_gap": 5.4,
+        "gap_std": 3.44,
         "zones": [],
         "parity": [
           3,
@@ -526,162 +514,17 @@
     "1000": [
       {
         "combo": [
-          11,
-          12,
-          20,
-          36,
-          37,
-          39
-        ],
-        "suma": 155,
-        "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 5.6,
-        "gap_std": 5.82,
-        "zones": [],
-        "parity": [
-          3,
-          3
-        ]
-      },
-      {
-        "combo": [
-          2,
-          13,
-          18,
-          38,
-          40,
-          41
-        ],
-        "suma": 152,
-        "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 7.8,
-        "gap_std": 7.03,
-        "zones": [],
-        "parity": [
           4,
-          2
-        ]
-      },
-      {
-        "combo": [
-          8,
+          14,
           21,
-          24,
-          32,
-          33,
-          35
+          25,
+          29,
+          31
         ],
-        "suma": 153,
+        "suma": 124,
         "score": 1.0,
-        "popularidad": 0.0,
         "mean_gap": 5.4,
-        "gap_std": 4.5,
-        "zones": [],
-        "parity": [
-          3,
-          3
-        ]
-      }
-    ],
-    "all": [
-      {
-        "combo": [
-          1,
-          13,
-          26,
-          32,
-          34,
-          38
-        ],
-        "suma": 144,
-        "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 7.4,
-        "gap_std": 4.36,
-        "zones": [],
-        "parity": [
-          4,
-          2
-        ]
-      },
-      {
-        "combo": [
-          8,
-          11,
-          18,
-          36,
-          37,
-          39
-        ],
-        "suma": 149,
-        "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 6.2,
-        "gap_std": 6.24,
-        "zones": [],
-        "parity": [
-          3,
-          3
-        ]
-      },
-      {
-        "combo": [
-          10,
-          12,
-          23,
-          35,
-          40,
-          41
-        ],
-        "suma": 161,
-        "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 6.2,
-        "gap_std": 4.53,
-        "zones": [],
-        "parity": [
-          3,
-          3
-        ]
-      }
-    ],
-    "dia": [
-      {
-        "combo": [
-          12,
-          13,
-          20,
-          35,
-          40,
-          41
-        ],
-        "suma": 161,
-        "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 5.8,
-        "gap_std": 5.15,
-        "zones": [],
-        "parity": [
-          3,
-          3
-        ]
-      },
-      {
-        "combo": [
-          4,
-          11,
-          23,
-          33,
-          36,
-          37
-        ],
-        "suma": 144,
-        "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 6.6,
-        "gap_std": 4.13,
+        "gap_std": 2.8,
         "zones": [],
         "parity": [
           2,
@@ -690,18 +533,213 @@
       },
       {
         "combo": [
+          6,
+          8,
+          18,
+          28,
+          35,
+          39
+        ],
+        "suma": 134,
+        "score": 1.0,
+        "mean_gap": 6.6,
+        "gap_std": 3.2,
+        "zones": [],
+        "parity": [
+          4,
+          2
+        ]
+      },
+      {
+        "combo": [
+          7,
+          10,
+          24,
+          26,
+          27,
+          30
+        ],
+        "suma": 124,
+        "score": 1.0,
+        "mean_gap": 4.6,
+        "gap_std": 4.76,
+        "zones": [],
+        "parity": [
+          4,
+          2
+        ]
+      }
+    ],
+    "all": [
+      {
+        "combo": [
+          5,
+          13,
+          14,
+          30,
+          33,
+          39
+        ],
+        "suma": 134,
+        "score": 1.0,
+        "mean_gap": 6.8,
+        "gap_std": 5.19,
+        "zones": [],
+        "parity": [
+          2,
+          4
+        ]
+      },
+      {
+        "combo": [
+          6,
+          7,
+          17,
+          18,
+          19,
+          29
+        ],
+        "suma": 96,
+        "score": 1.0,
+        "mean_gap": 4.6,
+        "gap_std": 4.41,
+        "zones": [],
+        "parity": [
+          2,
+          4
+        ]
+      },
+      {
+        "combo": [
+          8,
+          15,
+          24,
+          25,
+          28,
+          41
+        ],
+        "suma": 141,
+        "score": 1.0,
+        "mean_gap": 6.6,
+        "gap_std": 4.27,
+        "zones": [],
+        "parity": [
           3,
-          16,
-          21,
-          32,
-          34,
+          3
+        ]
+      }
+    ],
+    "all_sub": [
+      {
+        "combo": [
+          1,
+          14,
+          23,
+          24,
+          25,
+          29
+        ],
+        "suma": 116,
+        "score": 1.0,
+        "mean_gap": 5.6,
+        "gap_std": 4.72,
+        "zones": [],
+        "parity": [
+          2,
+          4
+        ]
+      },
+      {
+        "combo": [
+          9,
+          11,
+          12,
+          17,
+          33,
           38
         ],
-        "suma": 144,
+        "suma": 120,
         "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 7.0,
-        "gap_std": 4.24,
+        "mean_gap": 5.8,
+        "gap_std": 5.34,
+        "zones": [],
+        "parity": [
+          2,
+          4
+        ]
+      },
+      {
+        "combo": [
+          5,
+          6,
+          20,
+          28,
+          34,
+          37
+        ],
+        "suma": 130,
+        "score": 1.0,
+        "mean_gap": 6.4,
+        "gap_std": 4.5,
+        "zones": [],
+        "parity": [
+          4,
+          2
+        ]
+      }
+    ],
+    "dia": [
+      {
+        "combo": [
+          3,
+          5,
+          19,
+          29,
+          30,
+          32
+        ],
+        "suma": 118,
+        "score": 1.0,
+        "mean_gap": 5.8,
+        "gap_std": 5.23,
+        "zones": [],
+        "parity": [
+          2,
+          4
+        ]
+      },
+      {
+        "combo": [
+          11,
+          16,
+          21,
+          22,
+          34,
+          35
+        ],
+        "suma": 139,
+        "score": 1.0,
+        "mean_gap": 4.8,
+        "gap_std": 4.02,
+        "zones": [],
+        "parity": [
+          3,
+          3
+        ]
+      },
+      {
+        "combo": [
+          9,
+          12,
+          14,
+          18,
+          25,
+          26
+        ],
+        "suma": 104,
+        "score": 1.0,
+        "mean_gap": 3.4,
+        "gap_std": 2.06,
         "zones": [],
         "parity": [
           4,
@@ -712,62 +750,59 @@
     "mes": [
       {
         "combo": [
-          1,
-          4,
+          11,
+          17,
+          18,
+          25,
+          38,
+          39
+        ],
+        "suma": 148,
+        "score": 1.0,
+        "mean_gap": 5.6,
+        "gap_std": 4.45,
+        "zones": [],
+        "parity": [
+          2,
+          4
+        ]
+      },
+      {
+        "combo": [
           10,
-          34,
-          35,
-          41
-        ],
-        "suma": 125,
-        "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 8.0,
-        "gap_std": 8.22,
-        "zones": [],
-        "parity": [
-          3,
-          3
-        ]
-      },
-      {
-        "combo": [
-          7,
-          13,
-          15,
+          21,
+          27,
+          29,
           32,
-          36,
-          38
+          35
         ],
-        "suma": 141,
+        "suma": 154,
         "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 6.2,
-        "gap_std": 5.6,
+        "mean_gap": 5.0,
+        "gap_std": 3.29,
         "zones": [],
         "parity": [
-          3,
-          3
+          2,
+          4
         ]
       },
       {
         "combo": [
-          6,
-          12,
-          22,
-          33,
-          37,
-          40
+          1,
+          5,
+          8,
+          23,
+          26,
+          33
         ],
-        "suma": 150,
+        "suma": 96,
         "score": 1.0,
-        "popularidad": 0.0,
-        "mean_gap": 6.8,
-        "gap_std": 3.19,
+        "mean_gap": 6.4,
+        "gap_std": 4.54,
         "zones": [],
         "parity": [
-          4,
-          2
+          2,
+          4
         ]
       }
     ]

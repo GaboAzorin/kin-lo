@@ -25,7 +25,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "src" / "analytics"))
 sys.path.insert(0, str(REPO_ROOT / "src" / "notifications"))
 
-from suggestions import generar_sugerencias, combo_rank
+from suggestions import generar_sugerencias, combo_rank, _build_history_set
 from tg_notify   import send as tg_send
 
 DATA_DIR  = REPO_ROOT / "data"
@@ -68,10 +68,17 @@ _DIA_ES = {
     "Monday": "lunes", "Tuesday": "martes", "Wednesday": "miércoles",
     "Thursday": "jueves", "Friday": "viernes", "Saturday": "sábado", "Sunday": "domingo",
 }
-_RANGOS_ORDEN  = ["50", "100", "250", "500", "1000", "all", "dia", "mes"]
+_RANGOS_ORDEN  = ["50", "100", "250", "500", "1000", "all", "all_sub", "dia", "mes"]
 _UMBRAL_ALERTA = {"kino": 12, "loto": 5}   # aciertos mínimos para alerta destacada
 # Etiquetas legibles por rango para la tabla de Telegram (los numéricos van tal cual).
-_RANGO_LABEL_TG = {"all": "Todos", "dia": "Día", "mes": "Mes"}
+_RANGO_LABEL_TG = {"all": "Todos", "all_sub": "Todos+sub", "dia": "Día", "mes": "Mes"}
+
+# Prefijos de subjuegos por juego. El grupo "all_sub" ("Todos + subjuegos")
+# excluye por unicidad las combinaciones que salieron en CUALQUIERA de estos.
+SUBGAME_PREFIXES = {
+    "LOTO": ["LOTO", "RECARGADO", "REVANCHA", "DESQUITE"],
+    "KINO": ["KINO", "REKINO", "REQUETEKINO"],
+}
 
 # Calendario fijo de sorteos por juego — Python weekday(): lunes=0 … domingo=6.
 #   loto → martes/jueves/domingo ; kino → miércoles/viernes/domingo
@@ -599,11 +606,22 @@ def _sugerencias_por_rango(df_full: pd.DataFrame, prefix: str,
     total = len(df_full)
     juego = "loto" if prefix == "LOTO" else "kino"
 
-    # Slices como pares (label, df). Numéricos + "all", luego "dia" y "mes".
+    # Slices como pares (label, df). Numéricos + "all" + "all_sub", luego "dia"/"mes".
     slices: list[tuple[str, pd.DataFrame]] = [
         (str(n), df_full.tail(n)) for n in SUGGESTION_RANGES if n < total
     ]
     slices.append(("all", df_full))
+    slices.append(("all_sub", df_full))  # mismo df; se distingue por extra_history
+
+    # Exclusión ampliada del grupo "all_sub": unión de combinaciones de TODOS los
+    # subjuegos (Loto+Recargado+Revancha+Desquite / Kino+ReKino+RequeteKino).
+    extra_history_sub: set = set()
+    for sub_prefix in SUBGAME_PREFIXES.get(prefix, []):
+        if sub_prefix == prefix:
+            continue  # el propio juego ya se excluye vía df_history
+        sub_cols = [f"{sub_prefix}_n{i}" for i in range(1, pick + 1)]
+        if all(c in df_full.columns for c in sub_cols):
+            extra_history_sub |= _build_history_set(df_full, sub_cols)
 
     dia_en, mes_n = _proximo_sorteo_dia_mes(df_full, juego)
     if dia_en is not None and "dia_semana" in df_full.columns:
@@ -650,6 +668,7 @@ def _sugerencias_por_rango(df_full: pd.DataFrame, prefix: str,
             n_sugerencias=N_EVAL, num_col_prefix=prefix,
             df_history=df_full, n_display=N_DISPLAY,
             dist_params=dist_params,
+            extra_history=extra_history_sub if label == "all_sub" else None,
         )
     return result
 

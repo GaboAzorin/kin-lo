@@ -2,30 +2,20 @@
 suggestions.py
 Genera combinaciones sugeridas. Se llama desde metrics.py.
 
-CONTEXTO ESTADÍSTICO (ver src/analytics/backtest.py):
-En una lotería justa, todas las combinaciones son equiprobables y los sorteos
-son independientes. El backtest sobre el historial confirma que NINGÚN criterio
-sobre los números mejora los aciertos frente al azar (smart ≈ random ≈ esperanza
-hipergeométrica). Por eso este motor NO intenta "predecir": optimiza las dos
-únicas palancas con valor real:
+Este motor genera combinaciones optimizando dos palancas:
 
-  1. ANTI-REPARTO  — evita patrones que mucha gente juega (fechas, progresiones,
-     secuencias, múltiplos, mismo dígito). Si ganas, repartes con menos gente →
-     mayor premio esperado. (No cambia la probabilidad de ganar.)
-  2. DIVERSIDAD    — las N combinaciones se solapan lo menos posible entre sí,
+  1. DIVERSIDAD    — las N combinaciones se solapan lo menos posible entre sí,
      maximizando la cobertura del espacio de números si juegas varios cartones.
+  2. FORMA TÍPICA  — suma dentro de p10-p90, paridad y balance plausibles
+                     (que se parezca a un sorteo real).
 
-Más dos restricciones de cordura:
-  3. UNICIDAD      — ninguna combinación sugerida ha salido antes en el historial.
-  4. FORMA TÍPICA  — suma dentro de p10-p90, paridad y balance plausibles
-                     (cosmético: que se parezca a un sorteo real).
+Más una restricción de cordura:
+  3. UNICIDAD      — ninguna combinación sugerida ha salido antes en el historial
+                     (opcionalmente, tampoco en los subjuegos: ver extra_history).
 
-El criterio de "frecuencia esperada" del motor anterior se eliminó: el backtest
-mostró que era ruido (falacia caliente/frío).
-
-Loto (1-41, elige 6) y Kino (1-25, elige 14) usan perfiles distintos porque en
-Kino eliges más de la mitad de los números: suma/paridad/balance casi no varían,
-así que el peso recae en anti-reparto y diversidad.
+El anti-reparto (penalizar patrones populares) se eliminó a pedido: es preferible
+ganar y repartir que no ganar. La función `popularity_penalty` se conserva solo
+como métrica descriptiva del backtest; ya no interviene en la generación.
 """
 
 import random
@@ -57,16 +47,14 @@ def combo_rank(combo: list[int], n: int, k: int) -> int:
 # ---------------------------------------------------------------------------
 
 def _perfil(juego: str) -> dict:
-    """Pesos y parámetros de selección según el juego.
+    """Parámetros de selección según el juego.
 
-    w_pop: peso del anti-reparto vs forma típica en el score de candidatos.
-    lam:   peso de la diversidad vs score en la selección MMR (0-1, mayor = más diverso).
+    lam: peso de la diversidad vs score en la selección MMR (0-1, mayor = más diverso).
     """
     if juego == "kino":
-        # Eliges 14 de 25: forma casi sin varianza → todo el peso en anti-reparto.
-        return {"w_pop": 0.75, "lam": 0.70}
+        return {"lam": 0.70}
     # Loto y familia (1-41, elige 6).
-    return {"w_pop": 0.60, "lam": 0.60}
+    return {"lam": 0.60}
 
 
 # ---------------------------------------------------------------------------
@@ -213,28 +201,28 @@ def _shape_score(combo, sum_p10: int, sum_p90: int,
 def _seleccionar_diversas(cands, n: int, pick: int, lam: float):
     """
     Selección MMR (maximal marginal relevance): de un shortlist de candidatos
-    de alto score (= baja popularidad), va eligiendo en cada paso el que
+    de alto score (= forma más típica), va eligiendo en cada paso el que
     minimiza el solapamiento máximo con los ya elegidos, sin sacrificar score.
 
         valor = (1 - lam) * score  -  lam * (solape_max / pick)
 
-    cands: lista [(combo_tuple, score, pop)] ordenada por score desc.
+    cands: lista [(combo_tuple, score)] ordenada por score desc.
     """
     if not cands:
         return []
-    shortlist = cands[:max(400, n * 2)]  # score alto / pop baja; dimensionado según lo pedido
+    shortlist = cands[:max(400, n * 2)]  # score alto; dimensionado según lo pedido
     elegidos = [shortlist[0]]
     elegidos_set = {shortlist[0][0]}
 
     while len(elegidos) < n and len(elegidos) < len(shortlist):
         mejor, mejor_val = None, float("-inf")
-        for combo, sc, pop in shortlist:
+        for combo, sc in shortlist:
             if combo in elegidos_set:
                 continue
-            solape_max = max(len(set(combo) & set(c)) for c, _, _ in elegidos)
+            solape_max = max(len(set(combo) & set(c)) for c, _ in elegidos)
             val = (1 - lam) * sc - lam * (solape_max / pick)
             if val > mejor_val:
-                mejor_val, mejor = val, (combo, sc, pop)
+                mejor_val, mejor = val, (combo, sc)
         if mejor is None:
             break
         elegidos.append(mejor)
@@ -251,9 +239,10 @@ def generar_sugerencias(df, metricas: dict, num_range: int = 41,
                         num_col_prefix: str = "LOTO",
                         df_history=None, juego: str | None = None,
                         n_display: int | None = None,
-                        dist_params: dict | None = None) -> list[dict]:
+                        dist_params: dict | None = None,
+                        extra_history: set | None = None) -> list[dict]:
     """
-    Genera `n_sugerencias` combinaciones optimizadas por anti-reparto + diversidad.
+    Genera `n_sugerencias` combinaciones optimizadas por diversidad + forma típica.
 
     Args:
         df:             DataFrame del rango a analizar (para stats de forma).
@@ -273,20 +262,26 @@ def generar_sugerencias(df, metricas: dict, num_range: int = 41,
         dist_params:    Parámetros de distribución histórica para Kino:
                         {"gap_std_p10", "gap_std_p90", "zone_p10", "zone_p90", "zones"}.
                         Si None, no se aplica penalización por distribución.
+        extra_history:  Set de combinaciones (tuplas ordenadas) adicionales a
+                        excluir por unicidad, más allá de las de `df_history`.
+                        Lo usa el grupo "Todos + subjuegos" para excluir también
+                        lo que salió en los subjuegos (Recargado/Revancha/… o
+                        ReKino/RequeteKino).
 
     Returns:
         Lista de dicts ordenada por score:
-        [{"combo": [...], "suma": X, "score": Y, "popularidad": Z,
+        [{"combo": [...], "suma": X, "score": Y,
           "mean_gap": F, "gap_std": F, "zones": [...], "parity": [pares, impares]}, ...]
     """
     if juego is None:
         juego = "kino" if num_range <= 25 else "loto"
     perfil = _perfil(juego)
-    w_pop = perfil["w_pop"]
 
     num_cols = [f"{num_col_prefix}_n{i}" for i in range(1, pick + 1)]
     hist_df  = df_history if df_history is not None else df
     history  = _build_history_set(hist_df, num_cols)
+    if extra_history:
+        history = history | extra_history
 
     sum_p10 = metricas.get("sum_stats", {}).get("p10", 70)
     sum_p90 = metricas.get("sum_stats", {}).get("p90", 180)
@@ -301,10 +296,8 @@ def generar_sugerencias(df, metricas: dict, num_range: int = 41,
         combo = tuple(sorted(random.sample(range(1, num_range + 1), pick)))
         if combo in history:
             continue
-        shape = _shape_score(combo, sum_p10, sum_p90, num_range, pick, dist_params)
-        pop   = popularity_penalty(combo, num_range, pick)
-        score = (1 - w_pop) * shape + w_pop * (1 - pop)
-        candidatos.append((combo, score, pop))
+        score = _shape_score(combo, sum_p10, sum_p90, num_range, pick, dist_params)
+        candidatos.append((combo, score))
 
     candidatos.sort(key=lambda x: x[1], reverse=True)
 
@@ -329,7 +322,7 @@ def generar_sugerencias(df, metricas: dict, num_range: int = 41,
             ya.add(cand[0])
 
     result = []
-    for combo, sc, pop in elegidos:
+    for combo, sc in elegidos:
         combo_sorted = sorted(combo)
         n = len(combo_sorted)
         mg = round((combo_sorted[-1] - combo_sorted[0]) / (n - 1), 2) if n > 1 else 0.0
@@ -344,7 +337,6 @@ def generar_sugerencias(df, metricas: dict, num_range: int = 41,
             "combo":       combo_sorted,
             "suma":        sum(combo_sorted),
             "score":       round(sc, 3),
-            "popularidad": round(pop, 3),
             "mean_gap":    mg,
             "gap_std":     gs,
             "zones":       zc,
