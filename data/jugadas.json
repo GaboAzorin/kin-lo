@@ -1795,5 +1795,23 @@
     ],
     "rango_sugerencia": "all_sub",
     "aciertos": null
+  },
+  {
+    "fecha_jugada": "2026-07-13",
+    "juego": "loto",
+    "variantes": [
+      "loto"
+    ],
+    "sorteo": 5451,
+    "numeros": [
+      1,
+      14,
+      23,
+      24,
+      25,
+      29
+    ],
+    "rango_sugerencia": "all_sub",
+    "aciertos": null
   }
 ]
