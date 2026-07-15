@@ -1812,6 +1812,18 @@
       29
     ],
     "rango_sugerencia": "all_sub",
-    "aciertos": null
+    "aciertos": {
+      "loto": 0
+    },
+    "resultado_sorteo": {
+      "loto": [
+        10,
+        13,
+        15,
+        20,
+        38,
+        41
+      ]
+    }
   }
 ]
