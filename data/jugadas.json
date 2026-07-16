@@ -1794,7 +1794,27 @@
       24
     ],
     "rango_sugerencia": "all_sub",
-    "aciertos": null
+    "aciertos": {
+      "kino": 11
+    },
+    "resultado_sorteo": {
+      "kino": [
+        2,
+        5,
+        6,
+        9,
+        10,
+        11,
+        12,
+        13,
+        15,
+        17,
+        18,
+        19,
+        20,
+        22
+      ]
+    }
   },
   {
     "fecha_jugada": "2026-07-13",
