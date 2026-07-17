@@ -1845,5 +1845,31 @@
         41
       ]
     }
+  },
+  {
+    "fecha_jugada": "2026-07-16",
+    "juego": "kino",
+    "variantes": [
+      "kino"
+    ],
+    "sorteo": 3254,
+    "numeros": [
+      2,
+      3,
+      4,
+      6,
+      8,
+      12,
+      14,
+      15,
+      16,
+      17,
+      19,
+      21,
+      24,
+      25
+    ],
+    "rango_sugerencia": "all",
+    "aciertos": null
   }
 ]
