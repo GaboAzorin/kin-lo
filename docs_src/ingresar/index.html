@@ -101,6 +101,52 @@
       width: 6px; height: 6px; border-radius: 50%;
       background: var(--violet); box-shadow: 0 0 4px rgba(167,139,250,0.8);
     }
+    /* Puntos por cartón: un punto de color por cada cartón que incluye el número. */
+    .num .cardots {
+      position: absolute; top: 4px; right: 4px;
+      display: flex; gap: 2px; pointer-events: none;
+    }
+    .cardot {
+      width: 6px; height: 6px; border-radius: 50%;
+      box-shadow: 0 0 4px rgba(0,0,0,0.45), inset 0 0 2px rgba(255,255,255,0.4);
+    }
+    /* Velocímetro de progreso (0 → 14). */
+    .gauge-wrap { display: flex; flex-direction: column; align-items: center; margin: 6px 0 16px; }
+    .gauge { overflow: visible; }
+    .gauge-track {
+      fill: none; stroke: rgba(255,255,255,0.10); stroke-width: 12; stroke-linecap: round;
+    }
+    .gauge-fill {
+      fill: none; stroke: url(#gauge-grad); stroke-width: 12; stroke-linecap: round;
+      transition: stroke-dashoffset 0.55s cubic-bezier(0.34,1.56,0.64,1);
+      filter: drop-shadow(0 0 5px rgba(59,130,246,0.45));
+    }
+    .gauge-needle {
+      stroke: var(--text); stroke-width: 3; stroke-linecap: round;
+      transform-origin: 90px 90px;
+      transition: transform 0.55s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .gauge-hub { fill: var(--text); }
+    .gauge-readout {
+      margin-top: -14px; text-align: center;
+      font-family: var(--font-head); pointer-events: none;
+    }
+    #gauge-num {
+      font-size: 1.7rem; font-weight: 800; color: var(--text);
+      font-variant-numeric: tabular-nums; transition: color 0.3s;
+    }
+    .gauge-den { font-size: 0.9rem; font-weight: 700; color: var(--muted); }
+    .gauge-wrap.full #gauge-num { color: var(--green); }
+    .gauge-wrap.full .gauge-fill { filter: drop-shadow(0 0 8px rgba(52,211,153,0.7)); }
+
+    /* Leyenda de cartones (solo con 2 o más). */
+    .legend {
+      display: none; flex-wrap: wrap; gap: 14px;
+      margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border);
+    }
+    .legend.show { display: flex; }
+    .legend-item { display: flex; align-items: center; gap: 7px; font-size: 0.8rem; color: var(--muted); }
+    .legend-dot { width: 11px; height: 11px; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.4), inset 0 0 2px rgba(255,255,255,0.4); }
     .num.sel {
       background: rgba(59,130,246,0.9); border-color: var(--accent-soft); color: #fff;
       box-shadow: 0 0 14px rgba(59,130,246,0.55), inset 0 0 8px rgba(255,255,255,0.15);
@@ -184,7 +230,28 @@
       <span>Números sorteados (14 de 1–25)</span>
       <span class="counter" id="counter">0 / 14</span>
     </div>
+
+    <div class="gauge-wrap" id="gauge-wrap">
+      <svg class="gauge" viewBox="0 0 180 104" width="180" height="104" aria-hidden="true">
+        <defs>
+          <linearGradient id="gauge-grad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#3b82f6" />
+            <stop offset="0.55" stop-color="#60a5fa" />
+            <stop offset="1" stop-color="#34d399" />
+          </linearGradient>
+        </defs>
+        <path class="gauge-track" d="M20,90 A70,70 0 0 1 160,90" />
+        <path class="gauge-fill" id="gauge-fill" d="M20,90 A70,70 0 0 1 160,90" />
+        <line class="gauge-needle" id="gauge-needle" x1="90" y1="90" x2="90" y2="34" />
+        <circle class="gauge-hub" cx="90" cy="90" r="5" />
+      </svg>
+      <div class="gauge-readout">
+        <span id="gauge-num">0</span><span class="gauge-den">/14</span>
+      </div>
+    </div>
+
     <div class="grid" id="grid"></div>
+    <div class="legend" id="legend"></div>
 
     <div class="actions">
       <div class="msg" id="msg"></div>
@@ -232,8 +299,25 @@ function toggle(n, btn) {
   refresh();
 }
 
+// ── Velocímetro de progreso ───────────────────────────────────────────────────
+let gaugeLen = 0;
+function initGauge() {
+  const fill = $('gauge-fill');
+  gaugeLen = fill.getTotalLength();
+  fill.style.strokeDasharray = gaugeLen;
+  updateGauge(0);
+}
+function updateGauge(count) {
+  const t = Math.max(0, Math.min(1, count / MAX_NUMS));
+  $('gauge-fill').style.strokeDashoffset = gaugeLen * (1 - t);
+  $('gauge-needle').style.transform = `rotate(${(t - 0.5) * 180}deg)`;
+  $('gauge-num').textContent = count;
+  $('gauge-wrap').classList.toggle('full', count === MAX_NUMS);
+}
+
 function refresh() {
   const full = selected.size === MAX_NUMS;
+  updateGauge(selected.size);
   $('counter').textContent = `${selected.size} / ${MAX_NUMS}`;
   $('counter').className = full ? 'counter ok' : 'counter';
   // Deshabilitar los no seleccionados cuando ya hay 14.
@@ -301,26 +385,69 @@ async function loadJugadas() {
   return jugadasCache;
 }
 
+// Un color por cartón; los números compartidos muestran varios puntos.
+const CARDON_COLORS = ['#a78bfa', '#34d399', '#fbbf24', '#f472b6', '#38bdf8', '#fb7185', '#a3e635', '#c084fc'];
+
 async function markPlayed() {
   const sorteo = parseInt($('f-sorteo').value, 10);
-  document.querySelectorAll('.num').forEach(b => { b.classList.remove('played'); b.title = ''; });
+  // Limpiar marcas previas (clase, tooltip, puntos por cartón y leyenda).
+  document.querySelectorAll('.num').forEach(b => {
+    b.classList.remove('played');
+    b.title = '';
+    const d = b.querySelector('.cardots');
+    if (d) d.remove();
+  });
+  const legend = $('legend');
+  legend.className = 'legend';
+  legend.innerHTML = '';
+
   if (!sorteo || sorteo < 1) return;
   const jugadas = await loadJugadas();
-  const nums = new Set();
-  jugadas
-    .filter(j => j.juego === 'kino' && j.sorteo === sorteo)
-    .forEach(j => (j.numeros || []).forEach(n => nums.add(n)));
-  if (!nums.size) return;
+  const cartones = jugadas.filter(j => j.juego === 'kino' && j.sorteo === sorteo);
+  if (!cartones.length) return;
+
+  const multi = cartones.length > 1;
+  cartones.forEach((c, i) => { c._color = CARDON_COLORS[i % CARDON_COLORS.length]; });
+
+  // Un punto de color por cada cartón que incluye ese número.
   document.querySelectorAll('.num').forEach(b => {
-    if (nums.has(parseInt(b.dataset.n, 10))) {
-      b.classList.add('played');
-      b.title = 'Jugaste este número en este sorteo';
-    }
+    const n = parseInt(b.dataset.n, 10);
+    const owners = cartones.filter(c => (c.numeros || []).includes(n));
+    if (!owners.length) return;
+    const cont = document.createElement('span');
+    cont.className = 'cardots';
+    owners.forEach(c => {
+      const dot = document.createElement('span');
+      dot.className = 'cardot';
+      dot.style.background = c._color;
+      cont.appendChild(dot);
+    });
+    b.appendChild(cont);
+    b.title = multi
+      ? 'Jugado en: ' + owners.map(c => 'Cartón ' + (cartones.indexOf(c) + 1)).join(', ')
+      : 'Jugaste este número en este sorteo';
   });
+
+  // Leyenda solo cuando hay 2 o más cartones.
+  if (multi) {
+    cartones.forEach((c, i) => {
+      const item = document.createElement('span');
+      item.className = 'legend-item';
+      const dot = document.createElement('span');
+      dot.className = 'legend-dot';
+      dot.style.background = c._color;
+      const label = document.createElement('span');
+      label.textContent = `Cartón ${i + 1}` + (c.fecha_jugada ? ` · ${c.fecha_jugada}` : '');
+      item.append(dot, label);
+      legend.appendChild(item);
+    });
+    legend.classList.add('show');
+  }
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 buildGrid();
+initGauge();
 $('f-fecha').value = hoyISO();
 $('btn-clear').addEventListener('click', clearAll);
 $('btn-submit').addEventListener('click', submit);
