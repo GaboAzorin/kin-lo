@@ -1937,5 +1937,31 @@
         24
       ]
     }
+  },
+  {
+    "fecha_jugada": "2026-07-18",
+    "juego": "kino",
+    "variantes": [
+      "kino"
+    ],
+    "sorteo": 3255,
+    "numeros": [
+      1,
+      2,
+      3,
+      4,
+      8,
+      9,
+      11,
+      12,
+      14,
+      15,
+      17,
+      19,
+      20,
+      24
+    ],
+    "rango_sugerencia": null,
+    "aciertos": null
   }
 ]
