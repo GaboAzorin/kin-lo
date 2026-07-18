@@ -1870,7 +1870,27 @@
       25
     ],
     "rango_sugerencia": "all",
-    "aciertos": null
+    "aciertos": {
+      "kino": 9
+    },
+    "resultado_sorteo": {
+      "kino": [
+        2,
+        3,
+        6,
+        7,
+        9,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        20,
+        21,
+        24
+      ]
+    }
   },
   {
     "fecha_jugada": "2026-07-16",
@@ -1896,6 +1916,26 @@
       24
     ],
     "rango_sugerencia": "all",
-    "aciertos": null
+    "aciertos": {
+      "kino": 7
+    },
+    "resultado_sorteo": {
+      "kino": [
+        2,
+        3,
+        6,
+        7,
+        9,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        20,
+        21,
+        24
+      ]
+    }
   }
 ]
