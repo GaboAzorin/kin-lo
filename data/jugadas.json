@@ -1962,6 +1962,26 @@
       24
     ],
     "rango_sugerencia": null,
-    "aciertos": null
+    "aciertos": {
+      "kino": 7
+    },
+    "resultado_sorteo": {
+      "kino": [
+        1,
+        5,
+        7,
+        8,
+        11,
+        12,
+        13,
+        14,
+        16,
+        17,
+        19,
+        22,
+        23,
+        25
+      ]
+    }
   }
 ]
