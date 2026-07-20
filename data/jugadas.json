@@ -1983,5 +1983,24 @@
         25
       ]
     }
+  },
+  {
+    "fecha_jugada": "2026-07-20",
+    "juego": "loto",
+    "variantes": [
+      "loto",
+      "recargado"
+    ],
+    "sorteo": 5454,
+    "numeros": [
+      4,
+      11,
+      16,
+      18,
+      30,
+      33
+    ],
+    "rango_sugerencia": "all_sub",
+    "aciertos": null
   }
 ]
