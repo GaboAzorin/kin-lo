@@ -2001,7 +2001,28 @@
       33
     ],
     "rango_sugerencia": "all_sub",
-    "aciertos": null
+    "aciertos": {
+      "loto": 2,
+      "recargado": 0
+    },
+    "resultado_sorteo": {
+      "loto": [
+        11,
+        16,
+        17,
+        20,
+        28,
+        31
+      ],
+      "recargado": [
+        10,
+        17,
+        21,
+        22,
+        35,
+        39
+      ]
+    }
   },
   {
     "fecha_jugada": "2026-07-20",
