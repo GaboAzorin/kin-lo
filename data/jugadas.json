@@ -2048,6 +2048,26 @@
       24
     ],
     "rango_sugerencia": "100",
-    "aciertos": null
+    "aciertos": {
+      "kino": 8
+    },
+    "resultado_sorteo": {
+      "kino": [
+        2,
+        4,
+        6,
+        8,
+        9,
+        12,
+        13,
+        14,
+        15,
+        16,
+        20,
+        22,
+        23,
+        25
+      ]
+    }
   }
 ]
