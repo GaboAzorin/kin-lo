@@ -2069,5 +2069,23 @@
         25
       ]
     }
+  },
+  {
+    "fecha_jugada": "2026-07-23",
+    "juego": "loto",
+    "variantes": [
+      "loto"
+    ],
+    "sorteo": 5455,
+    "numeros": [
+      13,
+      18,
+      24,
+      27,
+      39,
+      40
+    ],
+    "rango_sugerencia": "all_sub",
+    "aciertos": null
   }
 ]
