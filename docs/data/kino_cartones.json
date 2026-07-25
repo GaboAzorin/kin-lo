@@ -1,6 +1,6 @@
 {
   "metodo": "pooled MLE hipergeometrico sobre ganadores k=10..13 (KINO)",
-  "n_sorteos": 41,
+  "n_sorteos": 42,
   "sorteos": [
     {
       "sorteo": 3216,
@@ -329,6 +329,14 @@
       "error_estandar": 2096,
       "error_pct": 0.54,
       "ganadores_usados": 34587
+    },
+    {
+      "sorteo": 3257,
+      "fecha": "2026-07-24",
+      "cartones_estimados": 311416,
+      "error_estandar": 1873,
+      "error_pct": 0.6,
+      "ganadores_usados": 27635
     }
   ]
 }
