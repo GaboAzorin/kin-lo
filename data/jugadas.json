@@ -2086,7 +2086,19 @@
       40
     ],
     "rango_sugerencia": "all_sub",
-    "aciertos": null
+    "aciertos": {
+      "loto": 0
+    },
+    "resultado_sorteo": {
+      "loto": [
+        2,
+        3,
+        5,
+        11,
+        26,
+        33
+      ]
+    }
   },
   {
     "fecha_jugada": "2026-07-23",

@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-25 06:17",
+  "updated": "2026-07-25 18:04",
   "kino": {
     "proximo_sorteo": "26 de julio 2026",
     "pozo_total": "11.600",
@@ -22,23 +22,23 @@
     ]
   },
   "loto": {
-    "total_millones": 2750,
+    "total_millones": 2900,
     "variantes": [
       {
         "nombre": "Loto",
-        "millones": 280
+        "millones": 370
       },
       {
         "nombre": "Recargado",
-        "millones": 520
+        "millones": 560
       },
       {
         "nombre": "Revancha",
-        "millones": 40
+        "millones": 50
       },
       {
         "nombre": "Desquite",
-        "millones": 350
+        "millones": 360
       }
     ]
   }
