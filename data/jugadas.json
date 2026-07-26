@@ -2174,5 +2174,23 @@
     "aciertos": {
       "kino": 8
     }
+  },
+  {
+    "fecha_jugada": "2026-07-26",
+    "juego": "loto",
+    "variantes": [
+      "loto"
+    ],
+    "sorteo": 5456,
+    "numeros": [
+      7,
+      17,
+      20,
+      24,
+      28,
+      29
+    ],
+    "rango_sugerencia": "all_sub",
+    "aciertos": null
   }
 ]
