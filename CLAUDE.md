@@ -118,8 +118,13 @@ GitHub Pages sirve docs/ → https://gaboazorin.github.io/kin-lo/
   - Premios Kino: `data/kino_premios_historial.csv` (`premio_individual`, o
     `premio_total` si la categoría quedó sin ganadores).
   - Premios Loto: `data/polla_historial.csv`, columnas `*_MONTO` (premio unitario de
-    cada categoría). **Disponible desde el sorteo 5456**; antes solo se guardaban los
-    números, así que la UI muestra el motivo en vez de un $0 engañoso. No backfilleable.
+    cada categoría). Cargado desde el sorteo **5429**; para sorteos sin esas columnas
+    la UI muestra el motivo en vez de un $0 engañoso.
+    **Sí es backfilleable**, al contrario de lo que decía este archivo: la API de
+    polla.cl responde a cualquier `drawId` del histórico (verificado hasta el #4000)
+    con el desglose completo. `python scripts/backfill_loto_premio.py <desde> <hasta>`
+    rellena las filas existentes; salta las que ya tienen premios, así que se puede
+    re-correr. Sí es local-only: polla.cl bloquea las IPs de GitHub Actions.
   - Valor del cartón: **$1.000** en ambos juegos.
   - Las categorías altas son pari-mutuel; se usa el monto publicado, sin descontar la
     dilución que habrían causado los 500 cartones propios.
@@ -133,6 +138,10 @@ aciertos paga distinto según lo lleve. Por eso `polla_historial.csv` guarda
 retorno se calcula solo con las categorías normales y la salida queda marcada
 `parcial: true` con una nota en la UI.
 
+Ojo: un `dist_comodin` vacío **no** implica que falte el dato — puede ser que ninguna
+combinación del grupo llevara el comodín. `retorno.py` decide `parcial` consultando
+`sorteos_con_comodin()` (la columna `LOTO_comodin`), no la celda vacía.
+
 ### Distribución de aciertos y backfill
 
 `data/suggestions_history.csv` guarda, por sorteo × rango, la columna **`dist_aciertos`**
@@ -144,6 +153,9 @@ Las filas anteriores a que existiera la columna se rellenaron con
 sorteo pasado desde el **historial de git** de `data/*_suggestions_pending.json` (están
 versionados) y verifica que la reconstrucción reproduzca exactamente el `aciertos_avg` y
 `aciertos_max` ya persistidos.
+
+También rellena `dist_comodin` (Loto), para lo cual el sorteo necesita `LOTO_comodin`
+en `polla_historial.csv` — correr antes `backfill_loto_premio.py` si falta.
 
 **Correr el backfill en local, no en la nube**: depende de `git log` completo del
 repo. Un clon superficial ve solo los últimos commits y rellena una fracción de las

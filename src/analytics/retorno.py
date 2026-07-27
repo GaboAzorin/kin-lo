@@ -141,6 +141,28 @@ def _cargar_premios_kino() -> dict[int, dict[int, int]]:
 
 
 _premios_loto_cache: dict[int, dict[tuple[int, bool], int]] | None = None
+_comodin_cache: set[int] | None = None
+
+
+def sorteos_con_comodin() -> set[int]:
+    """
+    Sorteos de Loto cuyo comodín está registrado en polla_historial.csv.
+
+    Sirve para distinguir un `dist_comodin` vacío porque no se calculó de uno vacío
+    porque ninguna combinación del grupo llevaba el comodín — lo segundo es un
+    resultado válido y no debe marcar el retorno como parcial.
+    """
+    global _comodin_cache
+    if _comodin_cache is not None:
+        return _comodin_cache
+
+    _comodin_cache = set()
+    if PREMIOS_LOTO_CSV.exists():
+        dp = pd.read_csv(PREMIOS_LOTO_CSV, usecols=["sorteo", "LOTO_comodin"])
+        dp = dp[pd.to_numeric(dp["LOTO_comodin"], errors="coerce").fillna(0) > 0]
+        _comodin_cache = {int(s) for s in pd.to_numeric(dp["sorteo"], errors="coerce")
+                          .dropna()}
+    return _comodin_cache
 
 
 def _cargar_premios_loto() -> dict[int, dict[tuple[int, bool], int]]:
@@ -258,8 +280,12 @@ def calcular_retorno(juego: str, sorteo: int, dist: dict[int, int],
 
     # Loto sin comodín registrado: no se pueden separar las categorías "SUPER_*",
     # así que todo el grupo se cobra a la tarifa normal y el total queda subestimado.
+    # Que `dist_comodin` venga vacío no basta para declararlo parcial: puede ser que
+    # ninguna de las combinaciones llevara el comodín.
     con_comodin = dist_comodin or {}
-    parcial = juego == "loto" and not con_comodin and any(k[1] for k in premios)
+    parcial = (juego == "loto"
+               and int(sorteo) not in sorteos_con_comodin()
+               and any(k[1] for k in premios))
 
     por_categoria = []
     ganado = 0
