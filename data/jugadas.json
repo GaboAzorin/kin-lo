@@ -2172,7 +2172,25 @@
     ],
     "rango_sugerencia": null,
     "aciertos": {
-      "kino": 8
+      "kino": 9
+    },
+    "resultado_sorteo": {
+      "kino": [
+        2,
+        3,
+        7,
+        8,
+        9,
+        10,
+        11,
+        13,
+        15,
+        16,
+        18,
+        19,
+        20,
+        23
+      ]
     }
   },
   {
