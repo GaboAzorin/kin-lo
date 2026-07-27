@@ -71,12 +71,42 @@ except ImportError as e:
 
 # ==============================================================================
 # COLUMNAS DE SALIDA
-# Solo guardamos sorteo, fecha, día y los números — sin premios ni montos.
 # ==============================================================================
+# Categorías de premio de Loto que puede ganar un cartón de 6 números, en el
+# orden en que las numera polla.cl (`prizes[].id.categoryCd`). Las "SUPER_*"
+# exigen que el comodín — un 7º número sorteado — esté entre los 6 elegidos.
+#   cat 1 → 6 aciertos          cat 2 → 5 + comodín     cat 3 → 5 aciertos
+#   cat 4 → 4 + comodín         cat 5 → 4 aciertos      cat 6 → 3 + comodín
+#   cat 7 → 3 aciertos          cat 8 → 2 + comodín
+# Un cartón no puede hacer "6 + comodín": los 6 números ya están en el principal.
+CATEGORIAS_LOTO = [
+    "LOTO",                               # 6 aciertos
+    "SUPER_QUINA_5_ACIERTOS_COMODIN",
+    "QUINA_5_ACIERTOS",
+    "SUPER_CUATERNA_4_ACIERTOS_COMODIN",
+    "CUATERNA_4_ACIERTOS",
+    "SUPER_TERNA_3_ACIERTOS_COMODIN",
+    "TERNA_3_ACIERTOS",
+    "SUPER_DUPLA_2_ACIERTOS_COMODIN",
+]
+
+# Premios de los subjuegos. Solo tienen una categoría (acertar los 6).
+CATEGORIAS_SUBJUEGOS = ["RECARGADO_6_ACIERTOS", "REVANCHA", "DESQUITE"]
+
+# Por cada categoría se guardan tres columnas. NO son backfilleables: el histórico
+# previo queda vacío y se llenan desde el primer sorteo scrapeado con este cambio.
+#   _GANADORES → nº de cartones ganadores de la categoría
+#   _MONTO     → premio por ganador (`divident`); 0 si la categoría quedó desierta
+#   _POZO_REAL → pozo real de la categoría (`jackpot`), lo que se acumula si nadie gana
+_SUFIJOS_PREMIO = ["_GANADORES", "_MONTO", "_POZO_REAL"]
+
 COLUMNS_POLLA = [
     "sorteo", "fecha", "dia_semana",
-    # Loto principal (6 números, sin comodín)
+    # Loto principal (6 números)
     "LOTO_n1", "LOTO_n2", "LOTO_n3", "LOTO_n4", "LOTO_n5", "LOTO_n6",
+    # Comodín: 7º número sorteado. Define las categorías "SUPER_*", así que sin él
+    # el retorno de un grupo de sugerencias no se puede calcular completo.
+    "LOTO_comodin",
     # Recargado
     "RECARGADO_n1", "RECARGADO_n2", "RECARGADO_n3", "RECARGADO_n4",
     "RECARGADO_n5", "RECARGADO_n6",
@@ -86,14 +116,12 @@ COLUMNS_POLLA = [
     # Desquite
     "DESQUITE_n1", "DESQUITE_n2", "DESQUITE_n3", "DESQUITE_n4",
     "DESQUITE_n5", "DESQUITE_n6",
-    # Premio mayor REAL de Loto (6 aciertos). El parser ya los entrega; antes se
-    # filtraban. NO es backfilleable: el histórico previo queda vacío y estas
-    # columnas se llenan desde el primer sorteo scrapeado con este cambio.
-    #   _GANADORES      → nº de ganadores de 6 aciertos
-    #   _MONTO          → premio por ganador (o monto de la categoría)
-    #   _POZO_REAL      → pozo real a repartir de la categoría de 6 aciertos
-    #   _POZO_ACUMULADO → pozo acumulado total (poolAccumulated)
-    "LOTO_GANADORES", "LOTO_MONTO", "LOTO_POZO_REAL", "LOTO_POZO_ACUMULADO",
+    # Premios por categoría. El parser ya los entregaba todos; antes se filtraba
+    # todo menos la categoría de 6 aciertos.
+    *[f"{cat}{suf}" for cat in CATEGORIAS_LOTO for suf in _SUFIJOS_PREMIO],
+    *[f"{cat}{suf}" for cat in CATEGORIAS_SUBJUEGOS for suf in _SUFIJOS_PREMIO],
+    # Pozo acumulado COMERCIAL de Loto (`poolAccumulated`): el que sale en la tele.
+    "LOTO_POZO_ACUMULADO",
 ]
 
 # ==============================================================================
@@ -140,6 +168,30 @@ def get_start_id() -> int:
     except (IOError, csv.Error) as e:
         logger.warning(f"Error leyendo CSV: {e}")
     return max_id + 1 if max_id > 0 else GAME_CONFIG["start_draw"]
+
+
+def migrar_header():
+    """
+    Reescribe el CSV con el header actual si le faltan columnas.
+
+    Al añadir columnas nuevas (p. ej. las categorías de premio) un append ciego
+    dejaría las filas nuevas desalineadas respecto del header viejo. Las filas ya
+    existentes quedan con celdas vacías en las columnas nuevas: son datos que no
+    se scrapearon en su momento y no son backfilleables.
+    """
+    if not (CSV_OUT.exists() and CSV_OUT.stat().st_size > 10):
+        return
+    with open(CSV_OUT, "r", encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        if reader.fieldnames == COLUMNS_POLLA:
+            return
+        filas = [{c: r.get(c, "") for c in COLUMNS_POLLA} for r in reader]
+    with open(CSV_OUT, "w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=COLUMNS_POLLA)
+        writer.writeheader()
+        writer.writerows(filas)
+    logger.info(f"Header del CSV migrado a {len(COLUMNS_POLLA)} columnas "
+                f"({len(filas)} filas conservadas).")
 
 
 def guardar_fila(raw_row: dict):
@@ -230,6 +282,7 @@ async def scrape_polla(proxy_config: dict | None = None) -> bool:
     mode = "Proxy/Nube" if proxy_config else "Local"
     logger.info(f"Iniciando scraping polla.cl ({mode})...")
 
+    migrar_header()
     current_id   = get_start_id()
     saved_any    = False
     consec_errors = 0

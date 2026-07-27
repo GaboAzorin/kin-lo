@@ -129,8 +129,12 @@ def parse_loto_rich(data_source):
 
         if col_prefix:
             row[f'{col_prefix}_GANADORES'] = p.get('winners', 0)
-            row[f'{col_prefix}_MONTO'] = p.get('prizePerWinner', 0) or p.get('winningAmount', 0)
-            
+            # `divident` es el premio POR GANADOR y `winningAmount` el total pagado a
+            # la categoría. La API no expone `prizePerWinner`, así que la versión
+            # anterior caía siempre al total y lo guardaba como si fuera unitario.
+            row[f'{col_prefix}_MONTO'] = p.get('divident', 0) or 0
+            row[f'{col_prefix}_TOTAL'] = p.get('winningAmount', 0) or 0
+
             # --- CORRECCIÓN FINAL: Guardar Pozo Real SIEMPRE ---
             # Quitamos el 'if pozo > 0' para que el dato '0' se escriba explícitamente
             # y el scraper detecte la columna desde el primer sorteo.

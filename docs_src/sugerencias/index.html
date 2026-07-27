@@ -552,16 +552,22 @@ function retornoSection(s, k) {
 
   const mejor  = Math.max(...disponibles.map(([, ret]) => ret.ganado || 0));
   const valor  = (disponibles[0][1] || {}).valor_carton;
+  // Loto sin comodín registrado: el total no incluye las categorías SUPER.
+  const nota   = (disponibles.find(([, ret]) => ret.nota) || [null, {}])[1].nota;
   const filas  = entries.map(([r, ret]) => {
     const label = `<b>${RANGE_LABELS[r] || r}</b>`;
     if (!ret.disponible) {
       return `<tr><td>${label}</td><td colspan="5" style="color:var(--muted)">
           ${ret.motivo || 'sin datos'}</td></tr>`;
     }
-    const pills = (ret.por_categoria || []).map(c =>
-      `<span class="cat-pill" title="${c.cartones} cartón(es) × ${fmtCLP(c.premio_unit)} = ${fmtCLP(c.subtotal)}"
-        >${c.aciertos}/${k}<b>×${c.cartones}</b><span class="pill-unit"> · ${fmtCLP(c.premio_unit)}</span></span>`
-    ).join('') || '<span style="color:var(--muted)">ninguna combinación premiada</span>';
+    // `comodin` solo aparece en Loto: marca las categorías SUPER, que pagan distinto
+    // con el mismo número de aciertos.
+    const pills = (ret.por_categoria || []).map(c => {
+      const cmd = c.comodin ? '+C' : '';
+      const ttl = c.comodin ? ' (con comodín)' : '';
+      return `<span class="cat-pill" title="${c.aciertos}/${k}${ttl}: ${c.cartones} cartón(es) × ${fmtCLP(c.premio_unit)} = ${fmtCLP(c.subtotal)}"
+        >${c.aciertos}/${k}${cmd}<b>×${c.cartones}</b><span class="pill-unit"> · ${fmtCLP(c.premio_unit)}</span></span>`;
+    }).join('') || '<span style="color:var(--muted)">ninguna combinación premiada</span>';
 
     const netoCls = ret.neto > 0 ? 'diff-pos' : ret.neto < 0 ? 'diff-neg' : 'diff-zero';
     const best    = (ret.ganado || 0) === mejor && mejor > 0;
@@ -594,9 +600,9 @@ function retornoSection(s, k) {
         </div>
         <p class="retorno-note">
           Costo = ${fmt(disponibles[0][1].cartones)} cartones${valor ? ' × ' + fmtCLP(valor) : ''}.
-          Los premios son los que pagó Lotería en este sorteo; los de 13 y 14 aciertos
-          se reparten entre los ganadores, así que jugar 500 cartones extra los habría
-          diluido un poco (aquí se muestra el monto publicado).
+          Los premios son los que se pagaron en este sorteo; las categorías altas
+          reparten un pozo entre sus ganadores, así que jugar 500 cartones extra los
+          habría diluido un poco (aquí se muestra el monto publicado).${nota ? ' ' + nota : ''}
         </p>
       </div>
     </div>`;

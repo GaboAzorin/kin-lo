@@ -38,7 +38,8 @@ PENDING_KINO = DATA_DIR / "kino_suggestions_pending.json"
 HISTORY_PATH = DATA_DIR / "suggestions_history.csv"
 HISTORY_COLS = ["juego", "sorteo_predicho", "fecha_sorteo", "rango",
                 "n_combos", "aciertos_avg", "aciertos_max", "top_combos",
-                "suggested_combos", "decile_avg", "dist_aciertos"]
+                "suggested_combos", "decile_avg", "dist_aciertos",
+                "dist_comodin"]
 # top_combos        → las N_DISPLAY con más aciertos (top-3 a posteriori).
 # suggested_combos  → las N_DISPLAY mostradas en la Home (índices de generación 1-3,
 #                     elegidas por diversidad MMR), con sus aciertos reales.
@@ -48,6 +49,11 @@ HISTORY_COLS = ["juego", "sorteo_predicho", "fecha_sorteo", "rango",
 #                     Es lo que permite calcular el retorno en dinero del grupo.
 #                     Las filas anteriores a que existiera la columna quedan vacías;
 #                     scripts/backfill_dist_aciertos.py las rellena desde git.
+# dist_comodin      → SOLO LOTO: mismo histograma, restringido a las combinaciones que
+#                     además contienen el comodín. Sin él no se pueden separar las
+#                     categorías "SUPER_*" de las normales al calcular el retorno.
+#                     Vacío cuando el sorteo no tiene comodín registrado en el CSV
+#                     (todo lo anterior a que scraper_polla.py lo guardara).
 JUGADAS_PATH = DATA_DIR / "jugadas.json"
 
 VARIANTE_COLS = {
@@ -391,14 +397,30 @@ def _evaluar_y_registrar(df: pd.DataFrame, juego: str,
             return None
 
     resultado_set = set(resultado)
-    per_rango_raw: dict[str, list] = {}   # rango → lista de {combo, aciertos}
+
+    # Comodín de Loto: 7º número sorteado que define las categorías "SUPER_*".
+    # Solo existe desde que scraper_polla.py empezó a guardarlo; antes es None y
+    # el retorno se calcula sin esas categorías.
+    comodin = None
+    if juego == "loto":
+        try:
+            c = int(fila.get("LOTO_comodin"))
+            comodin = c if c > 0 else None
+        except (TypeError, ValueError):
+            comodin = None
+
+    per_rango_raw: dict[str, list] = {}   # rango → lista de {combo, aciertos, comodin}
 
     for rango, combos in pending.get("sugerencias", {}).items():
         per_rango_raw[rango] = []
         for s in combos:
             combo    = s["combo"]          # list[int]
             aciertos = len(set(combo) & resultado_set)
-            per_rango_raw[rango].append({"combo": combo, "aciertos": aciertos})
+            per_rango_raw[rango].append({
+                "combo":    combo,
+                "aciertos": aciertos,
+                "comodin":  comodin is not None and comodin in combo,
+            })
 
     # Persistencia agregada: una fila por rango con avg/max/top-3/sugeridas/deciles.
     # `cs` viene en ORDEN DE GENERACIÓN (índices 1..n); los 3 primeros son las
@@ -426,6 +448,8 @@ def _evaluar_y_registrar(df: pd.DataFrame, juego: str,
             "suggested_combos": _encode_top(sugeridas),
             "decile_avg":       _encode_deciles(_deciles_de(cs)),
             "dist_aciertos":    encode_dist([c["aciertos"] for c in cs]),
+            "dist_comodin":     encode_dist([c["aciertos"] for c in cs
+                                             if c["comodin"]]) if comodin else "",
         })
 
     if not filas_nuevas:
@@ -946,7 +970,8 @@ def _exportar_detalle_json():
             for _, row in grp.iterrows():
                 r = str(row["rango"])
                 # Retorno en dinero de jugar TODAS las combinaciones del grupo.
-                dist = decode_dist(row.get("dist_aciertos", ""))
+                dist  = decode_dist(row.get("dist_aciertos", ""))
+                d_com = decode_dist(row.get("dist_comodin", ""))
                 try:
                     n_combos = int(row["n_combos"])
                 except (TypeError, ValueError):
@@ -954,7 +979,8 @@ def _exportar_detalle_json():
                 rangos[r] = {
                     "top":       _combo_entries(row["top_combos"]),
                     "suggested": _combo_entries(row.get("suggested_combos", "")),
-                    "retorno":   calcular_retorno(juego, sorteo_n, dist, n_combos),
+                    "retorno":   calcular_retorno(juego, sorteo_n, dist, n_combos,
+                                                  dist_comodin=d_com),
                 }
                 try:
                     mx = int(row["aciertos_max"])
