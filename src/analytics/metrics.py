@@ -26,6 +26,7 @@ sys.path.insert(0, str(REPO_ROOT / "src" / "analytics"))
 sys.path.insert(0, str(REPO_ROOT / "src" / "notifications"))
 
 from suggestions import generar_sugerencias, combo_rank, _build_history_set
+from retorno     import calcular_retorno, encode_dist, decode_dist
 from tg_notify   import send as tg_send
 
 DATA_DIR  = REPO_ROOT / "data"
@@ -37,12 +38,16 @@ PENDING_KINO = DATA_DIR / "kino_suggestions_pending.json"
 HISTORY_PATH = DATA_DIR / "suggestions_history.csv"
 HISTORY_COLS = ["juego", "sorteo_predicho", "fecha_sorteo", "rango",
                 "n_combos", "aciertos_avg", "aciertos_max", "top_combos",
-                "suggested_combos", "decile_avg"]
+                "suggested_combos", "decile_avg", "dist_aciertos"]
 # top_combos        → las N_DISPLAY con más aciertos (top-3 a posteriori).
 # suggested_combos  → las N_DISPLAY mostradas en la Home (índices de generación 1-3,
 #                     elegidas por diversidad MMR), con sus aciertos reales.
 # decile_avg        → 10 floats: promedio de aciertos por decil del orden de generación
 #                     (índices 1-50, 51-100, … 451-500). Para ver correlación índice↔aciertos.
+# dist_aciertos     → histograma completo "nivel:cuenta;…" de las N_EVAL combinaciones.
+#                     Es lo que permite calcular el retorno en dinero del grupo.
+#                     Las filas anteriores a que existiera la columna quedan vacías;
+#                     scripts/backfill_dist_aciertos.py las rellena desde git.
 JUGADAS_PATH = DATA_DIR / "jugadas.json"
 
 VARIANTE_COLS = {
@@ -420,6 +425,7 @@ def _evaluar_y_registrar(df: pd.DataFrame, juego: str,
             "top_combos":       _encode_top(top_sorted),
             "suggested_combos": _encode_top(sugeridas),
             "decile_avg":       _encode_deciles(_deciles_de(cs)),
+            "dist_aciertos":    encode_dist([c["aciertos"] for c in cs]),
         })
 
     if not filas_nuevas:
@@ -939,9 +945,16 @@ def _exportar_detalle_json():
             best_aciertos, best_rango = None, None
             for _, row in grp.iterrows():
                 r = str(row["rango"])
+                # Retorno en dinero de jugar TODAS las combinaciones del grupo.
+                dist = decode_dist(row.get("dist_aciertos", ""))
+                try:
+                    n_combos = int(row["n_combos"])
+                except (TypeError, ValueError):
+                    n_combos = None
                 rangos[r] = {
                     "top":       _combo_entries(row["top_combos"]),
                     "suggested": _combo_entries(row.get("suggested_combos", "")),
+                    "retorno":   calcular_retorno(juego, sorteo_n, dist, n_combos),
                 }
                 try:
                     mx = int(row["aciertos_max"])

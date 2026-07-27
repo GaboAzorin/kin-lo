@@ -112,6 +112,28 @@ GitHub Pages sirve docs/ → https://gaboazorin.github.io/kin-lo/
   aciertos se marca como "mejor grupo". La página `/sugerencias/` muestra las **3 con más aciertos**
   por rango (top-3 a posteriori), no las 3 mostradas en la Home.
 - **Unicidad garantizada**: ninguna combinación sugerida ha salido antes en el historial.
+- `retorno.py` traduce la distribución de aciertos de un grupo a dinero: cuánto se habría
+  ganado jugando las 500 combinaciones de ese grupo en un sorteo. Se muestra en la
+  subsección **Retorno** de cada tarjeta en `/sugerencias/`.
+  - Premios: `data/kino_premios_historial.csv` (`premio_individual`, o `premio_total`
+    si la categoría quedó sin ganadores). Valor del cartón Kino: **$1.000**.
+  - **Solo Kino.** Loto no es calculable: `polla_historial.csv` solo guarda el pozo de
+    6 aciertos, no lo que pagan 4 y 5. La UI lo dice explícitamente en vez de mostrar $0.
+  - Los premios de 13 y 14 aciertos son pari-mutuel; se usa el monto publicado, sin
+    descontar la dilución que habrían causado los 500 cartones propios.
+
+### Distribución de aciertos y backfill
+
+`data/suggestions_history.csv` guarda, por sorteo × rango, la columna **`dist_aciertos`**
+(`"nivel:cuenta;…"`): el histograma de aciertos de las 500 combinaciones. Es lo que
+alimenta el cálculo de retorno.
+
+Las filas anteriores a que existiera la columna se rellenaron con
+`python scripts/backfill_dist_aciertos.py`, que recupera las 500 combinaciones de cada
+sorteo pasado desde el **historial de git** de `data/*_suggestions_pending.json` (están
+versionados) y verifica que la reconstrucción reproduzca exactamente el `aciertos_avg` y
+`aciertos_max` ya persistidos. Cobertura del backfill: Kino 3250+, Loto 5447+; lo anterior
+no es recuperable y la UI muestra "se registra desde los próximos sorteos".
 
 ## Estructura de CSVs
 
@@ -121,6 +143,10 @@ GitHub Pages sirve docs/ → https://gaboazorin.github.io/kin-lo/
 
 **`data/loteria_historial.csv`** — separador `,`
 - Columnas: `sorteo, fecha, dia_semana, KINO_n1..n14, REKINO_n1..n14, REQUETEKINO_n1..n14`
+
+**`data/suggestions_history.csv`** — separador `,`
+- Columnas: `juego, sorteo_predicho, fecha_sorteo, rango, n_combos, aciertos_avg,
+  aciertos_max, top_combos, suggested_combos, decile_avg, dist_aciertos`
 
 ## Actualización de datos
 

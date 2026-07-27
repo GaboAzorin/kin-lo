@@ -255,9 +255,35 @@
     }
     .conjuntos-table tr.row-best td { background: rgba(245,158,11,0.05); }
 
+    /* Retorno */
+    .retorno-money { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .retorno-table tr.row-best td { background: rgba(52,211,153,0.06); }
+    .retorno-table .ganado { color: var(--green); font-weight: 700; }
+    .retorno-note {
+      font-size: 0.75rem; color: var(--muted); line-height: 1.5;
+      padding: 8px 0 2px;
+    }
+    .cat-pill {
+      display: inline-block; font-size: 0.72rem; padding: 2px 7px; margin: 2px 4px 2px 0;
+      border: 1px solid rgba(52,211,153,0.35); border-radius: 10px; color: var(--muted);
+      background: rgba(52,211,153,0.06); white-space: nowrap;
+    }
+    .cat-pill b { color: var(--text); }
+    /* La tabla nunca debe empujar el ancho de la página: scrollea dentro de la tarjeta. */
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
     @media (max-width: 640px) {
       .combos-table th:nth-child(4),
       .combos-table td:nth-child(4) { display: none; }
+      /* En la tabla de retorno la 4ª columna es "Costo" (constante) y la 6ª el ROI.
+         Los premios unitarios de cada pill también se ocultan: van en el tooltip. */
+      .retorno-table th:nth-child(6),
+      .retorno-table td:nth-child(6) { display: none; }
+      .cat-pill .pill-unit { display: none; }
+      /* Compactar para que Grupo/Premiadas/Ganado/Neto entren sin scroll. */
+      .retorno-table th, .retorno-table td { padding: 8px 4px; font-size: 0.76rem; }
+      .retorno-table th { font-size: 0.62rem; }
+      .cat-pill { font-size: 0.7rem; padding: 2px 6px; margin: 2px 2px 2px 0; }
       .bola { width: 28px; height: 28px; font-size: 0.7rem; }
       .bola-sm { width: 22px; height: 22px; font-size: 0.62rem; }
     }
@@ -283,7 +309,7 @@
 
 <main>
   <p style="font-size:0.82rem; color:var(--muted); margin-bottom:16px">
-    Cada rango genera 500 combinaciones. Aquí se muestran <b>tus 3 sugeridas</b> (las que viste en la Home, elegidas por diversidad) y las <b>3 con más aciertos</b> del grupo a posteriori, frente al resultado real · ID lexicográfico de cada combinación entre todas las posibles.
+    Cada rango genera 500 combinaciones. Aquí se muestran <b>tus 3 sugeridas</b> (las que viste en la Home, elegidas por diversidad) y las <b>3 con más aciertos</b> del grupo a posteriori, frente al resultado real · ID lexicográfico de cada combinación entre todas las posibles. La subsección <b>Retorno</b> traduce eso a plata: cuánto habría dejado jugar las 500 de cada grupo.
   </p>
 
   <div class="disclaimer">
@@ -497,6 +523,85 @@ function fmt(n) {
   return n == null ? '—' : n.toLocaleString('es-CL');
 }
 
+function fmtCLP(n) {
+  if (n == null) return '—';
+  const s = Math.abs(Math.round(n)).toLocaleString('es-CL');
+  return (n < 0 ? '−$' : '$') + s;
+}
+
+/**
+ * Subsección "Retorno": cuánta plata habrían dejado las 500 combinaciones de cada
+ * grupo en este sorteo. Los montos vienen precalculados desde metrics.py
+ * (src/analytics/retorno.py) contra el desglose real de premios del sorteo.
+ */
+function retornoSection(s, k) {
+  const entries = RANGO_ORDER.filter(r => s.rangos[r])
+    .map(r => [r, (s.rangos[r] || {}).retorno || {}]);
+  if (!entries.length) return '';
+
+  const disponibles = entries.filter(([, ret]) => ret.disponible);
+  if (!disponibles.length) {
+    const motivo = (entries.find(([, ret]) => ret.motivo) || [null, {}])[1].motivo;
+    return `<div class="rango-section">
+        <div class="rango-header">💰 Retorno</div>
+        <div class="combos-block">
+          <p class="combos-empty">Sin retorno calculable${motivo ? ': ' + motivo : ''}.</p>
+        </div>
+      </div>`;
+  }
+
+  const mejor  = Math.max(...disponibles.map(([, ret]) => ret.ganado || 0));
+  const valor  = (disponibles[0][1] || {}).valor_carton;
+  const filas  = entries.map(([r, ret]) => {
+    const label = `<b>${RANGE_LABELS[r] || r}</b>`;
+    if (!ret.disponible) {
+      return `<tr><td>${label}</td><td colspan="5" style="color:var(--muted)">
+          ${ret.motivo || 'sin datos'}</td></tr>`;
+    }
+    const pills = (ret.por_categoria || []).map(c =>
+      `<span class="cat-pill" title="${c.cartones} cartón(es) × ${fmtCLP(c.premio_unit)} = ${fmtCLP(c.subtotal)}"
+        >${c.aciertos}/${k}<b>×${c.cartones}</b><span class="pill-unit"> · ${fmtCLP(c.premio_unit)}</span></span>`
+    ).join('') || '<span style="color:var(--muted)">ninguna combinación premiada</span>';
+
+    const netoCls = ret.neto > 0 ? 'diff-pos' : ret.neto < 0 ? 'diff-neg' : 'diff-zero';
+    const best    = (ret.ganado || 0) === mejor && mejor > 0;
+
+    return `<tr class="${best ? 'row-best' : ''}">
+        <td>${label}${best ? ' <span title="mayor retorno del sorteo">★</span>' : ''}</td>
+        <td>${pills}</td>
+        <td class="retorno-money ganado" style="text-align:right">${fmtCLP(ret.ganado)}</td>
+        <td class="retorno-money" style="text-align:right;color:var(--muted)">${fmtCLP(ret.costo)}</td>
+        <td class="retorno-money ${netoCls}" style="text-align:right">${fmtCLP(ret.neto)}</td>
+        <td class="retorno-money" style="text-align:right">${ret.roi == null ? '—' : ret.roi.toFixed(1) + '%'}</td>
+      </tr>`;
+  }).join('');
+
+  return `<div class="rango-section">
+      <div class="rango-header">💰 Retorno · si hubieras jugado las 500 de cada grupo</div>
+      <div class="combos-block">
+        <div class="table-scroll">
+        <table class="combos-table retorno-table">
+          <thead><tr>
+            <th>Grupo</th>
+            <th>Combinaciones premiadas</th>
+            <th style="text-align:right">Ganado</th>
+            <th style="text-align:right">Costo</th>
+            <th style="text-align:right">Neto</th>
+            <th style="text-align:right">ROI</th>
+          </tr></thead>
+          <tbody>${filas}</tbody>
+        </table>
+        </div>
+        <p class="retorno-note">
+          Costo = ${fmt(disponibles[0][1].cartones)} cartones${valor ? ' × ' + fmtCLP(valor) : ''}.
+          Los premios son los que pagó Lotería en este sorteo; los de 13 y 14 aciertos
+          se reparten entre los ganadores, así que jugar 500 cartones extra los habría
+          diluido un poco (aquí se muestra el monto publicado).
+        </p>
+      </div>
+    </div>`;
+}
+
 function fmtDiff(d) {
   if (d == null) return '<span style="color:var(--muted)">—</span>';
   const sign = d > 0 ? '+' : d < 0 ? '' : '';
@@ -598,7 +703,7 @@ function render() {
           </div>
           <span class="chevron">▾</span>
         </div>
-        <div class="sorteo-body"><div class="sorteo-body-inner">${rangoSections}</div></div>
+        <div class="sorteo-body"><div class="sorteo-body-inner">${retornoSection(s, k)}${rangoSections}</div></div>
       </div>`;
   }).join('');
 
