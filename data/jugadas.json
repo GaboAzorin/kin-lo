@@ -2222,5 +2222,24 @@
         33
       ]
     }
+  },
+  {
+    "fecha_jugada": "2026-07-28",
+    "juego": "loto",
+    "variantes": [
+      "loto",
+      "recargado"
+    ],
+    "sorteo": 5457,
+    "numeros": [
+      5,
+      15,
+      21,
+      26,
+      38,
+      39
+    ],
+    "rango_sugerencia": "all_sub",
+    "aciertos": null
   }
 ]
