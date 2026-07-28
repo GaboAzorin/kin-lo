@@ -2241,5 +2241,31 @@
     ],
     "rango_sugerencia": "all_sub",
     "aciertos": null
+  },
+  {
+    "fecha_jugada": "2026-07-28",
+    "juego": "kino",
+    "variantes": [
+      "kino"
+    ],
+    "sorteo": 3259,
+    "numeros": [
+      1,
+      2,
+      3,
+      4,
+      7,
+      8,
+      9,
+      12,
+      13,
+      17,
+      18,
+      20,
+      23,
+      24
+    ],
+    "rango_sugerencia": null,
+    "aciertos": null
   }
 ]
