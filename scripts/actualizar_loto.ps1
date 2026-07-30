@@ -29,6 +29,7 @@ $archivos = @(
     "docs/data/suggestions_history.json",
     "docs/data/suggestions_detail.json",
     "data/jugadas.json",
+    "data/tg_notified.json",
     "docs/data/historial_index.json"
 )
 

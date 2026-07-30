@@ -55,6 +55,10 @@ HISTORY_COLS = ["juego", "sorteo_predicho", "fecha_sorteo", "rango",
 #                     Vacío cuando el sorteo no tiene comodín registrado en el CSV
 #                     (todo lo anterior a que scraper_polla.py lo guardara).
 JUGADAS_PATH = DATA_DIR / "jugadas.json"
+# Último sorteo avisado por Telegram, por juego: {"kino": {"sorteo": N, "resultado": [...]}}.
+# El runner de Actions es efímero, así que este archivo se commitea para que la
+# corrida siguiente sepa qué ya se avisó.
+NOTIFIED_PATH = DATA_DIR / "tg_notified.json"
 
 VARIANTE_COLS = {
     "loto": {
@@ -505,10 +509,6 @@ def _evaluar_jugadas(df: pd.DataFrame, juego: str, num_cols: list[str]) -> list[
     for j in jugadas:
         if j.get("juego") != juego:
             continue
-        # Saltar solo si ya está evaluado en el nuevo formato (dict).
-        # Entradas con aciertos numérico (formato viejo) se re-evalúan.
-        if isinstance(j.get("aciertos"), dict) and j.get("resultado_sorteo"):
-            continue
         sorteo_n = j.get("sorteo")
         if sorteo_n not in sorteos_disponibles:
             continue
@@ -535,10 +535,18 @@ def _evaluar_jugadas(df: pd.DataFrame, juego: str, num_cols: list[str]) -> list[
         if not aciertos_dict:
             continue
 
+        # Ya evaluada y coincide con el CSV → nada que hacer. Si difiere, se
+        # re-evalúa: el sorteo pudo entrar provisional/equivocado por
+        # /ingresar/ y corregirse después con el scraper, y antes ese acierto
+        # quedaba congelado con el resultado viejo para siempre.
+        ya_evaluada = isinstance(j.get("aciertos"), dict) and bool(j.get("resultado_sorteo"))
+        if ya_evaluada and j["resultado_sorteo"] == resultado_dict and j["aciertos"] == aciertos_dict:
+            continue
+
         j["aciertos"]        = aciertos_dict
         j["resultado_sorteo"] = resultado_dict
         modificado = True
-        evaluadas.append(dict(j))
+        evaluadas.append({**j, "_corregida": ya_evaluada})
 
         rango  = j.get("rango_sugerencia") or "manual"
         nums_j = "  ".join(str(n).rjust(2) for n in j["numeros"])
@@ -1053,34 +1061,89 @@ def _exportar_historial_index():
     print(f"  Índice histórico exportado: {out_path.name} ({sum(len(v) for v in result.values())} sorteos)")
 
 
+def _cargar_notificados() -> dict:
+    """Lee el marcador de sorteos ya avisados. {} si no existe o está corrupto."""
+    if not NOTIFIED_PATH.exists():
+        return {}
+    try:
+        with open(NOTIFIED_PATH, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _marcar_notificado(juego: str, sorteo: int, resultado: list[int]):
+    datos = _cargar_notificados()
+    datos[juego] = {"sorteo": sorteo, "resultado": resultado}
+    with open(NOTIFIED_PATH, "w", encoding="utf-8") as f:
+        json.dump(datos, f, ensure_ascii=False, indent=2)
+
+
+def _notificar_sorteo(juego: str, ultimo: dict):
+    """
+    Avisa por Telegram el resultado del último sorteo del CSV.
+
+    Se dispara con la sola llegada del sorteo, sin depender de que haya
+    sugerencias por evaluar: cuando el sorteo entra por /ingresar/, la Action
+    manual consume el pending y el cron posterior recibe eval_data=None, así
+    que atar este aviso a la evaluación lo dejaba mudo.
+
+    Deduplica con data/tg_notified.json, y vuelve a avisar (marcado como
+    corregido) si los números del mismo sorteo cambian — el caso de una fila
+    provisional mal ingresada que el scraper después sobrescribe.
+    """
+    sorteo_n  = ultimo.get("sorteo") or 0
+    resultado = ultimo.get("numeros") or []
+    if not sorteo_n or not resultado:
+        return
+
+    prev      = _cargar_notificados().get(juego) or {}
+    prev_n    = prev.get("sorteo") or 0
+    corregido = sorteo_n == prev_n and prev.get("resultado") != resultado
+
+    if sorteo_n == prev_n and not corregido:
+        print(f"  [Telegram] Sorteo #{sorteo_n} ya avisado, omitido.")
+        return
+    if sorteo_n < prev_n:  # el CSV retrocedió (rollback manual): no reenviar
+        return
+
+    emoji  = "🟦" if juego == "kino" else "🟡"
+    fecha  = str(ultimo.get("fecha", ""))
+    dia_en = str(ultimo.get("dia", ""))
+    dia    = _DIA_ES.get(dia_en, dia_en)  # el CSV guarda el día en inglés
+    nums_s = "  ".join(str(n).rjust(2) for n in resultado)
+    titulo = f"{juego.capitalize()} · Sorteo #{sorteo_n}"
+    if corregido:
+        titulo += " (corregido)"
+
+    # Solo marcar si el envío salió bien: si faltan credenciales o falla la red,
+    # la próxima corrida reintenta en vez de perder el aviso para siempre.
+    if tg_send(
+        f"{emoji} <b>{titulo}</b>\n"
+        f"📅 {dia} {fecha}\n\n"
+        f"🔢 <code>{nums_s}</code>"
+    ):
+        _marcar_notificado(juego, sorteo_n, resultado)
+
+
 def _enviar_notificaciones(juego: str, ultimo: dict,
                            eval_data: dict | None, range_scores: dict):
     """
     Envía hasta 3 mensajes a Telegram:
-      1. Resultado del sorteo recién scrapeado.
+      1. Resultado del sorteo recién scrapeado (siempre que sea nuevo o cambie).
       2. Tabla de rendimiento de sugerencias por rango.
       3. Alerta si alguna combinación alcanzó el umbral de aciertos destacados.
-    Solo envía si hubo una evaluación nueva (eval_data no es None).
+    Los mensajes 2 y 3 requieren una evaluación nueva (eval_data no es None).
     """
+    # ── 1. Nuevo sorteo ──────────────────────────────────────────────────
+    _notificar_sorteo(juego, ultimo)
+
     if eval_data is None:
         return
 
     pick      = eval_data["pick"]
-    emoji     = "🟦" if juego == "kino" else "🟡"
     cap       = juego.capitalize()
     sorteo_n  = eval_data["sorteo_n"]
-    resultado = eval_data["resultado"]
-    fecha     = eval_data["fecha"]
-
-    # ── 1. Nuevo sorteo ──────────────────────────────────────────────────
-    _fdt    = pd.to_datetime(eval_data["fecha"][:10], errors="coerce")
-    dia     = _DIA_ES.get(_fdt.strftime("%A"), "") if pd.notna(_fdt) else ""
-    nums_s  = "  ".join(str(n).rjust(2) for n in resultado)
-    tg_send(
-        f"{emoji} <b>{cap} · Sorteo #{sorteo_n}</b>\n"
-        f"📅 {dia} {fecha}\n\n"
-        f"🔢 <code>{nums_s}</code>"
-    )
 
     # ── 2. Tabla de rendimiento ───────────────────────────────────────────
     if range_scores:
@@ -1172,8 +1235,9 @@ def main():
             )
         else:
             ac_lines = f"  <b>{ac} de {pick}</b>"
+        sufijo = " (corregida)" if j.get("_corregida") else ""
         tg_send(
-            f"{emoji} <b>Mi jugada · {juego_key.capitalize()} #{j['sorteo']}</b>\n"
+            f"{emoji} <b>Mi jugada · {juego_key.capitalize()} #{j['sorteo']}</b>{sufijo}\n"
             f"Rango: {rango}\n\n"
             f"Jugué:   <code>{nums_j}</code>\n"
             f"Aciertos:\n{ac_lines}"

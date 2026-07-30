@@ -57,6 +57,6 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "data(loto): actualizar historial [${{ github.run_id }}]"
-          file_pattern: "data/polla_historial.csv docs/data/loto_metrics.json docs/data/pozos.json"
+          file_pattern: "data/polla_historial.csv docs/data/loto_metrics.json docs/data/pozos.json data/tg_notified.json"
           commit_user_name: "github-actions[bot]"
           commit_user_email: "github-actions[bot]@users.noreply.github.com"

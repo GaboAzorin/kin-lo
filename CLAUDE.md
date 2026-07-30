@@ -129,6 +129,19 @@ GitHub Pages sirve docs/ → https://gaboazorin.github.io/kin-lo/
   - Las categorías altas son pari-mutuel; se usa el monto publicado, sin descontar la
     dilución que habrían causado los 500 cartones propios.
 
+#### Notificaciones Telegram
+
+`metrics.py` avisa por Telegram (`src/notifications/tg_notify.py`, credenciales en `.env`
+local o secrets del repo). El aviso del **resultado del sorteo** no depende de que haya
+sugerencias por evaluar: se dispara con la llegada del sorteo al CSV y se deduplica con
+`data/tg_notified.json` (`{juego: {sorteo, resultado}}`). Ese archivo **se commitea** —
+el runner de Actions es efímero y sin él cada corrida reenviaría el mismo aviso.
+
+Si los números de un sorteo ya avisado cambian (fila provisional corregida por el
+scraper), se reenvía marcado `(corregido)` y las jugadas de ese sorteo se re-evalúan.
+El marcador solo se escribe si el envío tuvo éxito, así una corrida sin credenciales
+reintenta en la siguiente.
+
 #### Comodín de Loto
 
 Loto sortea un **7º número, el comodín**. Las categorías `SUPER_*` (5, 4, 3 aciertos +

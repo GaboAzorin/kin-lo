@@ -34,6 +34,8 @@
 | 20 | ✅ Baja | suggestions.py | Shortlist MMR fijo en 400 limita `n_sugerencias > 400` en modo clásico |
 | 21 | ✅ Baja | loto_parser_v3.py | `fromtimestamp` sin timezone: la fecha depende del reloj de la máquina |
 | 22 | ✅ Baja | docs_src/index.html | Doble `margin-left:auto` en el header rompe la alineación del timestamp |
+| 23 | ✅ Alta | metrics.py | Una jugada evaluada contra una fila provisional queda congelada aunque el CSV se corrija |
+| 24 | ✅ Alta | metrics.py | El aviso Telegram del sorteo no se envía si el pending ya fue consumido por la Action manual |
 
 ---
 
@@ -304,6 +306,30 @@ if not json_data or not json_data.get("results"):
 **Problema:** ambos elementos compiten por el margen automático: el espacio libre se reparte entre los dos y el timestamp `#last-update` queda centrado-flotante en vez de pegado a la derecha junto al link.
 
 **Resolución:** dejar `margin-left:auto` solo en el primero de los dos elementos del extremo derecho (el span) y quitar el inline del link.
+
+---
+
+### 23. 🔴 Jugada evaluada contra una fila provisional queda congelada — ✅ Resuelto 2026-07-30
+
+**Ubicación:** `src/analytics/metrics.py` → `_evaluar_jugadas`
+
+**Problema:** `_evaluar_jugadas` saltaba toda jugada que ya tuviera `aciertos` (dict) **y** `resultado_sorteo`, sin comparar contra el CSV. Cuando un sorteo entra por `/ingresar/` como fila provisional —o directamente con números equivocados— la jugada se evalúa contra esos datos y el resultado queda grabado para siempre: el cron después corrige el CSV, pero la jugada nunca se vuelve a mirar. Es el hermano del #10, que solo cubría el caso *sin* `resultado_sorteo`.
+
+Dos casos reales encontrados el 2026-07-30, ambos del mismo sorteo mal ingresado a mano:
+- Kino #3259: `aciertos` 8/14 calculado contra los números del #3256; el real era **10/14**.
+- Kino #3257: se jugó ReKino, pero la fila era provisional (solo Kino) al evaluarse → la jugada quedó sin el acierto de ReKino (**9/14**) de forma permanente.
+
+**Resolución:** comparar siempre el `resultado_sorteo` guardado contra el CSV y re-evaluar si difieren (o si aparecen variantes nuevas). El aviso Telegram de una jugada re-evaluada se marca `(corregida)`. Detectar casos viejos: recorrer `jugadas.json` y contrastar cada `resultado_sorteo` con su fila del CSV.
+
+---
+
+### 24. 🔴 El aviso Telegram del sorteo se pierde si el pending ya fue consumido — ✅ Resuelto 2026-07-30
+
+**Ubicación:** `src/analytics/metrics.py` → `_enviar_notificaciones`
+
+**Problema:** el mensaje "resultado del sorteo" colgaba de `eval_data`, que es `None` cuando `_evaluar_y_registrar` no tiene nada que evaluar — y eso ocurre **siempre** que el sorteo ya fue evaluado en otra corrida: el chequeo anti-duplicados contra `suggestions_history.csv` devuelve `None`. Flujo que lo dispara: se ingresa el sorteo por `/ingresar/` → `kino-manual.yml` corre `metrics.py`, evalúa y registra el sorteo en el historial → el cron posterior recibe `eval_data=None` y **no avisa nada**, aunque acaba de traer datos nuevos (ReKino/RequeteKino, o la corrección de una fila mal ingresada).
+
+**Resolución:** separar el aviso del sorteo de la evaluación de sugerencias (`_notificar_sorteo`), disparándolo con la llegada del sorteo al CSV. Deduplicar con `data/tg_notified.json` (`{juego: {sorteo, resultado}}`, commiteado porque el runner es efímero); si los números del mismo sorteo cambian, se reenvía marcado `(corregido)`. El marcador solo se escribe si el envío tuvo éxito, así una corrida sin credenciales o sin red reintenta en la siguiente en vez de perder el aviso.
 
 ---
 
