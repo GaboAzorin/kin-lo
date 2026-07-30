@@ -2240,7 +2240,28 @@
       39
     ],
     "rango_sugerencia": "all_sub",
-    "aciertos": null
+    "aciertos": {
+      "loto": 1,
+      "recargado": 1
+    },
+    "resultado_sorteo": {
+      "loto": [
+        1,
+        5,
+        10,
+        16,
+        27,
+        30
+      ],
+      "recargado": [
+        1,
+        5,
+        16,
+        24,
+        27,
+        36
+      ]
+    }
   },
   {
     "fecha_jugada": "2026-07-28",
