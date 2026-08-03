@@ -2396,6 +2396,26 @@
       25
     ],
     "rango_sugerencia": null,
-    "aciertos": null
+    "aciertos": {
+      "kino": 9
+    },
+    "resultado_sorteo": {
+      "kino": [
+        1,
+        2,
+        3,
+        6,
+        7,
+        10,
+        11,
+        12,
+        13,
+        14,
+        16,
+        18,
+        22,
+        24
+      ]
+    }
   }
 ]
