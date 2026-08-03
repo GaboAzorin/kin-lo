@@ -2417,5 +2417,31 @@
         24
       ]
     }
+  },
+  {
+    "fecha_jugada": "2026-08-03",
+    "juego": "kino",
+    "variantes": [
+      "kino"
+    ],
+    "sorteo": 3262,
+    "numeros": [
+      3,
+      6,
+      7,
+      8,
+      9,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      21,
+      23
+    ],
+    "rango_sugerencia": null,
+    "aciertos": null
   }
 ]
