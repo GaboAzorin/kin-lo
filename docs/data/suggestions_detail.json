@@ -27968,8 +27968,37 @@
               }
             ],
             "retorno": {
-              "disponible": false,
-              "motivo": "sin premios registrados para el sorteo #3267"
+              "disponible": true,
+              "ganado": 91500,
+              "cartones": 500,
+              "premiados": 55,
+              "por_categoria": [
+                {
+                  "aciertos": 12,
+                  "comodin": false,
+                  "cartones": 1,
+                  "premio_unit": 10000,
+                  "subtotal": 10000
+                },
+                {
+                  "aciertos": 11,
+                  "comodin": false,
+                  "cartones": 11,
+                  "premio_unit": 3500,
+                  "subtotal": 38500
+                },
+                {
+                  "aciertos": 10,
+                  "comodin": false,
+                  "cartones": 43,
+                  "premio_unit": 1000,
+                  "subtotal": 43000
+                }
+              ],
+              "valor_carton": 1000,
+              "costo": 500000,
+              "neto": -408500,
+              "roi": 18.3
             }
           },
           "100": {
@@ -28104,8 +28133,30 @@
               }
             ],
             "retorno": {
-              "disponible": false,
-              "motivo": "sin premios registrados para el sorteo #3267"
+              "disponible": true,
+              "ganado": 72500,
+              "cartones": 500,
+              "premiados": 50,
+              "por_categoria": [
+                {
+                  "aciertos": 11,
+                  "comodin": false,
+                  "cartones": 9,
+                  "premio_unit": 3500,
+                  "subtotal": 31500
+                },
+                {
+                  "aciertos": 10,
+                  "comodin": false,
+                  "cartones": 41,
+                  "premio_unit": 1000,
+                  "subtotal": 41000
+                }
+              ],
+              "valor_carton": 1000,
+              "costo": 500000,
+              "neto": -427500,
+              "roi": 14.5
             }
           },
           "250": {
@@ -28240,8 +28291,30 @@
               }
             ],
             "retorno": {
-              "disponible": false,
-              "motivo": "sin premios registrados para el sorteo #3267"
+              "disponible": true,
+              "ganado": 60000,
+              "cartones": 500,
+              "premiados": 45,
+              "por_categoria": [
+                {
+                  "aciertos": 11,
+                  "comodin": false,
+                  "cartones": 6,
+                  "premio_unit": 3500,
+                  "subtotal": 21000
+                },
+                {
+                  "aciertos": 10,
+                  "comodin": false,
+                  "cartones": 39,
+                  "premio_unit": 1000,
+                  "subtotal": 39000
+                }
+              ],
+              "valor_carton": 1000,
+              "costo": 500000,
+              "neto": -440000,
+              "roi": 12.0
             }
           },
           "500": {
@@ -28376,8 +28449,30 @@
               }
             ],
             "retorno": {
-              "disponible": false,
-              "motivo": "sin premios registrados para el sorteo #3267"
+              "disponible": true,
+              "ganado": 84500,
+              "cartones": 500,
+              "premiados": 57,
+              "por_categoria": [
+                {
+                  "aciertos": 11,
+                  "comodin": false,
+                  "cartones": 11,
+                  "premio_unit": 3500,
+                  "subtotal": 38500
+                },
+                {
+                  "aciertos": 10,
+                  "comodin": false,
+                  "cartones": 46,
+                  "premio_unit": 1000,
+                  "subtotal": 46000
+                }
+              ],
+              "valor_carton": 1000,
+              "costo": 500000,
+              "neto": -415500,
+              "roi": 16.9
             }
           },
           "1000": {
@@ -28512,8 +28607,30 @@
               }
             ],
             "retorno": {
-              "disponible": false,
-              "motivo": "sin premios registrados para el sorteo #3267"
+              "disponible": true,
+              "ganado": 61000,
+              "cartones": 500,
+              "premiados": 46,
+              "por_categoria": [
+                {
+                  "aciertos": 11,
+                  "comodin": false,
+                  "cartones": 6,
+                  "premio_unit": 3500,
+                  "subtotal": 21000
+                },
+                {
+                  "aciertos": 10,
+                  "comodin": false,
+                  "cartones": 40,
+                  "premio_unit": 1000,
+                  "subtotal": 40000
+                }
+              ],
+              "valor_carton": 1000,
+              "costo": 500000,
+              "neto": -439000,
+              "roi": 12.2
             }
           },
           "all": {
@@ -28648,8 +28765,37 @@
               }
             ],
             "retorno": {
-              "disponible": false,
-              "motivo": "sin premios registrados para el sorteo #3267"
+              "disponible": true,
+              "ganado": 79500,
+              "cartones": 500,
+              "premiados": 53,
+              "por_categoria": [
+                {
+                  "aciertos": 12,
+                  "comodin": false,
+                  "cartones": 1,
+                  "premio_unit": 10000,
+                  "subtotal": 10000
+                },
+                {
+                  "aciertos": 11,
+                  "comodin": false,
+                  "cartones": 7,
+                  "premio_unit": 3500,
+                  "subtotal": 24500
+                },
+                {
+                  "aciertos": 10,
+                  "comodin": false,
+                  "cartones": 45,
+                  "premio_unit": 1000,
+                  "subtotal": 45000
+                }
+              ],
+              "valor_carton": 1000,
+              "costo": 500000,
+              "neto": -420500,
+              "roi": 15.9
             }
           },
           "all_sub": {
@@ -28784,8 +28930,37 @@
               }
             ],
             "retorno": {
-              "disponible": false,
-              "motivo": "sin premios registrados para el sorteo #3267"
+              "disponible": true,
+              "ganado": 68500,
+              "cartones": 500,
+              "premiados": 47,
+              "por_categoria": [
+                {
+                  "aciertos": 12,
+                  "comodin": false,
+                  "cartones": 1,
+                  "premio_unit": 10000,
+                  "subtotal": 10000
+                },
+                {
+                  "aciertos": 11,
+                  "comodin": false,
+                  "cartones": 5,
+                  "premio_unit": 3500,
+                  "subtotal": 17500
+                },
+                {
+                  "aciertos": 10,
+                  "comodin": false,
+                  "cartones": 41,
+                  "premio_unit": 1000,
+                  "subtotal": 41000
+                }
+              ],
+              "valor_carton": 1000,
+              "costo": 500000,
+              "neto": -431500,
+              "roi": 13.7
             }
           },
           "dia": {
@@ -28920,8 +29095,37 @@
               }
             ],
             "retorno": {
-              "disponible": false,
-              "motivo": "sin premios registrados para el sorteo #3267"
+              "disponible": true,
+              "ganado": 70500,
+              "cartones": 500,
+              "premiados": 49,
+              "por_categoria": [
+                {
+                  "aciertos": 12,
+                  "comodin": false,
+                  "cartones": 1,
+                  "premio_unit": 10000,
+                  "subtotal": 10000
+                },
+                {
+                  "aciertos": 11,
+                  "comodin": false,
+                  "cartones": 5,
+                  "premio_unit": 3500,
+                  "subtotal": 17500
+                },
+                {
+                  "aciertos": 10,
+                  "comodin": false,
+                  "cartones": 43,
+                  "premio_unit": 1000,
+                  "subtotal": 43000
+                }
+              ],
+              "valor_carton": 1000,
+              "costo": 500000,
+              "neto": -429500,
+              "roi": 14.1
             }
           },
           "mes": {
@@ -29056,8 +29260,30 @@
               }
             ],
             "retorno": {
-              "disponible": false,
-              "motivo": "sin premios registrados para el sorteo #3267"
+              "disponible": true,
+              "ganado": 79500,
+              "cartones": 500,
+              "premiados": 52,
+              "por_categoria": [
+                {
+                  "aciertos": 11,
+                  "comodin": false,
+                  "cartones": 11,
+                  "premio_unit": 3500,
+                  "subtotal": 38500
+                },
+                {
+                  "aciertos": 10,
+                  "comodin": false,
+                  "cartones": 41,
+                  "premio_unit": 1000,
+                  "subtotal": 41000
+                }
+              ],
+              "valor_carton": 1000,
+              "costo": 500000,
+              "neto": -420500,
+              "roi": 15.9
             }
           }
         }
