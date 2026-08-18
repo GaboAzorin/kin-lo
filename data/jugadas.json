@@ -2693,5 +2693,23 @@
         25
       ]
     }
+  },
+  {
+    "fecha_jugada": "2026-08-18",
+    "juego": "loto",
+    "variantes": [
+      "loto"
+    ],
+    "sorteo": 5466,
+    "numeros": [
+      5,
+      15,
+      21,
+      26,
+      31,
+      32
+    ],
+    "rango_sugerencia": "all_sub",
+    "aciertos": null
   }
 ]
