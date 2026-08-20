@@ -2787,5 +2787,31 @@
     ],
     "rango_sugerencia": "all_sub",
     "aciertos": null
+  },
+  {
+    "fecha_jugada": "2026-08-20",
+    "juego": "kino",
+    "variantes": [
+      "kino"
+    ],
+    "sorteo": 3269,
+    "numeros": [
+      2,
+      3,
+      4,
+      6,
+      7,
+      11,
+      13,
+      14,
+      15,
+      17,
+      19,
+      22,
+      24,
+      25
+    ],
+    "rango_sugerencia": "500",
+    "aciertos": null
   }
 ]
