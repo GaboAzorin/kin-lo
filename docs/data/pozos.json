@@ -1,23 +1,23 @@
 {
-  "updated": "2026-08-19 10:39",
+  "updated": "2026-08-20 04:35",
   "kino": {
-    "proximo_sorteo": "19 de agosto 2026",
-    "pozo_total": "15.000",
+    "proximo_sorteo": "21 de agosto 2026",
+    "pozo_total": "15.300",
     "variantes": [
       {
         "nombre": "Kino",
-        "pozo_str": "8.710",
-        "millones": 8710
+        "pozo_str": "8.850",
+        "millones": 8850
       },
       {
         "nombre": "ReKino",
-        "pozo_str": "1.790",
-        "millones": 1790
+        "pozo_str": "1.870",
+        "millones": 1870
       },
       {
         "nombre": "RequeteKino",
-        "pozo_str": "1.220",
-        "millones": 1220
+        "pozo_str": "1.300",
+        "millones": 1300
       }
     ]
   },
