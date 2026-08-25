@@ -2865,5 +2865,23 @@
     "aciertos": {
       "loto": 1
     }
+  },
+  {
+    "fecha_jugada": "2026-08-25",
+    "juego": "loto",
+    "variantes": [
+      "loto"
+    ],
+    "sorteo": 5469,
+    "numeros": [
+      2,
+      9,
+      10,
+      35,
+      36,
+      38
+    ],
+    "rango_sugerencia": "all_sub",
+    "aciertos": null
   }
 ]
