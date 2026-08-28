@@ -2864,6 +2864,16 @@
     "rango_sugerencia": null,
     "aciertos": {
       "loto": 1
+    },
+    "resultado_sorteo": {
+      "loto": [
+        15,
+        17,
+        27,
+        28,
+        34,
+        39
+      ]
     }
   },
   {
@@ -2882,6 +2892,18 @@
       38
     ],
     "rango_sugerencia": "all_sub",
-    "aciertos": null
+    "aciertos": {
+      "loto": 0
+    },
+    "resultado_sorteo": {
+      "loto": [
+        3,
+        4,
+        19,
+        29,
+        37,
+        39
+      ]
+    }
   }
 ]
