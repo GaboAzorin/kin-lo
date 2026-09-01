@@ -2905,5 +2905,23 @@
         39
       ]
     }
+  },
+  {
+    "fecha_jugada": "2026-09-01",
+    "juego": "loto",
+    "variantes": [
+      "loto"
+    ],
+    "sorteo": 5472,
+    "numeros": [
+      11,
+      15,
+      17,
+      18,
+      25,
+      36
+    ],
+    "rango_sugerencia": "all_sub",
+    "aciertos": null
   }
 ]
