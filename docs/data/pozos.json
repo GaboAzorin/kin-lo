@@ -1,23 +1,23 @@
 {
-  "updated": "2026-08-31 22:05",
+  "updated": "2026-09-03 08:34",
   "kino": {
-    "proximo_sorteo": "2 de septiembre 2026",
-    "pozo_total": "7.300",
+    "proximo_sorteo": "4 de septiembre 2026",
+    "pozo_total": "7.500",
     "variantes": [
       {
         "nombre": "Kino",
-        "pozo_str": "430",
-        "millones": 430
+        "pozo_str": "510",
+        "millones": 510
       },
       {
         "nombre": "ReKino",
-        "pozo_str": "2.090",
-        "millones": 2090
+        "pozo_str": "2.150",
+        "millones": 2150
       },
       {
         "nombre": "RequeteKino",
-        "pozo_str": "1.500",
-        "millones": 1500
+        "pozo_str": "1.560",
+        "millones": 1560
       }
     ]
   },
