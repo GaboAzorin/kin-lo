@@ -23,8 +23,13 @@
 > ofrece. El código se conserva como evidencia y por si algún día cambia el
 > panorama (p. ej. una plataforma con salida residencial).
 >
-> Alternativa viva: `scripts/sondeo_fuentes_loto.py`, que busca fuentes de
-> resultados que no estén detrás de Imperva.
+> Alternativas vivas:
+>
+> - **Proxy residencial** (`scripts/SCRAPINGANT.md`): si el bloqueo es reputación
+>   de rangos de datacenter, una IP residencial debería pasar. Se sondea con
+>   `python scripts/diagnostico_polla.py --probe scrapingant`.
+> - `scripts/sondeo_fuentes_loto.py`, que busca fuentes de resultados que no
+>   estén detrás de Imperva.
 
 ---
 

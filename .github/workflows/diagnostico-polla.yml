@@ -22,6 +22,11 @@ on:
           - impersonate
           - playwright
           - relay
+          # 'scrapingant' NO entra en 'todas' a propósito: sale por proxy
+          # residencial de un free tier y cada petición gasta ~25 de los 10.000
+          # créditos mensuales. Solo corre si se la elige aquí explícitamente.
+          # Requiere el secret SCRAPINGANT_API_KEY (ver scripts/SCRAPINGANT.md).
+          - scrapingant
           # 'fuentes' no sondea polla.cl: busca fuentes ALTERNATIVAS de
           # resultados de Loto. Va en el mismo menú para dispararlo desde el
           # teléfono con un solo toque, sin otra pantalla ni otro workflow.
@@ -78,6 +83,9 @@ jobs:
           # como no configurado en vez de fallar.
           RELAY_URL: ${{ secrets.RELAY_URL }}
           RELAY_TOKEN: ${{ secrets.RELAY_TOKEN }}
+          # Si el secret no existe llega vacío y la sonda 'scrapingant' lo reporta
+          # como "no configurada" sin gastar créditos ni tocar la red.
+          SCRAPINGANT_API_KEY: ${{ secrets.SCRAPINGANT_API_KEY }}
         if: inputs.sondas != 'fuentes'
         run: |
           if [ "${{ inputs.sondas }}" = "todas" ]; then
