@@ -34,6 +34,49 @@ secret**.
 Si el secret no existe, la sonda lo reporta como "no configurada" y no gasta
 nada ni intenta salir a la red.
 
+## País del proxy: Chile NO está disponible
+
+Medido en Actions (2026-09-15): pedirle `proxy_country=cl` a ScrapingAnt devuelve
+**422** con la lista de países permitidos. `cl` no aparece. De Latinoamérica solo
+hay **`br`, `mx` y `bz`**.
+
+Países disponibles (textual desde el error de la API):
+
+```
+ae br bz ca cn cz de es fr gb hk id il in it jp kr mx my nh nl ph pk pl
+ro ru sa sc se sg th tr tw uk us vn
+```
+
+El resto de los parámetros (`url`, `x-api-key`, `proxy_type=residential`) sí
+fueron aceptados: el 422 señalaba únicamente a `proxy_country`.
+
+**Por defecto no se envía país**: la sonda usa el pool global de ScrapingAnt.
+Es la prueba más limpia de "¿basta una IP residencial?", sin mezclar la variable
+geográfica. Si polla.cl además filtrara por geografía, ninguna opción de
+ScrapingAnt serviría — pero eso es una hipótesis que el diagnóstico tiene que
+distinguir, no algo dado.
+
+### Probar con un país concreto
+
+Definir la **variable de repositorio** (no secret) `SCRAPINGANT_COUNTRY`:
+**Settings → Secrets and variables → Actions → pestaña *Variables* → New
+repository variable**, con valor `br` o `mx`. El workflow la pasa tal cual.
+
+En local:
+
+```bash
+SCRAPINGANT_COUNTRY=br SCRAPINGANT_API_KEY=... \
+  python scripts/diagnostico_polla.py --probe scrapingant
+```
+
+Si el valor no está en la lista de arriba, la sonda **falla antes de hacer la
+petición** y muestra los válidos: así un `cl` por costumbre no quema créditos en
+un 422 evitable.
+
+Cuando la sonda falle **con** país configurado, el veredicto avisa de que el
+resultado puede deberse a esa geografía y sugiere reintentar sin país. Si falla
+**sin** país, esa salvedad no se imprime porque no aplica.
+
 ## Cómo correrla
 
 Desde la pestaña **Actions → Diagnóstico polla.cl → Run workflow**, eligiendo
@@ -66,9 +109,10 @@ distingue tres casos y solo el primero es un éxito:
 | 200 pero con firma de Imperva en el HTML | el proxy residencial no basta |
 | 4xx/5xx de la propia API | key inválida, créditos agotados o parámetros mal |
 
-## Pendiente de confirmar
+## Estado de los parámetros
 
-Los nombres exactos de los parámetros (`x-api-key`, `proxy_type`,
-`proxy_country`) están tomados de la documentación pero **no se han verificado
-contra la API real**. Si alguno está mal, ScrapingAnt responde 4xx y el informe
-imprime su mensaje de error, que suele nombrar el parámetro correcto.
+Verificado contra la API real (corrida en Actions, 2026-09-15): `url`,
+`x-api-key`, `proxy_type` y `proxy_country` son nombres correctos — el único
+error devuelto fue el valor `cl` de `proxy_country`. Lo que sigue sin verificarse
+es si la vía residencial atraviesa el WAF de polla.cl: para eso hay que correr la
+sonda con una API key válida.

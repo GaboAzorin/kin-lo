@@ -12,7 +12,7 @@ Sondas:
   impersonate  — misma IP que `directo`, pero con fingerprint TLS de Chrome
   playwright   — misma IP, con Chromium real y el flujo CSRF + POST completo
   relay        — vía el relay serverless, si RELAY_URL está definido
-  scrapingant  — vía ScrapingAnt con proxy residencial chileno (free tier)
+  scrapingant  — vía ScrapingAnt con proxy residencial (free tier)
 
 `directo`, `impersonate` y `playwright` salen por la MISMA IP y solo cambian el
 cliente: comparándolas se separa "me bloquean por reputación de IP" de "me
@@ -72,8 +72,22 @@ SCRAPINGANT_URL = "https://api.scrapingant.com/v2/general"
 SCRAPINGANT_PARAMS = {
     "x-api-key": None,          # se rellena con la key del entorno
     "proxy_type": "residential",
-    "proxy_country": "cl",
 }
+# Países con proxy residencial en ScrapingAnt, textual desde el 422 que devolvió
+# la API al pedirle `proxy_country=cl` (corrida en Actions, 2026-09-15).
+#
+# CHILE NO ESTÁ. De Latinoamérica solo hay br, mx y bz. Importa porque, si
+# polla.cl filtra además por geografía y no solo por reputación de IP, entonces
+# NINGUNA opción de ScrapingAnt serviría y la vía residencial estaría muerta por
+# una razón distinta de la que se está probando. Es una hipótesis que este mismo
+# diagnóstico debe distinguir, no un hecho: por eso el default es NO mandar país
+# (pool global de ScrapingAnt), que es la prueba más limpia de "¿basta una IP
+# residencial?" sin meter la variable geográfica de por medio.
+SCRAPINGANT_PAISES = [
+    "ae", "br", "bz", "ca", "cn", "cz", "de", "es", "fr", "gb", "hk", "id",
+    "il", "in", "it", "jp", "kr", "mx", "my", "nh", "nl", "ph", "pk", "pl",
+    "ro", "ru", "sa", "sc", "se", "sg", "th", "tr", "tw", "uk", "us", "vn",
+]
 # Una petición residencial cuesta ~25 créditos de los 10.000 mensuales. Por eso la
 # sonda hace UNA sola petición por corrida y no reintenta nunca: un bucle de
 # reintentos podría vaciar el mes entero en una tarde.
@@ -292,16 +306,38 @@ def probe_relay():
 
 
 def probe_scrapingant():
-    """polla.cl vía ScrapingAnt, que sale por proxies residenciales chilenos.
+    """polla.cl vía ScrapingAnt, que sale por proxies residenciales.
 
     Es la sonda que queda después de descartar el relay: si el bloqueo es puro
     reputación de IP de datacenter (que es lo que indican los 403 desde Azure y
     desde Cloudflare), una IP residencial debería pasar.
 
+    Por defecto NO se fija país: se usa el pool global. Definiendo la variable de
+    entorno SCRAPINGANT_COUNTRY (p. ej. `br` o `mx`) se prueba una geografía
+    concreta, sin tocar código. Chile no está disponible (ver SCRAPINGANT_PAISES).
+
     Hace UNA sola petición y no reintenta: cada request residencial cuesta ~25
     créditos de los 10.000 del free tier mensual.
     """
-    nombre = "GET página de resultados vía ScrapingAnt (proxy residencial CL)"
+    pais = os.environ.get("SCRAPINGANT_COUNTRY", "").strip().lower()
+    nombre = (
+        f"GET página de resultados vía ScrapingAnt (proxy residencial, país={pais})"
+        if pais else
+        "GET página de resultados vía ScrapingAnt (proxy residencial, pool global)"
+    )
+
+    if pais and pais not in SCRAPINGANT_PAISES:
+        # Falla ANTES de pedir nada: un país inválido es un 422 seguro, y gastar
+        # un request (y créditos) para que la API repita lo que ya sabemos aquí
+        # sería tirar free tier a la basura.
+        return [_resultado_error(
+            nombre,
+            SCRAPINGANT_URL,
+            f"SCRAPINGANT_COUNTRY='{pais}' no es un país válido de ScrapingAnt "
+            f"(no se hizo ninguna petición). Válidos: {', '.join(SCRAPINGANT_PAISES)}. "
+            "Chile no está disponible; dejar la variable sin definir usa el pool global.",
+        )]
+
     api_key = os.environ.get("SCRAPINGANT_API_KEY", "").strip()
     if not api_key:
         # Sin key no se intenta nada: así la sonda nunca consume créditos por
@@ -316,14 +352,21 @@ def probe_scrapingant():
 
     params = dict(SCRAPINGANT_PARAMS, url=BASE_URL)
     params["x-api-key"] = api_key
+    if pais:
+        params["proxy_country"] = pais
     url = f"{SCRAPINGANT_URL}?{urllib.parse.urlencode(params)}"
+
+    # Misma query pero sin la key: es la que se reporta e informa.
+    publicos = {k: v for k, v in params.items() if k != "x-api-key"}
+    url_publica = f"{SCRAPINGANT_URL}?{urllib.parse.urlencode(publicos)}"
 
     # Cuerpo completo: `csrfToken` aparece bien entrado el HTML, mucho más allá
     # del fragmento que guarda el informe.
     r = _request(url, timeout=SCRAPINGANT_TIMEOUT, cuerpo_completo=True)
     r["nombre"] = nombre
     # La URL con la key dentro no debe acabar en el informe ni en el artifact.
-    r["url"] = f"{SCRAPINGANT_URL}?url={BASE_URL}&proxy_type=residential&proxy_country=cl"
+    r["url"] = url_publica
+    r["pais"] = pais or None
 
     # Dos cosas distintas que hay que reportar por separado:
     #   - el status de la API de ScrapingAnt (¿me atendió el servicio?)
@@ -667,6 +710,21 @@ def veredicto(todo):
     if "scrapingant" in todo:
         ant = todo["scrapingant"][0]
         status = ant.get("status")
+        pais = ant.get("pais")
+
+        def _salvedad_pais():
+            """Advierte que el fallo puede ser del país elegido, si se eligió uno.
+
+            Sin país configurado la sonda salió por el pool global y esta salvedad
+            no aplica: imprimirla ahí sugeriría una causa que no existe.
+            """
+            if not pais:
+                return
+            print(f"  → OJO: la sonda salió con proxy_country={pais}. El resultado")
+            print("    puede deberse a esa geografía y no a la vía residencial en sí.")
+            print("    Reintentar SIN SCRAPINGANT_COUNTRY (pool global) o con otro país")
+            print("    antes de dar por muerta la opción. Chile no está disponible.")
+
         pistas = sorted(set(_pistas_waf(ant)) | set(ant.get("pistas_extra") or []))
         ok_http = bool(status and 200 <= status < 300)
 
@@ -690,14 +748,17 @@ def veredicto(todo):
             print("  → El proxy residencial NO basta: el bloqueo mira algo más que")
             print("    la IP. Habría que probar el modo navegador de ScrapingAnt o")
             print("    replantear la vía entera.")
+            _salvedad_pais()
         elif ok_http:
             print("\nScrapingAnt respondió 200 pero sin token CSRF ni firma de WAF")
             print("reconocible. No se puede concluir: revisar el body del informe.")
+            _salvedad_pais()
         else:
             print(f"\nScrapingAnt devolvió HTTP {status} — falló la petición al propio")
             print("servicio (key inválida, créditos agotados o parámetros mal puestos).")
             print("  → Revisar el body del informe: la API explica el motivo ahí.")
             print("  → No dice nada sobre polla.cl todavía.")
+            _salvedad_pais()
 
     no_corridas = [p for p in PROBES if p not in todo]
     if no_corridas:
