@@ -1,4 +1,34 @@
-# Relay para polla.cl
+# Relay para polla.cl — DESCARTADO (2026-09-15)
+
+> **Esta vía no funciona. No la reintentes sin leer esto.**
+>
+> El relay se desplegó en Cloudflare Workers y funciona correctamente: alcanza
+> polla.cl y devuelve la respuesta. El problema es que **Imperva bloquea también
+> la IP de salida de Cloudflare**, igual que la de Azure.
+>
+> Medido el 2026-09-15 desde `relay-polla.ga-azorin.workers.dev`
+> (IP de salida `104.22.10.178`):
+>
+> ```
+> HTTP 403 · set-cookie: incap_ses_... · body con _Incapsula_Resource
+> ```
+>
+> Sumado a lo que ya sabíamos —403 desde Azure con urllib, con fingerprint TLS de
+> Chrome y con Chromium real— la conclusión es que **Imperva rechaza rangos de
+> datacenter en general**, no un proveedor concreto. Deno Deploy y Val.town corren
+> sobre infraestructura de nube más convencional todavía, así que no se probaron:
+> si Cloudflare no pasa, ellos tampoco.
+>
+> Lo que haría falta es una **IP residencial**, que ningún free tier serverless
+> ofrece. El código se conserva como evidencia y por si algún día cambia el
+> panorama (p. ej. una plataforma con salida residencial).
+>
+> Alternativa viva: `scripts/sondeo_fuentes_loto.py`, que busca fuentes de
+> resultados que no estén detrás de Imperva.
+
+---
+
+## Qué era (documentación original)
 
 polla.cl bloquea las IPs de GitHub Actions, así que el workflow de Loto no puede
 pegarle directo. `worker.js` es un relay mínimo que corre en un free tier
@@ -34,13 +64,21 @@ secret del repo y como variable de entorno del worker.
 
 ### Cloudflare Workers
 
+**Corre los comandos desde la carpeta `relay/` del repo clonado**, no desde
+cualquier directorio: wrangler lee `wrangler.toml` del directorio actual y
+escribe su caché ahí. Lanzarlo desde una ruta protegida del sistema
+(`C:\WINDOWS\System32`, por ejemplo) falla con un error de permisos que no
+menciona el directorio como causa.
+
 ```bash
 npm install -g wrangler
 wrangler login
-cd relay
-wrangler deploy worker.js --name relay-polla --compatibility-date 2024-01-01
-wrangler secret put RELAY_TOKEN --name relay-polla   # pega el token
+
+cd <ruta-del-repo>/relay      # en Windows: cd C:\ruta\a\kin-lo\relay
+wrangler deploy               # wrangler.toml ya trae name, main y fecha
+wrangler secret put RELAY_TOKEN   # pega el token cuando lo pida
 ```
+
 URL resultante: `https://relay-polla.<tu-subdominio>.workers.dev`
 
 ### Deno Deploy

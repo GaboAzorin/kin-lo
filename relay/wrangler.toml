@@ -1,0 +1,12 @@
+# Configuración del deploy a Cloudflare Workers.
+#
+# Existe para que desplegar sea `wrangler deploy` a secas, desde esta carpeta:
+# sin --name ni --compatibility-date, que son fáciles de escribir mal o de
+# ejecutar desde el directorio equivocado.
+
+name = "relay-polla"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# RELAY_TOKEN NO va aquí: este archivo se commitea. Se carga como secret con
+#   wrangler secret put RELAY_TOKEN
