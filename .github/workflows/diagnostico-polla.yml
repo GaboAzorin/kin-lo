@@ -86,6 +86,11 @@ jobs:
           # Si el secret no existe llega vacío y la sonda 'scrapingant' lo reporta
           # como "no configurada" sin gastar créditos ni tocar la red.
           SCRAPINGANT_API_KEY: ${{ secrets.SCRAPINGANT_API_KEY }}
+          # Variable de repo, NO secret: el país del proxy no es un secreto y así
+          # se cambia desde Settings → Variables sin tocar código. Vacía = pool
+          # global de ScrapingAnt, que es el default deliberado (Chile no está
+          # entre los países disponibles; ver scripts/SCRAPINGANT.md).
+          SCRAPINGANT_COUNTRY: ${{ vars.SCRAPINGANT_COUNTRY }}
         if: inputs.sondas != 'fuentes'
         run: |
           if [ "${{ inputs.sondas }}" = "todas" ]; then
