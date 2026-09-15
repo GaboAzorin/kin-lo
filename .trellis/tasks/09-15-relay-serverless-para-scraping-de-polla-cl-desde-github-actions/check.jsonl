@@ -1,0 +1,3 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Barra de calidad del repo para el código nuevo"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Verificar que los fallos de red del relay se manejen según el patrón del repo"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "El cambio cruza workflow de Actions, worker externo y scraper Python"}
