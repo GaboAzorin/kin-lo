@@ -73,6 +73,23 @@ SCRAPINGANT_PARAMS = {
     "x-api-key": None,          # se rellena con la key del entorno
     "proxy_type": "residential",
 }
+# Modo por defecto: SIN navegador (`browser=false`).
+#
+# Medido en Actions (2026-09-15) con `proxy_type=residential` y pool global:
+# ScrapingAnt devolvió 423 tras 6,6 s con "Our browser was detected by target
+# site". O sea: la petición SÍ llegó a polla.cl y lo que Imperva detectó fue el
+# NAVEGADOR headless que ScrapingAnt usa por defecto, no necesariamente la IP.
+#
+# La página de resultados sirve el `csrfToken` en el HTML, sin JavaScript, así
+# que el render no aporta nada: apagarlo quita justo la superficie que falló y
+# además cuesta menos créditos. Es a la vez el experimento correcto y el barato.
+#
+# El nombre del parámetro (`browser`) y su valor ("false") vienen de la
+# documentación de ScrapingAnt; NO se pudieron verificar contra la API real
+# desde este entorno (sin salida de red) — CONFIRMAR en la primera corrida, como
+# se hizo con los demás parámetros. Si el nombre fuese otro, la API responde 422
+# nombrando el correcto y el informe lo imprime tal cual.
+SCRAPINGANT_BROWSER_DEFECTO = "false"
 # Países con proxy residencial en ScrapingAnt, textual desde el 422 que devolvió
 # la API al pedirle `proxy_country=cl` (corrida en Actions, 2026-09-15).
 #
@@ -316,14 +333,26 @@ def probe_scrapingant():
     entorno SCRAPINGANT_COUNTRY (p. ej. `br` o `mx`) se prueba una geografía
     concreta, sin tocar código. Chile no está disponible (ver SCRAPINGANT_PAISES).
 
+    Por defecto tampoco se renderiza con navegador (`browser=false`): el 423 que
+    devolvió la API dice que lo detectado fue el navegador, y el HTML con el
+    csrfToken no necesita JS. Con SCRAPINGANT_BROWSER=true se vuelve a probar el
+    modo navegador sin tocar código.
+
     Hace UNA sola petición y no reintenta: cada request residencial cuesta ~25
     créditos de los 10.000 del free tier mensual.
     """
     pais = os.environ.get("SCRAPINGANT_COUNTRY", "").strip().lower()
+    browser_env = os.environ.get("SCRAPINGANT_BROWSER", "").strip().lower()
+    # Cualquier valor que no sea "true" se trata como false: el default es no
+    # renderizar, y un valor mal escrito no debería activar en silencio el modo
+    # caro que además es el que ya falló.
+    con_browser = browser_env == "true"
     nombre = (
-        f"GET página de resultados vía ScrapingAnt (proxy residencial, país={pais})"
-        if pais else
-        "GET página de resultados vía ScrapingAnt (proxy residencial, pool global)"
+        "GET página de resultados vía ScrapingAnt (proxy residencial, "
+        + ("con navegador" if con_browser else "sin navegador")
+        + ", "
+        + (f"país={pais}" if pais else "pool global")
+        + ")"
     )
 
     if pais and pais not in SCRAPINGANT_PAISES:
@@ -352,6 +381,7 @@ def probe_scrapingant():
 
     params = dict(SCRAPINGANT_PARAMS, url=BASE_URL)
     params["x-api-key"] = api_key
+    params["browser"] = "true" if con_browser else SCRAPINGANT_BROWSER_DEFECTO
     if pais:
         params["proxy_country"] = pais
     url = f"{SCRAPINGANT_URL}?{urllib.parse.urlencode(params)}"
@@ -367,6 +397,7 @@ def probe_scrapingant():
     # La URL con la key dentro no debe acabar en el informe ni en el artifact.
     r["url"] = url_publica
     r["pais"] = pais or None
+    r["browser"] = con_browser
 
     # Dos cosas distintas que hay que reportar por separado:
     #   - el status de la API de ScrapingAnt (¿me atendió el servicio?)
@@ -727,6 +758,8 @@ def veredicto(todo):
 
         pistas = sorted(set(_pistas_waf(ant)) | set(ant.get("pistas_extra") or []))
         ok_http = bool(status and 200 <= status < 300)
+        con_browser = bool(ant.get("browser"))
+        cuerpo_ant = (ant.get("body") or "").lower()
 
         if status is None:
             # Ni siquiera hubo respuesta: sin key, sin red o timeout. No dice nada
@@ -753,9 +786,44 @@ def veredicto(todo):
             print("\nScrapingAnt respondió 200 pero sin token CSRF ni firma de WAF")
             print("reconocible. No se puede concluir: revisar el body del informe.")
             _salvedad_pais()
+        elif status == 423:
+            # 423 NO es un fallo del servicio: ScrapingAnt lo usa para decir que
+            # el sitio objetivo detectó a su cliente. La petición llegó a
+            # polla.cl, así que este caso SÍ informa sobre polla.cl y meterlo en
+            # el saco de "key/créditos/parámetros" perdería el dato.
+            print("\nScrapingAnt devolvió 423: el objetivo DETECTÓ a su cliente.")
+            print("  → La petición SÍ llegó a polla.cl; no es problema de key,")
+            print("    créditos ni parámetros.")
+            if con_browser:
+                print("  → Se corrió CON navegador, que es la superficie más fácil de")
+                print("    detectar. Reintentar con SCRAPINGANT_BROWSER=false: el HTML")
+                print("    con el csrfToken no necesita JS y gasta menos créditos.")
+            else:
+                print("  → Se corrió SIN navegador: ni el modo HTTP plano por IP")
+                print("    residencial pasa. Queda por separar reputación de IP de")
+                print("    geobloqueo: probar SCRAPINGANT_COUNTRY=br (Chile no está")
+                print("    disponible). Si br también da 423, la vía residencial de")
+                print("    ScrapingAnt está muerta.")
+            _salvedad_pais()
+        elif status in (401, 403):
+            print(f"\nScrapingAnt devolvió HTTP {status} — problema de CREDENCIALES o")
+            print("permisos del propio servicio (API key inválida, revocada o sin")
+            print("acceso al plan que se está pidiendo).")
+            print("  → Revisar el secret SCRAPINGANT_API_KEY.")
+            print("  → No dice nada sobre polla.cl.")
+        elif status == 402 or "credit" in cuerpo_ant or "quota" in cuerpo_ant:
+            print(f"\nScrapingAnt devolvió HTTP {status} — CUOTA AGOTADA: no quedan")
+            print("créditos en el free tier de este mes.")
+            print("  → Esperar la renovación mensual antes de volver a sondear.")
+            print("  → No dice nada sobre polla.cl.")
+        elif status == 422:
+            print("\nScrapingAnt devolvió 422 — PARÁMETROS inválidos.")
+            print("  → La API nombra el parámetro correcto en el body del informe;")
+            print("    corregirlo ahí y reintentar.")
+            print("  → No dice nada sobre polla.cl.")
         else:
-            print(f"\nScrapingAnt devolvió HTTP {status} — falló la petición al propio")
-            print("servicio (key inválida, créditos agotados o parámetros mal puestos).")
+            print(f"\nScrapingAnt devolvió HTTP {status} — fallo genérico del propio")
+            print("servicio.")
             print("  → Revisar el body del informe: la API explica el motivo ahí.")
             print("  → No dice nada sobre polla.cl todavía.")
             _salvedad_pais()
