@@ -77,6 +77,46 @@ Cuando la sonda falle **con** país configurado, el veredicto avisa de que el
 resultado puede deberse a esa geografía y sugiere reintentar sin país. Si falla
 **sin** país, esa salvedad no se imprime porque no aplica.
 
+## Modo navegador: por defecto APAGADO
+
+Medido en Actions (2026-09-15), con `proxy_type=residential` y pool global:
+
+```
+status: 423  (6660 ms)
+{"detail":"Our browser was detected by target site. Retry the request or try
+ adjusting proxy country, proxy type and browser rendering settings."}
+```
+
+Esto es **distinto** del 403 con página de Incapsula que veíamos antes: la
+petición SÍ llegó a polla.cl (6,6 s de latencia = render real) y no es error de
+key, créditos ni parámetros. Lo que Imperva detectó fue el **navegador headless**
+que ScrapingAnt usa por defecto.
+
+Por eso el default pasa a ser **sin navegador** (`browser=false`):
+
+- la página `https://www.polla.cl/es/view/resultados` trae el `csrfToken` en el
+  HTML servido, **no necesita JavaScript**, así que el render no aporta nada;
+- apagarlo quita justo la superficie de detección que acaba de fallar;
+- cuesta menos créditos (ver más abajo).
+
+### Volver a probar con navegador
+
+Definir la **variable de repositorio** (no secret) `SCRAPINGANT_BROWSER` con
+valor `true`: **Settings → Secrets and variables → Actions → Variables**. El
+workflow la pasa tal cual. Cualquier valor distinto de `true` (incluida la
+variable vacía o ausente) deja el modo sin navegador, para que una errata no
+active en silencio el modo caro que ya falló.
+
+En local:
+
+```bash
+SCRAPINGANT_BROWSER=true SCRAPINGANT_API_KEY=... \
+  python scripts/diagnostico_polla.py --probe scrapingant
+```
+
+El modo queda reflejado en el nombre de la sonda del informe ("sin navegador,
+pool global"), igual que el país.
+
 ## Cómo correrla
 
 Desde la pestaña **Actions → Diagnóstico polla.cl → Run workflow**, eligiendo
@@ -91,7 +131,10 @@ SCRAPINGANT_API_KEY=... python scripts/diagnostico_polla.py --probe scrapingant
 ## Presupuesto de créditos
 
 Cada petición con `proxy_type=residential` cuesta **~25 créditos** de los 10.000
-mensuales (≈ 400 peticiones al mes). Por eso:
+mensuales (≈ 400 peticiones al mes). El modo sin navegador es **más barato** que
+el modo con render —ScrapingAnt tarifa el render aparte—, pero **no tenemos la
+cifra exacta** y no se inventa aquí: se confirmará leyendo el consumo del
+dashboard tras la primera corrida con `browser=false`. Por eso:
 
 - la sonda hace **una sola petición** por corrida y **no reintenta** nunca;
 - `scrapingant` **no** se incluye en la opción `todas` del workflow ni en la
@@ -107,12 +150,26 @@ distingue tres casos y solo el primero es un éxito:
 |---|---|
 | 200 **con `csrfToken`** en el HTML | la vía residencial funciona |
 | 200 pero con firma de Imperva en el HTML | el proxy residencial no basta |
-| 4xx/5xx de la propia API | key inválida, créditos agotados o parámetros mal |
+| **423** | **el objetivo detectó al cliente de ScrapingAnt — la petición SÍ llegó a polla.cl** |
+| 401/403 de la propia API | credenciales o permisos del servicio |
+| 402 (o mensaje de créditos) | cuota del free tier agotada |
+| 422 | parámetros inválidos; la API nombra el correcto en el body |
+| otros 4xx/5xx | fallo genérico del servicio |
+
+Un **423 no es un fallo del servicio** y el veredicto ya no lo mete en ese saco:
+informa sobre polla.cl. Si se corrió **con** navegador, sugiere reintentar con
+`SCRAPINGANT_BROWSER=false`. Si se corrió **sin** navegador, significa que ni el
+modo HTTP plano por IP residencial pasa, y sugiere `SCRAPINGANT_COUNTRY=br` para
+separar reputación de IP de geobloqueo.
 
 ## Estado de los parámetros
 
 Verificado contra la API real (corrida en Actions, 2026-09-15): `url`,
 `x-api-key`, `proxy_type` y `proxy_country` son nombres correctos — el único
-error devuelto fue el valor `cl` de `proxy_country`. Lo que sigue sin verificarse
+error devuelto fue el valor `cl` de `proxy_country`. El parámetro `browser`
+(valor `false` para desactivar el render) viene de la documentación y **está sin
+verificar contra la API real**: se confirma en la primera corrida, igual que se
+confirmaron los demás. Si el nombre fuese otro, la API responde 422 nombrando el
+correcto y el informe lo imprime tal cual. Lo que sigue sin verificarse
 es si la vía residencial atraviesa el WAF de polla.cl: para eso hay que correr la
 sonda con una API key válida.

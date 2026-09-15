@@ -91,6 +91,11 @@ jobs:
           # global de ScrapingAnt, que es el default deliberado (Chile no está
           # entre los países disponibles; ver scripts/SCRAPINGANT.md).
           SCRAPINGANT_COUNTRY: ${{ vars.SCRAPINGANT_COUNTRY }}
+          # Variable de repo, tampoco secret. Vacía = SIN navegador, que es el
+          # default deliberado: el 423 medido dice que lo detectado fue el
+          # navegador headless, y el HTML con el csrfToken no necesita JS.
+          # Poner "true" para volver a probar el modo navegador.
+          SCRAPINGANT_BROWSER: ${{ vars.SCRAPINGANT_BROWSER }}
         if: inputs.sondas != 'fuentes'
         run: |
           if [ "${{ inputs.sondas }}" = "todas" ]; then
