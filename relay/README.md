@@ -34,13 +34,21 @@ secret del repo y como variable de entorno del worker.
 
 ### Cloudflare Workers
 
+**Corre los comandos desde la carpeta `relay/` del repo clonado**, no desde
+cualquier directorio: wrangler lee `wrangler.toml` del directorio actual y
+escribe su caché ahí. Lanzarlo desde una ruta protegida del sistema
+(`C:\WINDOWS\System32`, por ejemplo) falla con un error de permisos que no
+menciona el directorio como causa.
+
 ```bash
 npm install -g wrangler
 wrangler login
-cd relay
-wrangler deploy worker.js --name relay-polla --compatibility-date 2024-01-01
-wrangler secret put RELAY_TOKEN --name relay-polla   # pega el token
+
+cd <ruta-del-repo>/relay      # en Windows: cd C:\ruta\a\kin-lo\relay
+wrangler deploy               # wrangler.toml ya trae name, main y fecha
+wrangler secret put RELAY_TOKEN   # pega el token cuando lo pida
 ```
+
 URL resultante: `https://relay-polla.<tu-subdominio>.workers.dev`
 
 ### Deno Deploy
