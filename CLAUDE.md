@@ -70,6 +70,12 @@ GitHub Pages sirve docs/ → https://gaboazorin.github.io/kin-lo/
 - Un solo `gameId` trae Loto + Recargado + Revancha + Desquite (en `additionalGameResults`).
 - Parser: `src/parsers/loto_parser_v3.py` → función `parse_loto_rich()`.
 - **Solo funciona desde IPs residenciales/corporativas.** polla.cl bloquea IPs de GitHub Actions.
+- El bloqueo lo aplica **Imperva/Incapsula** y es por **reputación de IP**, no por
+  el cliente. Medido el 2026-09-15 con `scripts/diagnostico_polla.py`: desde el
+  runner de Actions (Azure, AS8075) dan 403 por igual `urllib`, `curl_cffi` con
+  fingerprint TLS de Chrome y **Chromium real vía Playwright**. Un relay en
+  Cloudflare Workers también recibe 403. Cambiar de cliente HTTP o de proveedor
+  de nube NO sirve; haría falta una IP residencial.
 - Correr con `.\scripts\actualizar_loto.ps1` después de cada sorteo.
 
 ### Scraper loteria.cl (`src/scrapers/scraper_loteria.py`)
