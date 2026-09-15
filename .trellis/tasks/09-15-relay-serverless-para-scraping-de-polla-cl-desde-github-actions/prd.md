@@ -23,14 +23,32 @@ relay, el relay llama a polla.cl y devuelve el JSON.
 * `fetch_pozos.py` y `scripts/backfill_loto_premio.py` también pegan a polla.cl.
 * La API responde a cualquier `drawId` histórico → los premios son backfilleables.
 
+## Hallazgos medidos (corrida en Actions, 2026-09-15)
+
+* IP del runner: `172.174.223.248` — `AS8075 Microsoft Corporation`, Virginia US.
+  Confirma que Actions sale por Azure.
+* `GET /es/view/resultados` → **403 con WAF de Imperva/Incapsula** (body con
+  `_Incapsula_Resource`). El mismo 403 en el POST a la API.
+* **Refuta la premisa del repo**: no es un filtro de IP a secas como decía
+  CLAUDE.md, hay un WAF comercial delante.
+* Endpoints móviles descartados: `api.polla.cl` no resuelve por DNS; las rutas
+  bajo `www.polla.cl` caen en el mismo 403 de Imperva.
+
+### Confusión del experimento (importante)
+
+La sonda usa `urllib`, cuyo fingerprint TLS Imperva rechaza en cualquier IP.
+Respecto del setup que SÍ funciona (PC del usuario) cambiaron DOS variables:
+IP (residencial CL → Azure US) y cliente (Chromium real → urllib). El 403 se
+explica por cualquiera de las dos, así que el veredicto automático
+("un relay probablemente no baste") está sobre-afirmando: es hipótesis, no dato.
+
 ## Assumptions (temporary)
 
-* El bloqueo de polla.cl es por rango de IP (ASN Azure/GitHub), no un WAF con
-  challenge de JS. **NO VALIDADO** — es la incógnita central.
-* Si el bloqueo es por ASN, la IP de salida de un worker serverless
-  (Cloudflare/Deno/Vercel) pasa.
-* El flujo CSRF + POST se puede replicar con HTTP plano, sin navegador.
-  **NO VALIDADO.**
+* Si el bloqueo es de fingerprint, basta cambiar de cliente HTTP (curl-cffi) y no
+  hace falta relay ni cuentas. **EN VALIDACIÓN** (sondas `impersonate`/`playwright`).
+* Si el bloqueo es de reputación de IP, el relay debe además imitar fingerprint de
+  navegador — el `fetch()` del worker NO lo hace, así que `relay/worker.js` tal
+  como está podría fallar igual.
 
 ## Decision (ADR-lite)
 

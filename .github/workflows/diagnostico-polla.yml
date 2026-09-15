@@ -19,6 +19,8 @@ on:
           - todas
           - directo
           - movil
+          - impersonate
+          - playwright
           - relay
 
 permissions:
@@ -46,6 +48,19 @@ jobs:
           echo
           echo "Datos del ASN:"
           curl -sS --max-time 15 https://ipinfo.io/json || echo "(no se pudo obtener)"
+
+      - name: Instalar curl-cffi
+        # Barato (~5 s) y lo necesita la sonda 'impersonate'; se instala siempre
+        # para no tener que ramificar por sonda.
+        run: pip install curl-cffi
+
+      - name: Instalar Playwright + Chromium
+        # Descargar el browser tarda ~1 min, así que solo cuando de verdad se va
+        # a usar: la sonda 'playwright' o la corrida completa.
+        if: inputs.sondas == 'playwright' || inputs.sondas == 'todas'
+        run: |
+          pip install playwright
+          playwright install chromium --with-deps
 
       - name: Correr diagnóstico
         env:
