@@ -1,6 +1,9 @@
 # Scraping polla.cl
 playwright>=1.43.0
 requests>=2.31.0        # usado en modo Scrape.do (proxy nube)
+curl-cffi>=0.7.0        # solo diagnóstico: sonda que imita el fingerprint TLS/JA3
+                        # de Chrome para distinguir bloqueo por IP de bloqueo por
+                        # cliente. El pipeline no depende de esto.
 
 # Analytics
 pandas>=2.0.0

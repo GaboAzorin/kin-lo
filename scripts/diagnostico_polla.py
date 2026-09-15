@@ -7,9 +7,15 @@ registrado nunca el error real. Sin saber si el bloqueo es por rango de IP o por
 WAF, elegir una solución (relay serverless, proxy, otra fuente) es adivinar.
 
 Sondas:
-  directo  — polla.cl desde donde corra esto (en Actions = IP de Azure)
-  movil    — endpoints candidatos de API de app móvil, que suelen no llevar WAF
-  relay    — vía el relay serverless, si RELAY_URL está definido
+  directo      — polla.cl desde donde corra esto (en Actions = IP de Azure)
+  movil        — endpoints candidatos de API de app móvil, que suelen no llevar WAF
+  impersonate  — misma IP que `directo`, pero con fingerprint TLS de Chrome
+  playwright   — misma IP, con Chromium real y el flujo CSRF + POST completo
+  relay        — vía el relay serverless, si RELAY_URL está definido
+
+`directo`, `impersonate` y `playwright` salen por la MISMA IP y solo cambian el
+cliente: comparándolas se separa "me bloquean por reputación de IP" de "me
+bloquean por cómo me veo", que llevan a soluciones completamente distintas.
 
 Uso:
     python scripts/diagnostico_polla.py                 # todas las sondas
@@ -21,8 +27,10 @@ válido del diagnóstico, no un error de ejecución.
 """
 
 import argparse
+import asyncio
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.request
@@ -104,6 +112,25 @@ def _request(url, method="GET", data=None, headers=None, timeout=TIMEOUT):
             "error": f"{type(e).__name__}: {e}",
             "ms": int((datetime.now(timezone.utc) - inicio).total_seconds() * 1000),
         }
+
+
+def _resultado_error(nombre, url, error, ms=0):
+    """Resultado con forma de sonda para fallos previos a cualquier petición.
+
+    Las sondas opcionales (dependencia ausente, browser sin instalar) tienen que
+    reportarse, no reventar: un `status` None marca "no se midió", que el
+    veredicto trata distinto de un rechazo HTTP.
+    """
+    return {
+        "nombre": nombre,
+        "url": url,
+        "status": None,
+        "headers": {},
+        "body": "",
+        "body_len": 0,
+        "error": error,
+        "ms": ms,
+    }
 
 
 def _pistas_waf(res):
@@ -227,9 +254,174 @@ def probe_relay():
     return [r]
 
 
+def probe_impersonate():
+    """polla.cl con fingerprint TLS/JA3 de Chrome, sin levantar navegador.
+
+    Corre desde la MISMA IP que `directo`; lo único que cambia es el cliente. Si
+    `directo` (urllib) da 403 y esta da 200, el bloqueo no es por reputación de IP
+    sino por fingerprint — y entonces sobra todo el andamiaje de relay.
+    """
+    try:
+        from curl_cffi import requests as cffi_requests
+    except ImportError as e:
+        # Sonda opcional: su ausencia no debe tumbar el diagnóstico completo.
+        return [_resultado_error(
+            "GET página de resultados (fingerprint Chrome)",
+            BASE_URL,
+            f"curl_cffi no está instalado ({e}) — "
+            "instalar con 'pip install curl-cffi' para correr esta sonda",
+        )]
+
+    inicio = datetime.now(timezone.utc)
+    try:
+        resp = cffi_requests.get(
+            BASE_URL,
+            headers={"User-Agent": USER_AGENT},
+            impersonate="chrome",
+            timeout=TIMEOUT,
+        )
+    except Exception as e:
+        return [_resultado_error(
+            "GET página de resultados (fingerprint Chrome)",
+            BASE_URL,
+            f"{type(e).__name__}: {e}",
+            ms=int((datetime.now(timezone.utc) - inicio).total_seconds() * 1000),
+        )]
+
+    cuerpo = resp.text or ""
+    return [{
+        "nombre": "GET página de resultados (fingerprint Chrome)",
+        "url": BASE_URL,
+        "status": resp.status_code,
+        "headers": dict(resp.headers),
+        "body": cuerpo[:BODY_SNIPPET],
+        "body_len": len(cuerpo),
+        "tiene_csrf": "csrfToken" in cuerpo,
+        "error": None if 200 <= resp.status_code < 300 else f"HTTP {resp.status_code}",
+        "ms": int((datetime.now(timezone.utc) - inicio).total_seconds() * 1000),
+    }]
+
+
+async def _playwright_probe():
+    """Replica el flujo real del scraper: Chromium, token CSRF y POST a la API.
+
+    Es la única sonda que prueba el camino completo. Un 200 en el GET no basta:
+    el WAF puede servir la página y luego rechazar la API, así que se exige que
+    el JSON traiga `results` con contenido.
+    """
+    from playwright.async_api import async_playwright
+
+    res = {
+        "nombre": "Chromium real: GET + CSRF + POST API",
+        "url": API_URL,
+        "status": None,
+        "headers": {},
+        "body": "",
+        "body_len": 0,
+        "tiene_csrf": False,
+        "error": None,
+    }
+
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        try:
+            context = await browser.new_context(
+                user_agent=USER_AGENT,
+                ignore_https_errors=True,
+            )
+            page = await context.new_page()
+            page.set_default_timeout(TIMEOUT * 1000)
+
+            navegacion = await page.goto(BASE_URL, wait_until="domcontentloaded")
+            res["status_get"] = navegacion.status if navegacion else None
+
+            html = await page.content()
+            token = await page.evaluate(
+                "document.querySelector('input[name=\"csrfToken\"]')?.value"
+            )
+            if not token:
+                for patron in [
+                    r'csrfToken["\']\s*[:=]\s*["\']([a-zA-Z0-9]+)["\']',
+                    r'"csrfToken"\s*:\s*"([^"]+)"',
+                ]:
+                    m = re.search(patron, html)
+                    if m:
+                        token = m.group(1)
+                        break
+
+            res["tiene_csrf"] = bool(token)
+            if not token:
+                # Sin token no se puede ni intentar el POST; el GET ya dice bastante.
+                res["status"] = res["status_get"]
+                res["body"] = html[:BODY_SNIPPET]
+                res["body_len"] = len(html)
+                res["error"] = "No se encontró token CSRF en el HTML servido"
+                return res
+
+            resp = await page.request.post(
+                API_URL,
+                data={
+                    "gameId": GAME_ID,
+                    "drawId": SORTEO_CANARIO,
+                    "csrfToken": token,
+                },
+                headers={
+                    "x-requested-with": "XMLHttpRequest",
+                    "Origin": "https://www.polla.cl",
+                    "Referer": BASE_URL,
+                },
+            )
+            cuerpo = await resp.text()
+            res["status"] = resp.status
+            res["headers"] = dict(resp.headers)
+            res["body"] = cuerpo[:BODY_SNIPPET]
+            res["body_len"] = len(cuerpo)
+            if not (200 <= resp.status < 300):
+                res["error"] = f"HTTP {resp.status}"
+
+            try:
+                datos = json.loads(cuerpo)
+                res["tiene_results"] = bool(datos.get("results"))
+            except (json.JSONDecodeError, AttributeError):
+                res["tiene_results"] = False
+            return res
+        finally:
+            await browser.close()
+
+
+def probe_playwright():
+    """Envuelve la sonda async para que tenga la misma firma que las demás."""
+    inicio = datetime.now(timezone.utc)
+    try:
+        import playwright  # noqa: F401
+    except ImportError as e:
+        return [_resultado_error(
+            "Chromium real: GET + CSRF + POST API",
+            API_URL,
+            f"playwright no está instalado ({e}) — "
+            "instalar con 'pip install playwright && playwright install chromium'",
+        )]
+
+    try:
+        res = asyncio.run(_playwright_probe())
+    except Exception as e:
+        # Falta el binario de Chromium, timeout de navegación, red caída…
+        return [_resultado_error(
+            "Chromium real: GET + CSRF + POST API",
+            API_URL,
+            f"{type(e).__name__}: {e}",
+            ms=int((datetime.now(timezone.utc) - inicio).total_seconds() * 1000),
+        )]
+
+    res.setdefault("ms", int((datetime.now(timezone.utc) - inicio).total_seconds() * 1000))
+    return [res]
+
+
 PROBES = {
     "directo": probe_directo,
     "movil": probe_movil,
+    "impersonate": probe_impersonate,
+    "playwright": probe_playwright,
     "relay": probe_relay,
 }
 
@@ -248,8 +440,12 @@ def imprimir(nombre_probe, resultados):
             print(f"    status polla.cl (dentro del relay): {r['status_upstream']}")
         if r.get("error"):
             print(f"    error:  {r['error']}")
+        if r.get("status_get") is not None:
+            print(f"    status GET página: {r['status_get']}")
         if r.get("tiene_csrf"):
             print("    csrf:   token CSRF presente en el HTML")
+        if "tiene_results" in r:
+            print(f"    results: {'JSON con resultados reales' if r['tiene_results'] else 'sin resultados en el JSON'}")
         pistas = _pistas_waf(r)
         if pistas:
             print(f"    WAF:    {', '.join(pistas)}")
@@ -272,6 +468,24 @@ def veredicto(todo):
     print(f"\n{'=' * 70}")
     print("VEREDICTO")
     print("=" * 70)
+
+    # Las tres sondas de cliente salen por la misma IP. Cruzarlas es lo que separa
+    # "bloqueo por reputación de IP" de "bloqueo por cómo se ve el cliente", y esa
+    # distinción decide si hace falta relay (y cuentas en terceros) o no.
+    def _estado(nombre):
+        """'ok' / 'rechazo' / 'sin_medir' — o None si la sonda no se ejecutó."""
+        if nombre not in todo:
+            return None
+        rs = todo[nombre]
+        if any(r.get("status") and 200 <= r["status"] < 300 for r in rs):
+            return "ok"
+        if all(r.get("status") is None for r in rs):
+            return "sin_medir"
+        return "rechazo"
+
+    e_directo = _estado("directo")
+    e_imp = _estado("impersonate")
+    e_pw = _estado("playwright")
 
     if "directo" in todo:
         directo = todo["directo"]
@@ -298,11 +512,17 @@ def veredicto(todo):
             print("polla.cl NO responde directo desde esta IP (rechazo con respuesta HTTP).")
             if waf:
                 print(f"  → Firma de WAF detectada: {', '.join(waf)}.")
+            if e_imp is not None or e_pw is not None:
+                # Con otra sonda desde la misma IP, la causa la decide el cruce de
+                # más abajo; opinar aquí sería adelantarse al dato.
+                print("  → La causa (IP vs. cliente) la decide la comparación de abajo.")
+            elif waf:
                 print("    Un relay serverless probablemente NO baste: el WAF mira más")
                 print("    que la IP. Habría que revisar fingerprint TLS / challenge JS.")
             else:
                 print("  → Sin firma de WAF: parece filtro por rango de IP.")
-                print("    Es el caso bueno — un relay serverless debería esquivarlo.")
+                print("    Correr también --probe impersonate y --probe playwright para")
+                print("    descartar que el bloqueo sea por fingerprint del cliente.")
 
     if "movil" in todo:
         movil_ok = [r for r in todo["movil"]
@@ -314,6 +534,36 @@ def veredicto(todo):
             print("  → Camino gratis y sin terceros. Priorizar sobre el relay.")
         else:
             print("\nNingún endpoint móvil candidato respondió.")
+
+    if e_imp or e_pw:
+        print("\nComparación de clientes desde la misma IP:")
+        for etiqueta, estado in (("directo (urllib)", e_directo),
+                                 ("impersonate (TLS de Chrome)", e_imp),
+                                 ("playwright (Chromium real)", e_pw)):
+            if estado is not None:
+                print(f"  - {etiqueta}: {estado}")
+
+    if e_imp == "sin_medir":
+        print("\nLa sonda 'impersonate' no llegó a medir nada (dependencia ausente o")
+        print("red caída). Sin ese dato no se puede descartar el fingerprint.")
+    if e_pw == "sin_medir":
+        print("\nLa sonda 'playwright' no llegó a medir nada (dependencia, browser o")
+        print("red). Sin ese dato no se puede descartar el fingerprint.")
+
+    if e_directo == "rechazo" and e_imp == "ok":
+        print("\nCONCLUSIÓN: el bloqueo es por FINGERPRINT del cliente, NO por IP.")
+        print("  → La IP de Azure sirve. Basta cambiar el cliente HTTP a curl_cffi")
+        print("    con impersonate='chrome'. No hacen falta relay ni cuentas en terceros.")
+    elif e_directo == "rechazo" and e_imp == "rechazo" and e_pw == "ok":
+        print("\nCONCLUSIÓN: hace falta un NAVEGADOR REAL, pero la IP de Azure sirve.")
+        print("  → Correr Playwright dentro de Actions (como ya hace el scraper en")
+        print("    local). Sin relay ni cuentas en terceros.")
+    elif e_directo == "rechazo" and e_imp == "rechazo" and e_pw == "rechazo":
+        print("\nCONCLUSIÓN: es REPUTACIÓN DE IP — ni el fingerprint de Chrome ni un")
+        print("Chromium real pasan desde aquí.")
+        print("  → Hay que salir por otra IP (relay serverless). Y el relay debe")
+        print("    además imitar fingerprint de navegador, porque un fetch plano")
+        print("    tampoco bastó desde esta IP.")
 
     if "relay" in todo:
         relay = todo["relay"]
