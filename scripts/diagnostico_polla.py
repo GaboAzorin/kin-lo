@@ -12,14 +12,20 @@ Sondas:
   impersonate  — misma IP que `directo`, pero con fingerprint TLS de Chrome
   playwright   — misma IP, con Chromium real y el flujo CSRF + POST completo
   relay        — vía el relay serverless, si RELAY_URL está definido
+  scrapingant  — vía ScrapingAnt con proxy residencial chileno (free tier)
 
 `directo`, `impersonate` y `playwright` salen por la MISMA IP y solo cambian el
 cliente: comparándolas se separa "me bloquean por reputación de IP" de "me
 bloquean por cómo me veo", que llevan a soluciones completamente distintas.
 
+`scrapingant` queda FUERA de la corrida por defecto: cada petición gasta
+créditos de un free tier limitado y no renovable dentro del mes, así que solo
+corre cuando se la pide explícitamente con --probe.
+
 Uso:
-    python scripts/diagnostico_polla.py                 # todas las sondas
+    python scripts/diagnostico_polla.py                 # sondas por defecto
     python scripts/diagnostico_polla.py --probe directo
+    python scripts/diagnostico_polla.py --probe scrapingant   # gasta créditos
 
 Salida: informe legible a stdout y, con --json, un JSON para inspección posterior.
 El exit code es 0 aunque todas las sondas fallen: un bloqueo es un resultado
@@ -33,6 +39,7 @@ import os
 import re
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 
@@ -53,6 +60,25 @@ GAME_ID = "5271"
 TIMEOUT = 30
 BODY_SNIPPET = 600
 
+# ScrapingAnt: API de scraping con salida por proxies residenciales. Es la
+# hipótesis viva después de que relay serverless, fingerprint TLS y Chromium real
+# dieran 403 — todos salen por rangos de datacenter, que es justo lo que Imperva
+# rechaza. Free tier: 10.000 créditos/mes recurrentes y sin tarjeta.
+SCRAPINGANT_URL = "https://api.scrapingant.com/v2/general"
+# Nombres de parámetro tomados de la documentación de ScrapingAnt. No se pudieron
+# verificar contra la API real (este entorno no tiene salida de red): CONFIRMAR en
+# la primera corrida de Actions. Si alguno no existe, la API responde 400/422 con
+# el nombre correcto en el mensaje de error, que el informe imprime tal cual.
+SCRAPINGANT_PARAMS = {
+    "x-api-key": None,          # se rellena con la key del entorno
+    "proxy_type": "residential",
+    "proxy_country": "cl",
+}
+# Una petición residencial cuesta ~25 créditos de los 10.000 mensuales. Por eso la
+# sonda hace UNA sola petición por corrida y no reintenta nunca: un bucle de
+# reintentos podría vaciar el mes entero en una tarde.
+SCRAPINGANT_TIMEOUT = 120
+
 # Rutas candidatas de API de app móvil. No están documentadas; son los patrones
 # habituales. Que devuelvan 404 es informativo (no existen), que devuelvan 200 es
 # el mejor resultado posible de este diagnóstico.
@@ -65,11 +91,18 @@ CANDIDATOS_MOVIL = [
 ]
 
 
-def _request(url, method="GET", data=None, headers=None, timeout=TIMEOUT):
+def _request(url, method="GET", data=None, headers=None, timeout=TIMEOUT,
+             cuerpo_completo=False):
     """Ejecuta una petición y devuelve siempre un dict, incluso si falla.
 
     urllib levanta HTTPError para 4xx/5xx, pero aquí un 403 es justamente el dato
     que buscamos, así que se captura y se reporta como resultado normal.
+
+    `cuerpo_completo` añade `body_completo` con la respuesta entera. Por defecto
+    está apagado porque el informe solo necesita un fragmento y el JSON no debe
+    engordar con páginas enteras; se enciende cuando hay que buscar algo que
+    puede aparecer más allá del fragmento (p. ej. `csrfToken` en el HTML que
+    devuelve un intermediario).
     """
     hdrs = {"User-Agent": USER_AGENT}
     if headers:
@@ -81,24 +114,28 @@ def _request(url, method="GET", data=None, headers=None, timeout=TIMEOUT):
     inicio = datetime.now(timezone.utc)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
-            cuerpo = resp.read(BODY_SNIPPET * 4).decode("utf-8", errors="replace")
+            crudo = resp.read() if cuerpo_completo else resp.read(BODY_SNIPPET * 4)
+            cuerpo = crudo.decode("utf-8", errors="replace")
             return {
                 "url": url,
                 "status": resp.status,
                 "headers": dict(resp.headers),
                 "body": cuerpo[:BODY_SNIPPET],
                 "body_len": len(cuerpo),
+                **({"body_completo": cuerpo} if cuerpo_completo else {}),
                 "error": None,
                 "ms": int((datetime.now(timezone.utc) - inicio).total_seconds() * 1000),
             }
     except urllib.error.HTTPError as e:
-        cuerpo = e.read(BODY_SNIPPET * 4).decode("utf-8", errors="replace")
+        crudo = e.read() if cuerpo_completo else e.read(BODY_SNIPPET * 4)
+        cuerpo = crudo.decode("utf-8", errors="replace")
         return {
             "url": url,
             "status": e.code,
             "headers": dict(e.headers or {}),
             "body": cuerpo[:BODY_SNIPPET],
             "body_len": len(cuerpo),
+            **({"body_completo": cuerpo} if cuerpo_completo else {}),
             "error": f"HTTP {e.code}",
             "ms": int((datetime.now(timezone.utc) - inicio).total_seconds() * 1000),
         }
@@ -250,6 +287,53 @@ def probe_relay():
     except (json.JSONDecodeError, AttributeError):
         r["status_upstream"] = None
         r["tiene_csrf"] = False
+
+    return [r]
+
+
+def probe_scrapingant():
+    """polla.cl vía ScrapingAnt, que sale por proxies residenciales chilenos.
+
+    Es la sonda que queda después de descartar el relay: si el bloqueo es puro
+    reputación de IP de datacenter (que es lo que indican los 403 desde Azure y
+    desde Cloudflare), una IP residencial debería pasar.
+
+    Hace UNA sola petición y no reintenta: cada request residencial cuesta ~25
+    créditos de los 10.000 del free tier mensual.
+    """
+    nombre = "GET página de resultados vía ScrapingAnt (proxy residencial CL)"
+    api_key = os.environ.get("SCRAPINGANT_API_KEY", "").strip()
+    if not api_key:
+        # Sin key no se intenta nada: así la sonda nunca consume créditos por
+        # accidente ni revienta el diagnóstico completo.
+        return [_resultado_error(
+            nombre,
+            SCRAPINGANT_URL,
+            "SCRAPINGANT_API_KEY no está configurada — crear cuenta gratis en "
+            "scrapingant.com, copiar la API key del dashboard y cargarla como "
+            "secret SCRAPINGANT_API_KEY (ver scripts/SCRAPINGANT.md)",
+        )]
+
+    params = dict(SCRAPINGANT_PARAMS, url=BASE_URL)
+    params["x-api-key"] = api_key
+    url = f"{SCRAPINGANT_URL}?{urllib.parse.urlencode(params)}"
+
+    # Cuerpo completo: `csrfToken` aparece bien entrado el HTML, mucho más allá
+    # del fragmento que guarda el informe.
+    r = _request(url, timeout=SCRAPINGANT_TIMEOUT, cuerpo_completo=True)
+    r["nombre"] = nombre
+    # La URL con la key dentro no debe acabar en el informe ni en el artifact.
+    r["url"] = f"{SCRAPINGANT_URL}?url={BASE_URL}&proxy_type=residential&proxy_country=cl"
+
+    # Dos cosas distintas que hay que reportar por separado:
+    #   - el status de la API de ScrapingAnt (¿me atendió el servicio?)
+    #   - qué contenido devolvió (¿es la página real de polla.cl?)
+    # ScrapingAnt puede responder 200 y entregar el HTML de bloqueo de Imperva;
+    # leer ese caso como éxito es exactamente el error que hay que evitar.
+    contenido = r.get("body_completo") or r.get("body") or ""
+    r.pop("body_completo", None)  # no se persiste: es la página entera
+    r["tiene_csrf"] = "csrfToken" in contenido
+    r["pistas_extra"] = _pistas_waf({"headers": {}, "body": contenido})
 
     return [r]
 
@@ -423,7 +507,13 @@ PROBES = {
     "impersonate": probe_impersonate,
     "playwright": probe_playwright,
     "relay": probe_relay,
+    "scrapingant": probe_scrapingant,
 }
+
+# Sondas que corren cuando no se pide ninguna en concreto. 'scrapingant' queda
+# fuera a propósito: gasta créditos de un free tier limitado, y el diagnóstico se
+# corre a menudo para comparar clientes, donde esa sonda no aporta nada.
+PROBES_POR_DEFECTO = [p for p in PROBES if p != "scrapingant"]
 
 
 def imprimir(nombre_probe, resultados):
@@ -446,7 +536,7 @@ def imprimir(nombre_probe, resultados):
             print("    csrf:   token CSRF presente en el HTML")
         if "tiene_results" in r:
             print(f"    results: {'JSON con resultados reales' if r['tiene_results'] else 'sin resultados en el JSON'}")
-        pistas = _pistas_waf(r)
+        pistas = sorted(set(_pistas_waf(r)) | set(r.get("pistas_extra") or []))
         if pistas:
             print(f"    WAF:    {', '.join(pistas)}")
         interesantes = ["server", "cf-ray", "x-cache", "content-type", "location"]
@@ -574,6 +664,41 @@ def veredicto(todo):
         else:
             print("\nEl relay NO alcanza polla.cl. Probar otra plataforma.")
 
+    if "scrapingant" in todo:
+        ant = todo["scrapingant"][0]
+        status = ant.get("status")
+        pistas = sorted(set(_pistas_waf(ant)) | set(ant.get("pistas_extra") or []))
+        ok_http = bool(status and 200 <= status < 300)
+
+        if status is None:
+            # Ni siquiera hubo respuesta: sin key, sin red o timeout. No dice nada
+            # sobre polla.cl, así que no se opina sobre la vía residencial.
+            print("\nScrapingAnt no llegó a medir nada.")
+            print(f"  → {ant.get('error')}")
+        elif ok_http and ant.get("tiene_csrf"):
+            # El csrfToken manda sobre la firma de WAF, y no al revés: las páginas
+            # legítimas de un sitio con Imperva suelen incluir igualmente scripts
+            # `_Incapsula_Resource`. Lo que no puede falsificar una página de
+            # bloqueo es el token CSRF de la página real.
+            print("\nLa vía del PROXY RESIDENCIAL FUNCIONA: ScrapingAnt devolvió la")
+            print("página real de polla.cl (con token CSRF).")
+            print("  → Siguiente paso: enchufar scraper_polla.py a ScrapingAnt y")
+            print("    activar scrape-loto.yml. Ojo con el presupuesto de créditos.")
+        elif ok_http and pistas:
+            print("\nScrapingAnt respondió 200 pero el contenido es una página de")
+            print(f"BLOQUEO ({', '.join(pistas)}), no polla.cl. Esto es un FALLO.")
+            print("  → El proxy residencial NO basta: el bloqueo mira algo más que")
+            print("    la IP. Habría que probar el modo navegador de ScrapingAnt o")
+            print("    replantear la vía entera.")
+        elif ok_http:
+            print("\nScrapingAnt respondió 200 pero sin token CSRF ni firma de WAF")
+            print("reconocible. No se puede concluir: revisar el body del informe.")
+        else:
+            print(f"\nScrapingAnt devolvió HTTP {status} — falló la petición al propio")
+            print("servicio (key inválida, créditos agotados o parámetros mal puestos).")
+            print("  → Revisar el body del informe: la API explica el motivo ahí.")
+            print("  → No dice nada sobre polla.cl todavía.")
+
     no_corridas = [p for p in PROBES if p not in todo]
     if no_corridas:
         print(f"\n(Sondas no ejecutadas, sin conclusión: {', '.join(no_corridas)})")
@@ -587,7 +712,7 @@ def main():
                     help="Guardar el informe crudo como JSON")
     args = ap.parse_args()
 
-    elegidas = args.probe or list(PROBES)
+    elegidas = args.probe or list(PROBES_POR_DEFECTO)
     print(f"Diagnóstico polla.cl — {datetime.now(timezone.utc).isoformat()}")
     print(f"Sondas: {', '.join(elegidas)}")
 
