@@ -34,7 +34,22 @@ relay, el relay llama a polla.cl y devuelve el JSON.
 * Endpoints móviles descartados: `api.polla.cl` no resuelve por DNS; las rutas
   bajo `www.polla.cl` caen en el mismo 403 de Imperva.
 
-### Confusión del experimento (importante)
+### Segunda corrida (con sondas de cliente) — CONCLUYENTE
+
+Desde la misma IP de Azure, las tres dieron 403 de Imperva:
+* `urllib` → 403
+* `curl_cffi` con impersonate=chrome → 403
+* **Chromium real (Playwright) → 403**, ni siquiera sirve el HTML con el CSRF.
+
+**Es reputación de IP.** El cliente es irrelevante. Esto CONFIRMA la premisa
+original de CLAUDE.md ("polla.cl bloquea las IPs de GitHub Actions"), que una
+lectura apresurada de la primera corrida había dado por refutada.
+
+Consecuencia para la opción A: Imperva bloquea rangos de datacenter en general,
+así que Cloudflare/Deno/Val.town podrían recibir el mismo 403. El relay pasa de
+apuesta principal a experimento por descarte.
+
+### Confusión del experimento (resuelta por la segunda corrida)
 
 La sonda usa `urllib`, cuyo fingerprint TLS Imperva rechaza en cualquier IP.
 Respecto del setup que SÍ funciona (PC del usuario) cambiaron DOS variables:

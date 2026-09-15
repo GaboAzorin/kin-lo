@@ -22,6 +22,10 @@ on:
           - impersonate
           - playwright
           - relay
+          # 'fuentes' no sondea polla.cl: busca fuentes ALTERNATIVAS de
+          # resultados de Loto. Va en el mismo menú para dispararlo desde el
+          # teléfono con un solo toque, sin otra pantalla ni otro workflow.
+          - fuentes
 
 permissions:
   contents: read # Solo lee el repo; el diagnóstico no escribe nada
@@ -54,6 +58,12 @@ jobs:
         # para no tener que ramificar por sonda.
         run: pip install curl-cffi
 
+      - name: Correr sondeo de fuentes alternativas
+        # Sonda aparte: no mide polla.cl sino sitios de terceros y feeds, así que
+        # no comparte informe con el diagnóstico.
+        if: inputs.sondas == 'fuentes'
+        run: python scripts/sondeo_fuentes_loto.py --json diagnostico.json
+
       - name: Instalar Playwright + Chromium
         # Descargar el browser tarda ~1 min, así que solo cuando de verdad se va
         # a usar: la sonda 'playwright' o la corrida completa.
@@ -68,6 +78,7 @@ jobs:
           # como no configurado en vez de fallar.
           RELAY_URL: ${{ secrets.RELAY_URL }}
           RELAY_TOKEN: ${{ secrets.RELAY_TOKEN }}
+        if: inputs.sondas != 'fuentes'
         run: |
           if [ "${{ inputs.sondas }}" = "todas" ]; then
             python scripts/diagnostico_polla.py --json diagnostico.json
