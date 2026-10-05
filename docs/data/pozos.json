@@ -1,23 +1,23 @@
 {
-  "updated": "2026-10-03 09:41",
+  "updated": "2026-10-05 11:11",
   "kino": {
-    "proximo_sorteo": "4 de octubre 2026",
-    "pozo_total": "6.700",
+    "proximo_sorteo": "7 de octubre 2026",
+    "pozo_total": "6.650",
     "variantes": [
       {
         "nombre": "Kino",
-        "pozo_str": "640",
-        "millones": 640
+        "pozo_str": "500",
+        "millones": 500
       },
       {
         "nombre": "ReKino",
-        "pozo_str": "2.710",
-        "millones": 2710
+        "pozo_str": "2.760",
+        "millones": 2760
       },
       {
         "nombre": "RequeteKino",
-        "pozo_str": "70",
-        "millones": 70
+        "pozo_str": "110",
+        "millones": 110
       }
     ]
   },
