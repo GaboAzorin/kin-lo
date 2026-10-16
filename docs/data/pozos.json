@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-15 08:52",
+  "updated": "2026-10-16 11:25",
   "kino": {
     "proximo_sorteo": "16 de octubre 2026",
     "pozo_total": "7.100",
@@ -22,7 +22,7 @@
     ]
   },
   "loto": {
-    "total_millones": 4850,
+    "total_millones": 4150,
     "variantes": [
       {
         "nombre": "Loto",
@@ -30,15 +30,15 @@
       },
       {
         "nombre": "Recargado",
-        "millones": 1270
+        "millones": 160
       },
       {
         "nombre": "Revancha",
-        "millones": 440
+        "millones": 690
       },
       {
         "nombre": "Desquite",
-        "millones": 150
+        "millones": 310
       }
     ]
   }
