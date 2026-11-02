@@ -37607,6 +37607,1490 @@
   "kino": {
     "sorteos": [
       {
+        "sorteo": 3300,
+        "fecha": "2026-11-01",
+        "resultado": [
+          2,
+          3,
+          4,
+          6,
+          7,
+          8,
+          11,
+          13,
+          14,
+          15,
+          20,
+          21,
+          23,
+          25
+        ],
+        "rank_resultado": 2700691,
+        "best": {
+          "aciertos": 12,
+          "rango": "50"
+        },
+        "rangos": {
+          "50": {
+            "top": [
+              {
+                "combo": [
+                  2,
+                  6,
+                  7,
+                  8,
+                  11,
+                  13,
+                  14,
+                  15,
+                  16,
+                  20,
+                  21,
+                  22,
+                  23,
+                  25
+                ],
+                "aciertos": 12,
+                "rank_combo": 3580544,
+                "diff_rank": -879853
+              },
+              {
+                "combo": [
+                  2,
+                  3,
+                  4,
+                  6,
+                  7,
+                  11,
+                  14,
+                  15,
+                  18,
+                  19,
+                  20,
+                  21,
+                  23,
+                  25
+                ],
+                "aciertos": 12,
+                "rank_combo": 2727210,
+                "diff_rank": -26519
+              },
+              {
+                "combo": [
+                  4,
+                  6,
+                  7,
+                  8,
+                  10,
+                  11,
+                  13,
+                  14,
+                  15,
+                  19,
+                  20,
+                  21,
+                  23,
+                  25
+                ],
+                "aciertos": 12,
+                "rank_combo": 4276992,
+                "diff_rank": -1576301
+              }
+            ],
+            "suggested": [
+              {
+                "combo": [
+                  1,
+                  3,
+                  5,
+                  6,
+                  10,
+                  11,
+                  12,
+                  13,
+                  16,
+                  17,
+                  21,
+                  22,
+                  24,
+                  25
+                ],
+                "aciertos": 6,
+                "rank_combo": 1789946,
+                "diff_rank": 910745
+              },
+              {
+                "combo": [
+                  2,
+                  4,
+                  6,
+                  7,
+                  8,
+                  9,
+                  11,
+                  15,
+                  18,
+                  19,
+                  20,
+                  22,
+                  23,
+                  25
+                ],
+                "aciertos": 10,
+                "rank_combo": 3320477,
+                "diff_rank": -619786
+              },
+              {
+                "combo": [
+                  1,
+                  3,
+                  7,
+                  8,
+                  9,
+                  10,
+                  12,
+                  13,
+                  14,
+                  15,
+                  16,
+                  20,
+                  21,
+                  23
+                ],
+                "aciertos": 9,
+                "rank_combo": 1951834,
+                "diff_rank": 748857
+              }
+            ],
+            "retorno": {
+              "disponible": true,
+              "ganado": 104000,
+              "cartones": 500,
+              "premiados": 57,
+              "por_categoria": [
+                {
+                  "aciertos": 12,
+                  "comodin": false,
+                  "cartones": 3,
+                  "premio_unit": 10000,
+                  "subtotal": 30000
+                },
+                {
+                  "aciertos": 11,
+                  "comodin": false,
+                  "cartones": 8,
+                  "premio_unit": 3500,
+                  "subtotal": 28000
+                },
+                {
+                  "aciertos": 10,
+                  "comodin": false,
+                  "cartones": 46,
+                  "premio_unit": 1000,
+                  "subtotal": 46000
+                }
+              ],
+              "valor_carton": 1000,
+              "costo": 500000,
+              "neto": -396000,
+              "roi": 20.8
+            }
+          },
+          "100": {
+            "top": [
+              {
+                "combo": [
+                  2,
+                  3,
+                  5,
+                  6,
+                  8,
+                  11,
+                  13,
+                  14,
+                  15,
+                  16,
+                  20,
+                  21,
+                  23,
+                  25
+                ],
+                "aciertos": 12,
+                "rank_combo": 2918617,
+                "diff_rank": -217926
+              },
+              {
+                "combo": [
+                  3,
+                  4,
+                  6,
+                  7,
+                  8,
+                  10,
+                  11,
+                  13,
+                  14,
+                  15,
+                  16,
+                  20,
+                  23,
+                  24
+                ],
+                "aciertos": 11,
+                "rank_combo": 3822828,
+                "diff_rank": -1122137
+              },
+              {
+                "combo": [
+                  1,
+                  2,
+                  3,
+                  6,
+                  7,
+                  8,
+                  10,
+                  14,
+                  15,
+                  18,
+                  20,
+                  21,
+                  23,
+                  25
+                ],
+                "aciertos": 11,
+                "rank_combo": 554776,
+                "diff_rank": 2145915
+              }
+            ],
+            "suggested": [
+              {
+                "combo": [
+                  1,
+                  2,
+                  5,
+                  6,
+                  7,
+                  9,
+                  12,
+                  17,
+                  18,
+                  19,
+                  21,
+                  22,
+                  24,
+                  25
+                ],
+                "aciertos": 5,
+                "rank_combo": 1094018,
+                "diff_rank": 1606673
+              },
+              {
+                "combo": [
+                  3,
+                  4,
+                  6,
+                  7,
+                  8,
+                  10,
+                  11,
+                  13,
+                  14,
+                  15,
+                  16,
+                  20,
+                  23,
+                  24
+                ],
+                "aciertos": 11,
+                "rank_combo": 3822828,
+                "diff_rank": -1122137
+              },
+              {
+                "combo": [
+                  1,
+                  2,
+                  4,
+                  8,
+                  9,
+                  11,
+                  14,
+                  16,
+                  18,
+                  20,
+                  21,
+                  22,
+                  23,
+                  25
+                ],
+                "aciertos": 9,
+                "rank_combo": 1035550,
+                "diff_rank": 1665141
+              }
+            ],
+            "retorno": {
+              "disponible": true,
+              "ganado": 75500,
+              "cartones": 500,
+              "premiados": 49,
+              "por_categoria": [
+                {
+                  "aciertos": 12,
+                  "comodin": false,
+                  "cartones": 1,
+                  "premio_unit": 10000,
+                  "subtotal": 10000
+                },
+                {
+                  "aciertos": 11,
+                  "comodin": false,
+                  "cartones": 7,
+                  "premio_unit": 3500,
+                  "subtotal": 24500
+                },
+                {
+                  "aciertos": 10,
+                  "comodin": false,
+                  "cartones": 41,
+                  "premio_unit": 1000,
+                  "subtotal": 41000
+                }
+              ],
+              "valor_carton": 1000,
+              "costo": 500000,
+              "neto": -424500,
+              "roi": 15.1
+            }
+          },
+          "250": {
+            "top": [
+              {
+                "combo": [
+                  2,
+                  3,
+                  4,
+                  6,
+                  7,
+                  8,
+                  11,
+                  14,
+                  15,
+                  16,
+                  17,
+                  19,
+                  20,
+                  23
+                ],
+                "aciertos": 11,
+                "rank_combo": 2701439,
+                "diff_rank": -748
+              },
+              {
+                "combo": [
+                  1,
+                  2,
+                  3,
+                  4,
+                  6,
+                  8,
+                  10,
+                  13,
+                  14,
+                  15,
+                  17,
+                  21,
+                  23,
+                  25
+                ],
+                "aciertos": 11,
+                "rank_combo": 228012,
+                "diff_rank": 2472679
+              },
+              {
+                "combo": [
+                  2,
+                  3,
+                  4,
+                  6,
+                  7,
+                  8,
+                  9,
+                  14,
+                  15,
+                  16,
+                  20,
+                  22,
+                  23,
+                  25
+                ],
+                "aciertos": 11,
+                "rank_combo": 2691667,
+                "diff_rank": 9024
+              }
+            ],
+            "suggested": [
+              {
+                "combo": [
+                  1,
+                  2,
+                  5,
+                  6,
+                  9,
+                  11,
+                  14,
+                  15,
+                  16,
+                  18,
+                  21,
+                  22,
+                  23,
+                  25
+                ],
+                "aciertos": 8,
+                "rank_combo": 1140123,
+                "diff_rank": 1560568
+              },
+              {
+                "combo": [
+                  2,
+                  4,
+                  6,
+                  7,
+                  8,
+                  9,
+                  10,
+                  12,
+                  13,
+                  17,
+                  19,
+                  20,
+                  21,
+                  24
+                ],
+                "aciertos": 8,
+                "rank_combo": 3314457,
+                "diff_rank": -613766
+              },
+              {
+                "combo": [
+                  3,
+                  4,
+                  7,
+                  8,
+                  10,
+                  12,
+                  13,
+                  14,
+                  15,
+                  16,
+                  18,
+                  19,
+                  22,
+                  23
+                ],
+                "aciertos": 8,
+                "rank_combo": 3898261,
+                "diff_rank": -1197570
+              }
+            ],
+            "retorno": {
+              "disponible": true,
+              "ganado": 75000,
+              "cartones": 500,
+              "premiados": 50,
+              "por_categoria": [
+                {
+                  "aciertos": 11,
+                  "comodin": false,
+                  "cartones": 10,
+                  "premio_unit": 3500,
+                  "subtotal": 35000
+                },
+                {
+                  "aciertos": 10,
+                  "comodin": false,
+                  "cartones": 40,
+                  "premio_unit": 1000,
+                  "subtotal": 40000
+                }
+              ],
+              "valor_carton": 1000,
+              "costo": 500000,
+              "neto": -425000,
+              "roi": 15.0
+            }
+          },
+          "500": {
+            "top": [
+              {
+                "combo": [
+                  2,
+                  4,
+                  6,
+                  7,
+                  8,
+                  11,
+                  13,
+                  14,
+                  15,
+                  16,
+                  20,
+                  23,
+                  24,
+                  25
+                ],
+                "aciertos": 12,
+                "rank_combo": 3331892,
+                "diff_rank": -631201
+              },
+              {
+                "combo": [
+                  4,
+                  5,
+                  6,
+                  7,
+                  8,
+                  11,
+                  13,
+                  14,
+                  16,
+                  17,
+                  20,
+                  21,
+                  23,
+                  25
+                ],
+                "aciertos": 11,
+                "rank_combo": 4158963,
+                "diff_rank": -1458272
+              },
+              {
+                "combo": [
+                  2,
+                  3,
+                  4,
+                  7,
+                  8,
+                  11,
+                  13,
+                  14,
+                  15,
+                  16,
+                  20,
+                  21,
+                  22,
+                  24
+                ],
+                "aciertos": 11,
+                "rank_combo": 2794412,
+                "diff_rank": -93721
+              }
+            ],
+            "suggested": [
+              {
+                "combo": [
+                  2,
+                  3,
+                  5,
+                  6,
+                  8,
+                  10,
+                  12,
+                  14,
+                  15,
+                  21,
+                  22,
+                  23,
+                  24,
+                  25
+                ],
+                "aciertos": 9,
+                "rank_combo": 2914958,
+                "diff_rank": -214267
+              },
+              {
+                "combo": [
+                  1,
+                  4,
+                  7,
+                  9,
+                  11,
+                  12,
+                  14,
+                  15,
+                  16,
+                  17,
+                  18,
+                  19,
+                  20,
+                  24
+                ],
+                "aciertos": 6,
+                "rank_combo": 2267515,
+                "diff_rank": 433176
+              },
+              {
+                "combo": [
+                  3,
+                  4,
+                  5,
+                  7,
+                  8,
+                  9,
+                  10,
+                  11,
+                  13,
+                  18,
+                  20,
+                  21,
+                  23,
+                  24
+                ],
+                "aciertos": 9,
+                "rank_combo": 3734635,
+                "diff_rank": -1033944
+              }
+            ],
+            "retorno": {
+              "disponible": true,
+              "ganado": 80000,
+              "cartones": 500,
+              "premiados": 46,
+              "por_categoria": [
+                {
+                  "aciertos": 12,
+                  "comodin": false,
+                  "cartones": 1,
+                  "premio_unit": 10000,
+                  "subtotal": 10000
+                },
+                {
+                  "aciertos": 11,
+                  "comodin": false,
+                  "cartones": 10,
+                  "premio_unit": 3500,
+                  "subtotal": 35000
+                },
+                {
+                  "aciertos": 10,
+                  "comodin": false,
+                  "cartones": 35,
+                  "premio_unit": 1000,
+                  "subtotal": 35000
+                }
+              ],
+              "valor_carton": 1000,
+              "costo": 500000,
+              "neto": -420000,
+              "roi": 16.0
+            }
+          },
+          "1000": {
+            "top": [
+              {
+                "combo": [
+                  2,
+                  3,
+                  4,
+                  7,
+                  8,
+                  13,
+                  14,
+                  15,
+                  17,
+                  18,
+                  20,
+                  21,
+                  23,
+                  25
+                ],
+                "aciertos": 12,
+                "rank_combo": 2797024,
+                "diff_rank": -96333
+              },
+              {
+                "combo": [
+                  2,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8,
+                  10,
+                  11,
+                  13,
+                  14,
+                  15,
+                  21,
+                  22,
+                  23
+                ],
+                "aciertos": 11,
+                "rank_combo": 3155628,
+                "diff_rank": -454937
+              },
+              {
+                "combo": [
+                  3,
+                  4,
+                  6,
+                  7,
+                  8,
+                  11,
+                  12,
+                  14,
+                  15,
+                  16,
+                  17,
+                  21,
+                  23,
+                  25
+                ],
+                "aciertos": 11,
+                "rank_combo": 3828450,
+                "diff_rank": -1127759
+              }
+            ],
+            "suggested": [
+              {
+                "combo": [
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  10,
+                  11,
+                  12,
+                  15,
+                  16,
+                  18,
+                  21,
+                  22,
+                  23
+                ],
+                "aciertos": 8,
+                "rank_combo": 3678726,
+                "diff_rank": -978035
+              },
+              {
+                "combo": [
+                  1,
+                  2,
+                  4,
+                  6,
+                  8,
+                  9,
+                  13,
+                  14,
+                  15,
+                  17,
+                  19,
+                  20,
+                  23,
+                  24
+                ],
+                "aciertos": 9,
+                "rank_combo": 950560,
+                "diff_rank": 1750131
+              },
+              {
+                "combo": [
+                  1,
+                  2,
+                  3,
+                  6,
+                  7,
+                  8,
+                  10,
+                  12,
+                  14,
+                  18,
+                  19,
+                  21,
+                  24,
+                  25
+                ],
+                "aciertos": 8,
+                "rank_combo": 553129,
+                "diff_rank": 2147562
+              }
+            ],
+            "retorno": {
+              "disponible": true,
+              "ganado": 69000,
+              "cartones": 500,
+              "premiados": 45,
+              "por_categoria": [
+                {
+                  "aciertos": 12,
+                  "comodin": false,
+                  "cartones": 1,
+                  "premio_unit": 10000,
+                  "subtotal": 10000
+                },
+                {
+                  "aciertos": 11,
+                  "comodin": false,
+                  "cartones": 6,
+                  "premio_unit": 3500,
+                  "subtotal": 21000
+                },
+                {
+                  "aciertos": 10,
+                  "comodin": false,
+                  "cartones": 38,
+                  "premio_unit": 1000,
+                  "subtotal": 38000
+                }
+              ],
+              "valor_carton": 1000,
+              "costo": 500000,
+              "neto": -431000,
+              "roi": 13.8
+            }
+          },
+          "all": {
+            "top": [
+              {
+                "combo": [
+                  2,
+                  3,
+                  6,
+                  7,
+                  8,
+                  10,
+                  11,
+                  13,
+                  14,
+                  15,
+                  18,
+                  20,
+                  21,
+                  25
+                ],
+                "aciertos": 12,
+                "rank_combo": 3031565,
+                "diff_rank": -330874
+              },
+              {
+                "combo": [
+                  2,
+                  3,
+                  4,
+                  5,
+                  7,
+                  8,
+                  10,
+                  11,
+                  14,
+                  15,
+                  20,
+                  21,
+                  23,
+                  25
+                ],
+                "aciertos": 12,
+                "rank_combo": 2602241,
+                "diff_rank": 98450
+              },
+              {
+                "combo": [
+                  2,
+                  6,
+                  7,
+                  8,
+                  9,
+                  11,
+                  12,
+                  13,
+                  14,
+                  18,
+                  20,
+                  21,
+                  23,
+                  25
+                ],
+                "aciertos": 11,
+                "rank_combo": 3569556,
+                "diff_rank": -868865
+              }
+            ],
+            "suggested": [
+              {
+                "combo": [
+                  2,
+                  5,
+                  7,
+                  8,
+                  9,
+                  12,
+                  13,
+                  14,
+                  16,
+                  18,
+                  21,
+                  22,
+                  23,
+                  25
+                ],
+                "aciertos": 8,
+                "rank_combo": 3522094,
+                "diff_rank": -821403
+              },
+              {
+                "combo": [
+                  1,
+                  3,
+                  4,
+                  5,
+                  6,
+                  10,
+                  11,
+                  13,
+                  14,
+                  15,
+                  19,
+                  20,
+                  22,
+                  24
+                ],
+                "aciertos": 8,
+                "rank_combo": 1434913,
+                "diff_rank": 1265778
+              },
+              {
+                "combo": [
+                  1,
+                  2,
+                  8,
+                  10,
+                  12,
+                  14,
+                  15,
+                  17,
+                  18,
+                  19,
+                  20,
+                  21,
+                  23,
+                  24
+                ],
+                "aciertos": 7,
+                "rank_combo": 1344107,
+                "diff_rank": 1356584
+              }
+            ],
+            "retorno": {
+              "disponible": true,
+              "ganado": 76500,
+              "cartones": 500,
+              "premiados": 36,
+              "por_categoria": [
+                {
+                  "aciertos": 12,
+                  "comodin": false,
+                  "cartones": 2,
+                  "premio_unit": 10000,
+                  "subtotal": 20000
+                },
+                {
+                  "aciertos": 11,
+                  "comodin": false,
+                  "cartones": 9,
+                  "premio_unit": 3500,
+                  "subtotal": 31500
+                },
+                {
+                  "aciertos": 10,
+                  "comodin": false,
+                  "cartones": 25,
+                  "premio_unit": 1000,
+                  "subtotal": 25000
+                }
+              ],
+              "valor_carton": 1000,
+              "costo": 500000,
+              "neto": -423500,
+              "roi": 15.3
+            }
+          },
+          "all_sub": {
+            "top": [
+              {
+                "combo": [
+                  2,
+                  3,
+                  6,
+                  8,
+                  11,
+                  12,
+                  13,
+                  14,
+                  15,
+                  16,
+                  17,
+                  20,
+                  21,
+                  23
+                ],
+                "aciertos": 11,
+                "rank_combo": 3077061,
+                "diff_rank": -376370
+              },
+              {
+                "combo": [
+                  2,
+                  3,
+                  5,
+                  6,
+                  10,
+                  11,
+                  13,
+                  14,
+                  15,
+                  20,
+                  21,
+                  23,
+                  24,
+                  25
+                ],
+                "aciertos": 11,
+                "rank_combo": 2935196,
+                "diff_rank": -234505
+              },
+              {
+                "combo": [
+                  2,
+                  3,
+                  4,
+                  6,
+                  7,
+                  8,
+                  11,
+                  14,
+                  15,
+                  16,
+                  19,
+                  20,
+                  23,
+                  24
+                ],
+                "aciertos": 11,
+                "rank_combo": 2701514,
+                "diff_rank": -823
+              }
+            ],
+            "suggested": [
+              {
+                "combo": [
+                  2,
+                  3,
+                  4,
+                  6,
+                  8,
+                  9,
+                  10,
+                  11,
+                  15,
+                  17,
+                  20,
+                  22,
+                  23,
+                  25
+                ],
+                "aciertos": 10,
+                "rank_combo": 2732250,
+                "diff_rank": -31559
+              },
+              {
+                "combo": [
+                  1,
+                  4,
+                  5,
+                  7,
+                  8,
+                  12,
+                  13,
+                  15,
+                  16,
+                  19,
+                  20,
+                  21,
+                  22,
+                  24
+                ],
+                "aciertos": 7,
+                "rank_combo": 2113979,
+                "diff_rank": 586712
+              },
+              {
+                "combo": [
+                  2,
+                  3,
+                  5,
+                  7,
+                  9,
+                  10,
+                  12,
+                  13,
+                  14,
+                  16,
+                  17,
+                  18,
+                  23,
+                  24
+                ],
+                "aciertos": 6,
+                "rank_combo": 2969209,
+                "diff_rank": -268518
+              }
+            ],
+            "retorno": {
+              "disponible": true,
+              "ganado": 58000,
+              "cartones": 500,
+              "premiados": 43,
+              "por_categoria": [
+                {
+                  "aciertos": 11,
+                  "comodin": false,
+                  "cartones": 6,
+                  "premio_unit": 3500,
+                  "subtotal": 21000
+                },
+                {
+                  "aciertos": 10,
+                  "comodin": false,
+                  "cartones": 37,
+                  "premio_unit": 1000,
+                  "subtotal": 37000
+                }
+              ],
+              "valor_carton": 1000,
+              "costo": 500000,
+              "neto": -442000,
+              "roi": 11.6
+            }
+          },
+          "dia": {
+            "top": [
+              {
+                "combo": [
+                  2,
+                  3,
+                  6,
+                  8,
+                  10,
+                  11,
+                  13,
+                  14,
+                  15,
+                  20,
+                  21,
+                  22,
+                  23,
+                  24
+                ],
+                "aciertos": 11,
+                "rank_combo": 3073981,
+                "diff_rank": -373290
+              },
+              {
+                "combo": [
+                  2,
+                  3,
+                  4,
+                  5,
+                  7,
+                  10,
+                  11,
+                  13,
+                  14,
+                  15,
+                  20,
+                  21,
+                  22,
+                  25
+                ],
+                "aciertos": 11,
+                "rank_combo": 2627616,
+                "diff_rank": 73075
+              },
+              {
+                "combo": [
+                  2,
+                  3,
+                  5,
+                  6,
+                  7,
+                  11,
+                  13,
+                  14,
+                  15,
+                  18,
+                  20,
+                  21,
+                  22,
+                  25
+                ],
+                "aciertos": 11,
+                "rank_combo": 2894410,
+                "diff_rank": -193719
+              }
+            ],
+            "suggested": [
+              {
+                "combo": [
+                  2,
+                  4,
+                  5,
+                  7,
+                  9,
+                  10,
+                  13,
+                  15,
+                  16,
+                  17,
+                  19,
+                  20,
+                  21,
+                  24
+                ],
+                "aciertos": 7,
+                "rank_combo": 3265126,
+                "diff_rank": -564435
+              },
+              {
+                "combo": [
+                  1,
+                  3,
+                  6,
+                  8,
+                  11,
+                  12,
+                  13,
+                  14,
+                  15,
+                  17,
+                  18,
+                  19,
+                  22,
+                  23
+                ],
+                "aciertos": 8,
+                "rank_combo": 1933093,
+                "diff_rank": 767598
+              },
+              {
+                "combo": [
+                  2,
+                  3,
+                  4,
+                  5,
+                  7,
+                  8,
+                  10,
+                  11,
+                  12,
+                  16,
+                  17,
+                  18,
+                  23,
+                  25
+                ],
+                "aciertos": 8,
+                "rank_combo": 2601017,
+                "diff_rank": 99674
+              }
+            ],
+            "retorno": {
+              "disponible": true,
+              "ganado": 55500,
+              "cartones": 500,
+              "premiados": 38,
+              "por_categoria": [
+                {
+                  "aciertos": 11,
+                  "comodin": false,
+                  "cartones": 7,
+                  "premio_unit": 3500,
+                  "subtotal": 24500
+                },
+                {
+                  "aciertos": 10,
+                  "comodin": false,
+                  "cartones": 31,
+                  "premio_unit": 1000,
+                  "subtotal": 31000
+                }
+              ],
+              "valor_carton": 1000,
+              "costo": 500000,
+              "neto": -444500,
+              "roi": 11.1
+            }
+          },
+          "mes": {
+            "top": [
+              {
+                "combo": [
+                  2,
+                  3,
+                  4,
+                  6,
+                  7,
+                  8,
+                  13,
+                  15,
+                  17,
+                  18,
+                  19,
+                  20,
+                  21,
+                  25
+                ],
+                "aciertos": 11,
+                "rank_combo": 2704515,
+                "diff_rank": -3824
+              },
+              {
+                "combo": [
+                  2,
+                  3,
+                  4,
+                  6,
+                  7,
+                  9,
+                  11,
+                  13,
+                  15,
+                  16,
+                  20,
+                  21,
+                  22,
+                  25
+                ],
+                "aciertos": 11,
+                "rank_combo": 2713937,
+                "diff_rank": -13246
+              },
+              {
+                "combo": [
+                  1,
+                  2,
+                  4,
+                  6,
+                  7,
+                  11,
+                  13,
+                  14,
+                  15,
+                  16,
+                  17,
+                  20,
+                  23,
+                  25
+                ],
+                "aciertos": 11,
+                "rank_combo": 935564,
+                "diff_rank": 1765127
+              }
+            ],
+            "suggested": [
+              {
+                "combo": [
+                  1,
+                  2,
+                  6,
+                  7,
+                  8,
+                  10,
+                  11,
+                  12,
+                  13,
+                  16,
+                  17,
+                  19,
+                  21,
+                  24
+                ],
+                "aciertos": 7,
+                "rank_combo": 1239547,
+                "diff_rank": 1461144
+              },
+              {
+                "combo": [
+                  3,
+                  4,
+                  5,
+                  7,
+                  9,
+                  14,
+                  15,
+                  16,
+                  17,
+                  18,
+                  20,
+                  21,
+                  22,
+                  23
+                ],
+                "aciertos": 8,
+                "rank_combo": 3768139,
+                "diff_rank": -1067448
+              },
+              {
+                "combo": [
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  8,
+                  9,
+                  12,
+                  13,
+                  17,
+                  18,
+                  19,
+                  22,
+                  25
+                ],
+                "aciertos": 6,
+                "rank_combo": 128026,
+                "diff_rank": 2572665
+              }
+            ],
+            "retorno": {
+              "disponible": true,
+              "ganado": 66000,
+              "cartones": 500,
+              "premiados": 41,
+              "por_categoria": [
+                {
+                  "aciertos": 11,
+                  "comodin": false,
+                  "cartones": 10,
+                  "premio_unit": 3500,
+                  "subtotal": 35000
+                },
+                {
+                  "aciertos": 10,
+                  "comodin": false,
+                  "cartones": 31,
+                  "premio_unit": 1000,
+                  "subtotal": 31000
+                }
+              ],
+              "valor_carton": 1000,
+              "costo": 500000,
+              "neto": -434000,
+              "roi": 13.2
+            }
+          }
+        }
+      },
+      {
         "sorteo": 3299,
         "fecha": "2026-10-30",
         "resultado": [
